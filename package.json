@@ -1,0 +1,13 @@
+{
+  "name": "aplikasi-permintaan-toko",
+  "version": "1.0.0",
+  "description": "Aplikasi Manajemen Permintaan Barang Toko",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "dependencies": {
+    "firebase": "^10.8.0",
+    "@supabase/supabase-js": "^2.49.1"
+  }
+}

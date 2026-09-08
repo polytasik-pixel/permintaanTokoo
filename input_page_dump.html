@@ -1,0 +1,128 @@
+<section id="inputPage" class="page">
+      <!-- HEADER BAR WITH AUTOFILL TOOLBAR -->
+      <div class="app-breadcrumb-bar" style="margin-bottom: 16px;">
+        <div class="breadcrumb-title">
+          <span class="material-symbols-rounded" style="color: #dc2626; font-size: 22px;">edit_note</span>
+          <span style="font-weight: 800; font-size: 15px; color: #0f172a;">FORMULIR PERMINTAAN BARANG TOKO</span>
+        </div>
+        
+        <!-- AUTOFILL ACTION BUTTONS -->
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button type="button" onclick="triggerUploadPdfAutoFill()" title="INPUT PDF AUTO-FILL" class="btn" style="height: 34px; padding: 0 10px; background: linear-gradient(135deg, #059669, #10b981) !important; color: #fff !important; font-size: 11.5px; font-weight: 700;">
+            <span class="material-symbols-rounded" style="font-size: 18px;">picture_as_pdf</span> AUTO-FILL PDF
+          </button>
+          <button type="button" onclick="triggerUploadGambarAutoFill()" title="INPUT GAMBAR AUTO-FILL" class="btn" style="height: 34px; padding: 0 10px; background: linear-gradient(135deg, #7c3aed, #9333ea) !important; color: #fff !important; font-size: 11.5px; font-weight: 700;">
+            <span class="material-symbols-rounded" style="font-size: 18px;">image</span> AUTO-FILL GAMBAR
+          </button>
+          <button type="button" onclick="triggerUploadExcelAutoFill()" title="INPUT EXCEL AUTO-FILL" class="btn" style="height: 34px; padding: 0 10px; background: linear-gradient(135deg, #107c41, #0f7b40) !important; color: #fff !important; font-size: 11.5px; font-weight: 700;">
+            <span class="material-symbols-rounded" style="font-size: 18px;">table_chart</span> AUTO-FILL EXCEL
+          </button>
+          <button type="button" onclick="downloadTemplateExcelPermintaan()" title="Download Format Template Excel" class="btn" style="height: 34px; padding: 0 10px; background: #ffffff !important; color: #107c41 !important; border: 1px solid #107c41 !important; font-size: 11.5px; font-weight: 700;">
+            <span class="material-symbols-rounded" style="font-size: 18px;">download</span> TEMPLATE EXCEL
+          </button>
+        </div>
+        
+        <!-- HIDDEN FILE INPUTS FOR AUTOFILL -->
+        <input type="file" id="inputPdfAutoFill" accept="application/pdf,.pdf" style="display: none;" onchange="prosesPdfAutoFillGemini(event)">
+        <input type="file" id="inputGambarAutoFill" accept="image/*,.jpg,.jpeg,.png,.webp,.heic" style="display: none;" onchange="prosesGambarAutoFillGemini(event)">
+        <input type="file" id="inputExcelAutoFill" accept=".xlsx,.xls,.csv" style="display: none;" onchange="prosesExcelAutoFill(event)">
+      </div>
+
+      <!-- MAIN FORM CARD -->
+      <div class="box card" style="max-width: 1000px; margin: 0 auto; padding: 24px !important; border-radius: 12px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important; background: #ffffff !important;">
+        
+        <!-- FORM ROW 1: TANGGAL & TOKO -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px;">
+          
+          <!-- TANGGAL -->
+          <div class="form-group">
+            <label style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">TANGGAL PERMINTAAN</label>
+            <input id="tanggal" readonly style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; font-weight: 700; color: #0f172a; background: #f1f5f9;">
+          </div>
+
+          <!-- JENIS PERMINTAAN -->
+          <div class="form-group">
+            <label style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">JENIS PERMINTAAN</label>
+            <select id="jenisPermintaan" onchange="gantiJenis()" style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; font-weight: 600; color: #0f172a; background: #f8fafc;">
+              <option value="DEFAULT" selected>DEFAULT (BARANG SATUAN)</option>
+              <option value="DUS">DUS (BARANG DUS/DUSAN)</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- FORM ROW 2: NAMA TOKO & SEARCH TOKO -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-size: 11.5px; font-weight: 800; color: #0f172a; margin: 0;">PILIK TOKO PEMINTA (STORE NAME)</label>
+            <div id="containerTambahToko">
+              <button type="button" onclick="bukaModalTambahToko(this)" style="background: none; border: none; color: #2563eb; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <span class="material-symbols-rounded" style="font-size: 16px;">add_circle</span> TAMBAH TOKO BARU
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <select id="toko" style="flex: 2; min-width: 220px; height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; font-weight: 600; color: #0f172a; background: #ffffff;"></select>
+            
+            <div id="wrapperCariToko" style="flex: 1; min-width: 180px; position: relative; display: flex; align-items: center;">
+              <input type="text" id="cariTokoInput" placeholder="CARI TOKO CE PAT..." style="width: 100%; height: 38px; padding: 0 30px 0 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; font-size: 12.5px; outline: none;" oninput="filterDropdownToko(this.value)">
+              <button type="button" id="btnHapusCariToko" onclick="resetCariToko()" title="Hapus Pencarian" style="position: absolute; right: 8px; background: none; border: none; color: #64748b; cursor: pointer; display: none;">
+                <span class="material-symbols-rounded" style="font-size: 16px;">cancel</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: DETAIL ITEM PERMINTAAN -->
+        <div style="border-top: 2px solid #e2e8f0; padding-top: 20px; margin-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 id="judulDetailPermintaan" style="margin: 0; font-size: 14px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+              <span class="material-symbols-rounded" style="color: #dc2626;">inventory_2</span> DETAIL BARANG PERMINTAAN
+            </h3>
+            <div id="infoSerial" style="font-size: 12px; color: #64748b; font-weight: 600;"></div>
+          </div>
+
+          <!-- DYNAMIC ITEM ROWS CONTAINER -->
+          <div id="detailContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+
+          <div style="margin-top: 16px; margin-bottom: 24px;">
+            <button type="button" class="btn" onclick="tambahRow()" style="height: 38px; background: linear-gradient(135deg, #334155, #475569) !important; color: #ffffff !important; font-weight: 700; font-size: 12.5px; border-radius: 6px;">
+              <span class="material-symbols-rounded" style="font-size: 18px;">add</span> TAMBAH BARANG PERMINTAAN
+            </button>
+          </div>
+        </div>
+
+        <!-- SECTION: ATTACHMENT FOTO & CATATAN -->
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 24px;">
+          
+          <!-- UPLOAD FOTO BARANG -->
+          <div id="sectionUploadFoto">
+            <label id="labelUploadFoto" style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px; display: block;">FOTO BARANG PENDUKUNG (OPSIONAL)</label>
+            <div class="uploadBox" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px; text-align: center; background: #f8fafc; cursor: pointer;">
+              <input type="file" id="foto" accept="image/png, image/jpeg, image/jpg, image/webp, image/heic, image/heif, image/*" multiple onchange="previewFoto(event)" style="display:none">
+              <div id="previewArea" onclick="pilihFoto()">
+                <span class="material-symbols-rounded" style="font-size: 28px; color: #2563eb;">add_a_photo</span>
+                <div id="previewText" style="font-size: 12px; font-weight: 700; color: #334155; margin-top: 4px;">TAP / PILIH FOTO DI SINI</div>
+                <div id="photoPreviewsGrid" class="photo-grid-preview" style="margin-top: 10px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATATAN TAMBAHAN -->
+          <div>
+            <label style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px; display: block;">CATATAN DIBUTUHKAN</label>
+            <textarea id="catatan" rows="4" placeholder="Tuliskan catatan tambahan jika ada..." style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 10px 12px; font-size: 13px; font-family: var(--font-sans); outline: none; background: #f8fafc; box-sizing: border-box;"></textarea>
+          </div>
+
+        </div>
+
+        <!-- SUBMIT ACTION BUTTON -->
+        <div style="text-align: center; padding-top: 10px;">
+          <button id="btnSimpan" class="btn" onclick="simpanData()" style="width: 100%; max-width: 400px; height: 44px; background: linear-gradient(135deg, #334155, #475569) !important; color: #ffffff !important; font-weight: 800 !important; font-size: 14px !important; letter-spacing: 0.5px !important; border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;">
+            <span class="material-symbols-rounded" style="font-size: 20px;">save</span> SIMPAN PERMINTAAN
+          </button>
+        </div>
+
+      </div>
+    </section>
