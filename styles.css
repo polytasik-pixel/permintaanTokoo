@@ -1966,8 +1966,13 @@ table.historyTable td {
   box-sizing: border-box !important;
 }
 
-#sectionEmbeddedTtd canvas#canvasTTD {
-  max-width: 100% !important;
+#sectionEmbeddedTtd canvas,
+#sectionEmbeddedTtd canvas#canvasTTDModal {
+  max-width: 450px !important;
+  width: 100% !important;
+  height: 180px !important;
+  margin: 0 auto !important;
+  display: block !important;
   box-sizing: border-box !important;
 }
 
@@ -4098,7 +4103,7 @@ tr.empty-grid-row td {
 /* 2. POPUP PILIHAN CETAK PDF & EXCEL TEMPLATE OVERLAY (ROOMLIER & SPACIOUS) */
 #modalPilihanCetakPdf > div {
   width: 92% !important;
-  max-width: 520px !important;
+  max-width: 650px !important;
   border-radius: 12px !important;
   overflow: hidden !important;
 }
@@ -4106,7 +4111,7 @@ tr.empty-grid-row td {
 #excelTemplateOverlay > div.popupBox,
 div#excelTemplateOverlay > div.popupBox {
   width: 92% !important;
-  max-width: 520px !important;
+  max-width: 650px !important;
   border-radius: 12px !important;
   overflow: hidden !important;
 }
@@ -7001,4 +7006,658 @@ button[onclick*="simpanData"]:hover {
   background: linear-gradient(135deg, #15803d, #166534) !important;
   background-color: #15803d !important;
   box-shadow: 0 6px 16px rgba(22, 163, 74, 0.38) !important;
+}
+
+
+/* =============================================================================
+   POPUP BANTUAN CLEAN WHITE BODY & BRIGHT BLUE HEADER DESIGN OVERRIDES
+   ============================================================================= */
+#popupBantuan {
+  padding: 5mm 12px !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan .chatBox {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 5px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
+  height: calc(100vh - 10mm) !important;
+  max-height: calc(100vh - 10mm) !important;
+  max-height: calc(100dvh - 10mm) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#popupBantuan .chatHeader {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 5px 5px 0 0 !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+#popupBantuan .chatHeader *,
+#popupBantuan .chatHeader .chatNama,
+#popupBantuan .chatHeader .chatStatus,
+#popupBantuan .chatHeader .material-symbols-rounded,
+#popupBantuan #chatHeaderTitle {
+  color: #ffffff !important;
+}
+
+#popupBantuan #chatUserPicker,
+#popupBantuan #chatList,
+#popupBantuan .chatBody,
+#popupBantuan .chatFooter {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+#popupBantuan .chatBody {
+  background: #f8fafc !important;
+  padding: 12px 16px !important;
+}
+
+#popupBantuan .chatUser {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2) !important;
+}
+
+#popupBantuan .chatAdmin {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+#popupBantuan .chatFooter {
+  border-top: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  padding: 10px 14px !important;
+}
+
+#popupBantuan .chatFooter input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 5px !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+}
+
+#popupBantuan .chatFooter button {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 5px !important;
+}
+
+#popupBantuan .chatClose {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  border-radius: 5px !important;
+}
+
+
+/* =============================================================================
+   LOGIN PASSWORD EYE ICON BLACK COLOR OVERRIDE (#togglePasswordIcon)
+   ============================================================================= */
+#togglePasswordBtn,
+#loginForm #togglePasswordBtn,
+.input-group #togglePasswordBtn {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  color: #000000 !important;
+  box-shadow: none !important;
+}
+
+#togglePasswordIcon,
+#togglePasswordBtn span,
+#togglePasswordBtn .material-symbols-rounded,
+#loginForm #togglePasswordIcon,
+.input-group #togglePasswordIcon {
+  color: #000000 !important;
+}
+
+#togglePasswordBtn:hover #togglePasswordIcon,
+#togglePasswordBtn:active #togglePasswordIcon {
+  color: #000000 !important;
+  opacity: 0.8 !important;
+}
+
+
+/* =============================================================================
+   POPUP BANTUAN STABLE FIXED DIMENSIONS (520PX WIDE) & DYNAMIC DISPLAY FIX
+   ============================================================================= */
+#popupBantuan {
+  padding: 5mm 12px !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+#popupBantuan:not(.show) {
+  display: none !important;
+}
+#popupBantuan.show {
+  display: flex !important;
+}
+
+#popupBantuan .chatBox {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 5px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
+  width: 650px !important;
+  max-width: calc(100vw - 24px) !important;
+  height: calc(100vh - 10mm) !important;
+  max-height: calc(100vh - 10mm) !important;
+  max-height: calc(100dvh - 10mm) !important;
+  margin: auto !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan .chatHeader {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 5px 5px 0 0 !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  flex-shrink: 0 !important;
+}
+
+#popupBantuan .chatHeader *,
+#popupBantuan .chatHeader .chatNama,
+#popupBantuan .chatHeader .chatStatus,
+#popupBantuan .chatHeader .material-symbols-rounded,
+#popupBantuan #chatHeaderTitle {
+  color: #ffffff !important;
+}
+
+#popupBantuan #chatUserPicker,
+#popupBantuan #chatList,
+#popupBantuan .chatBody,
+#popupBantuan .chatFooter {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+#popupBantuan #chatList {
+  padding: 12px 14px !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan #chatUserPicker {
+  padding: 14px 16px !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan #listUserChatContainer {
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  padding-right: 2px !important;
+  margin-top: 6px !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan .chatBody {
+  background: #f8fafc !important;
+  padding: 14px 16px !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan .chatUser {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  color: #ffffff !important;
+  border-radius: 8px 8px 0 8px !important;
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+  max-width: 80% !important;
+  align-self: flex-end !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2) !important;
+  line-height: 1.4 !important;
+  word-break: break-word !important;
+}
+
+#popupBantuan .chatAdmin {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px 8px 8px 0 !important;
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+  max-width: 80% !important;
+  align-self: flex-start !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05) !important;
+  line-height: 1.4 !important;
+  word-break: break-word !important;
+}
+
+#popupBantuan .chatFooter {
+  border-top: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  padding: 10px 14px !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan .chatFooter input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 5px !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  height: 40px !important;
+  flex: 1 !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan .chatFooter button {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  color: #ffffff !important;
+  border-radius: 5px !important;
+  height: 40px !important;
+  min-width: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25) !important;
+}
+
+#popupBantuan .chatClose {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  border-radius: 5px !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 22px !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+
+/* =============================================================================
+   KOTAK UNREAD & NOTIFICATION BADGE STYLING (MATCHING LONCENG NOTIFIKASI)
+   ============================================================================= */
+#unreadBadge,
+.unreadBadge,
+#notifBellBadge,
+.notifBadge,
+.notif-bell-badge {
+  border-radius: 5px !important;
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4) !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+
+
+/* =============================================================================
+   ALWAYS VISIBLE IDENTICAL TOPBAR ACTION BUTTONS (#btnNotifHeader & #helpButton)
+   AND IDENTICAL KOTAK BADGES (#badgeNotifCount & #unreadBadge)
+   ============================================================================= */
+#btnNotifHeader,
+#helpButton {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border-radius: 5px !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  cursor: pointer !important;
+  margin-left: 2px !important;
+  flex-shrink: 0 !important;
+}
+
+#badgeNotifCount,
+#unreadBadge,
+.unreadBadge,
+.notifBadge,
+.notif-bell-badge {
+  position: absolute !important;
+  top: -6px !important;
+  right: -6px !important;
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  padding: 0 4px !important;
+  border-radius: 4px !important;
+  border: 2px solid #ffffff !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  box-shadow: 0 3px 8px rgba(239, 68, 68, 0.65) !important;
+  z-index: 10 !important;
+  box-sizing: border-box !important;
+}
+
+
+/* ABSOLUTE OVERRIDE FOR POPUP BANTUAN VISIBILITY */
+#popupBantuan:not(.show) {
+  display: none !important;
+}
+#popupBantuan.show {
+  display: flex !important;
+}
+
+
+/* =============================================================================
+   CHAT BANTUAN LAYOUT ENHANCEMENTS: WIDER POPUP & PERFECT RIGHT/LEFT BUBBLES
+   ============================================================================= */
+#popupBantuan .chatBox {
+  width: 650px !important;
+  max-width: calc(100vw - 20px) !important;
+}
+
+#popupBantuan .chatBody {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 16px 20px !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+  background: #f8fafc !important;
+}
+
+#popupBantuan .chatUser {
+  align-self: flex-end !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  text-align: left !important;
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  color: #ffffff !important;
+  border-radius: 12px 12px 2px 12px !important;
+  max-width: 75% !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25) !important;
+  line-height: 1.4 !important;
+  word-break: break-word !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan .chatAdmin {
+  align-self: flex-start !important;
+  margin-right: auto !important;
+  margin-left: 0 !important;
+  text-align: left !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px 12px 12px 2px !important;
+  max-width: 75% !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+  line-height: 1.4 !important;
+  word-break: break-word !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan .chatUser .chatText,
+#popupBantuan .chatAdmin .chatText {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  font-weight: 500 !important;
+}
+
+#popupBantuan .chatUser .chatTime {
+  font-size: 10px !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  margin-top: 4px !important;
+  text-align: right !important;
+}
+
+#popupBantuan .chatAdmin .chatTime {
+  font-size: 10px !important;
+  color: #64748b !important;
+  margin-top: 4px !important;
+  text-align: right !important;
+}
+
+
+/* =============================================================================
+   FULL HEIGHT POPUP ELEMENTS (#chatUserPicker, #listUserChatContainer, #chatList, .chatBody)
+   ============================================================================= */
+#popupBantuan #chatUserPicker[style*="display: flex"],
+#popupBantuan #chatUserPicker[style*="display:flex"],
+#popupBantuan #chatUserPicker.show,
+#popupBantuan #chatUserPicker:not([style*="display: none"]):not([style*="display:none"]) {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 14px 16px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+#popupBantuan #listUserChatContainer {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+  padding-right: 4px !important;
+  margin-top: 6px !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan #chatList[style*="display: block"],
+#popupBantuan #chatList[style*="display:block"],
+#popupBantuan #chatList:not([style*="display: none"]):not([style*="display:none"]) {
+  display: block !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 14px 16px !important;
+  box-sizing: border-box !important;
+}
+
+
+/* =============================================================================
+   STRICT MUTUAL EXCLUSION & FULL HEIGHT FOR CHAT VIEWS (#chatList, #chatUserPicker, .chatBody, .chatFooter)
+   ============================================================================= */
+#popupBantuan #chatList,
+#popupBantuan #chatUserPicker,
+#popupBantuan .chatBody,
+#popupBantuan .chatFooter {
+  display: none;
+}
+
+#popupBantuan #chatList[style*="display: block"],
+#popupBantuan #chatList[style*="display:block"] {
+  display: block !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 14px 16px !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan #chatUserPicker[style*="display: flex"],
+#popupBantuan #chatUserPicker[style*="display:flex"] {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 14px 16px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+#popupBantuan #listUserChatContainer {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan .chatBody[style*="display: flex"],
+#popupBantuan .chatBody[style*="display:flex"],
+#popupBantuan .chatBody[style*="display: block"],
+#popupBantuan .chatBody[style*="display:block"] {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 16px 20px !important;
+  box-sizing: border-box !important;
+  background: #f8fafc !important;
+}
+
+#popupBantuan .chatFooter[style*="display: flex"],
+#popupBantuan .chatFooter[style*="display:flex"] {
+  display: flex !important;
+}
+
+
+/* =============================================================================
+   100% STRICT CHAT VIEW MUTUAL EXCLUSION & FULL HEIGHT (#popupBantuan)
+   ============================================================================= */
+#popupBantuan #chatList,
+#popupBantuan #chatUserPicker,
+#popupBantuan .chatBody,
+#popupBantuan .chatFooter {
+  display: none !important;
+}
+
+#popupBantuan #chatList[style*="display: block"],
+#popupBantuan #chatList[style*="display:block"] {
+  display: block !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 14px 16px !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan #chatUserPicker[style*="display: flex"],
+#popupBantuan #chatUserPicker[style*="display:flex"] {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 14px 16px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+#popupBantuan #listUserChatContainer {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+#popupBantuan .chatBody[style*="display: flex"],
+#popupBantuan .chatBody[style*="display:flex"],
+#popupBantuan .chatBody[style*="display: block"],
+#popupBantuan .chatBody[style*="display:block"] {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 16px 20px !important;
+  box-sizing: border-box !important;
+  background: #f8fafc !important;
+}
+
+#popupBantuan .chatFooter[style*="display: flex"],
+#popupBantuan .chatFooter[style*="display:flex"] {
+  display: flex !important;
+}
+
+/* =============================================================================
+   CANVAS TTD STYLING & TOUCH-ACTION FIX
+   ============================================================================= */
+#canvasTTD,
+#canvasTTDModal,
+canvas#canvasTTD,
+canvas#canvasTTDModal,
+#sectionEmbeddedTtd canvas,
+#sectionEmbeddedTtd canvas#canvasTTDModal {
+  touch-action: none !important;
+  pointer-events: auto !important;
+  cursor: crosshair !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }

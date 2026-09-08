@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- Background Vibrant Blue Rounded Box -->
+  <rect width="100" height="100" rx="22" fill="url(#blueGrad)"/>
+  <rect x="2" y="2" width="96" height="96" rx="20" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-opacity="0.4"/>
+  <!-- Storefront Icon (White) -->
+  <g fill="#ffffff" filter="url(#shadow)">
+    <!-- Roof Awning Slanted Top -->
+    <polygon points="18,36 26,18 74,18 82,36"/>
+    <!-- Awning Scallops / Waves -->
+    <path d="M 18,36 Q 26,44 34,36 Q 42,44 50,36 Q 58,44 66,36 Q 74,44 82,36 L 82,41 Q 74,49 66,41 Q 58,49 50,41 Q 42,49 34,41 Q 26,49 18,41 Z"/>
+    <!-- Store Pillars & Building Frame -->
+    <rect x="22" y="42" width="6" height="38" rx="1"/>
+    <rect x="72" y="42" width="6" height="38" rx="1"/>
+    <rect x="18" y="78" width="64" height="5" rx="2"/>
+    <!-- Store Window (Left) -->
+    <rect x="31" y="47" width="10" height="15" rx="1.5"/>
+    <!-- Store Window (Right) -->
+    <rect x="59" y="47" width="10" height="15" rx="1.5"/>
+    <!-- Store Center Door -->
+    <path d="M 44,53 L 56,53 L 56,78 L 44,78 Z" rx="1"/>
+    <circle cx="53" cy="66" r="1" fill="#2563eb"/>
+  </g>
+</svg>

@@ -33,8 +33,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
   <!-- Master Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260909_DONE_MODAL_COMPACT_V51">
-  <script src="app.js?v=20260909_DONE_MODAL_COMPACT_V51"></script>
+  <link rel="stylesheet" href="styles.css?v=20260909_DYNAMIC_TTD_CANVAS_V69_1788898011">
+  <script src="app.js?v=20260909_DYNAMIC_TTD_CANVAS_V69_1788898011"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -137,7 +137,7 @@
                 </button>
               </div>
               <div style="position: relative !important; display: flex !important; align-items: center !important; width: 100% !important;">
-                <input type="text" id="inputGeminiApiKeyVal" value="${currentKey}" placeholder="Tempel API Key di sini (Contoh: AIzaSy...)" style="width: 100% !important; height: 44px !important; padding: 8px 12px !important; border-radius: 3px !important; border: 1.5px solid #cbd5e1 !important; background: #f8fafc !important; color: #0f172a !important; font-family: monospace !important; font-size: 13px !important; outline: none !important; box-sizing: border-box !important;">
+                <input type="text" id="inputGeminiApiKeyVal_inlineTemp" value="${currentKey}" placeholder="Tempel API Key di sini (Contoh: AIzaSy...)" style="width: 100% !important; height: 44px !important; padding: 8px 12px !important; border-radius: 3px !important; border: 1.5px solid #cbd5e1 !important; background: #f8fafc !important; color: #0f172a !important; font-family: monospace !important; font-size: 13px !important; outline: none !important; box-sizing: border-box !important;">
               </div>
             </div>
             <div style="display: flex !important; gap: 8px !important; justify-content: flex-end !important; align-items: center !important; margin-top: 8px !important; width: 100% !important;">
@@ -225,14 +225,15 @@
         </button>
 
         <!-- Lonceng Notifikasi Real-time -->
-        <button type="button" id="btnNotifHeader" onclick="bukaModalNotifikasiList()" title="Lihat Notifikasi System Real-Time" style="position: relative; background: rgba(255, 255, 255, 0.18) !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important; padding: 4px 8px; border-radius: 5px !important; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center;">
+        <button type="button" id="btnNotifHeader" onclick="bukaModalNotifikasiList()" title="Lihat Notifikasi System Real-Time" style="position: relative !important; background: rgba(255, 255, 255, 0.18) !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important; width: 36px !important; height: 36px !important; min-width: 36px !important; min-height: 36px !important; padding: 0 !important; border-radius: 5px !important; cursor: pointer !important; outline: none !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-left: 2px !important; opacity: 1 !important; visibility: visible !important;">
           <span class="material-symbols-rounded" style="font-size: 24px; color: #facc15 !important; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));">notifications</span>
-          <span id="badgeNotifCount" style="position: absolute; top: -6px !important; right: -6px !important; background: #ef4444 !important; color: #ffffff !important; font-size: 11px !important; font-weight: 900 !important; min-width: 20px !important; height: 20px !important; padding: 0 4px !important; border-radius: 4px !important; border: 2px solid #ffffff !important; display: none; align-items: center; justify-content: center; line-height: 1; box-shadow: 0 3px 8px rgba(239, 68, 68, 0.65) !important; z-index: 10 !important;">0</span>
+          <span id="badgeNotifCount" style="position: absolute !important; top: -6px !important; right: -6px !important; background: #ef4444 !important; color: #ffffff !important; font-size: 11px !important; font-weight: 900 !important; min-width: 20px !important; height: 20px !important; padding: 0 4px !important; border-radius: 4px !important; border: 2px solid #ffffff !important; display: none; align-items: center !important; justify-content: center !important; line-height: 1 !important; box-shadow: 0 3px 8px rgba(239, 68, 68, 0.65) !important; z-index: 10 !important;">0</span>
         </button>
 
-        <!-- Icon Bantuan Support Customer Service (Sebelah Lonceng Notifikasi, Berdekatan & Bersudut 5px) -->
-        <button type="button" id="helpButton" onclick="bukaBantuan()" title="Pusat Bantuan & Support Admin (Customer Service)" style="position: relative; background: rgba(255, 255, 255, 0.18) !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important; padding: 4px 8px; border-radius: 5px !important; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: center; margin-left: 2px;">
+        <!-- Icon Bantuan Support Customer Service (Identik dengan Lonceng Notifikasi) -->
+        <button type="button" id="helpButton" onclick="bukaBantuan()" title="Pusat Bantuan & Support Admin (Customer Service)" style="position: relative !important; background: rgba(255, 255, 255, 0.18) !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important; width: 36px !important; height: 36px !important; min-width: 36px !important; min-height: 36px !important; padding: 0 !important; border-radius: 5px !important; cursor: pointer !important; outline: none !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-left: 2px !important; opacity: 1 !important; visibility: visible !important;">
           <span class="material-symbols-rounded" style="font-size: 24px; color: #10b981 !important; font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));">support_agent</span>
+          <span id="unreadBadge" class="unreadBadge" style="position: absolute !important; top: -6px !important; right: -6px !important; background: #ef4444 !important; color: #ffffff !important; font-size: 11px !important; font-weight: 900 !important; min-width: 20px !important; height: 20px !important; padding: 0 4px !important; border-radius: 4px !important; border: 2px solid #ffffff !important; display: none; align-items: center !important; justify-content: center !important; line-height: 1 !important; box-shadow: 0 3px 8px rgba(239, 68, 68, 0.65) !important; z-index: 10 !important;">0</span>
         </button>
 
         <!-- User Profile Avatar Badge -->
@@ -339,7 +340,7 @@
               <span><span class="material-symbols-rounded">lock</span></span>
               <input type="password" id="password" placeholder="PASSWORD">
               <button type="button" id="togglePasswordBtn" onclick="togglePasswordVisibility()" title="LIHAT / SEMBUNYIKAN PASSWORD">
-                <span class="material-symbols-rounded" id="togglePasswordIcon" style="font-size: 20px;">visibility</span>
+                <span class="material-symbols-rounded" id="togglePasswordIcon" style="font-size: 20px; color: #000000 !important;">visibility</span>
               </button>
             </div>
 
@@ -975,8 +976,7 @@
           <input type="text" id="firebaseConfigJsonInput">
           <input type="text" id="adminSecretKeySettingInput">
           <input type="text" id="adminScriptUrlInput">
-          <button id="btnBackAdmin"></button>
-          <span id="designModeBtnText"></span>
+                    <span id="designModeBtnText"></span>
           <span id="headerDesignModeText"></span>
         </div>
         </section>
@@ -1061,8 +1061,8 @@
             </div>
             
             <div style="text-align: center;">
-              <canvas id="canvasTTD" width="400" height="180" style="border: 2px dashed #cbd5e1; border-radius: 8px; background: #ffffff; cursor: crosshair; touch-action: none; max-width: 100%; box-sizing: border-box; display: inline-block;"></canvas>
-              <input type="file" id="fotoTTDInput" accept="image/*" onchange="prosesFotoKeTTD(event)" style="display: none;">
+              <canvas id="canvasTTDModal" style="width: 100% !important; max-width: 100% !important; max-width: 450px !important; height: 180px !important; border: 2px dashed #cbd5e1 !important; border-radius: 8px !important; background: #ffffff !important; display: block !important; box-sizing: border-box !important; margin: 0 auto !important; touch-action: none; cursor: crosshair;"></canvas>
+              <input type="file" id="fotoTTDInputModal" accept="image/*" onchange="prosesFotoKeTTD(event)" style="display: none;">
               
               <div style="margin-top: 12px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
                 <button type="button" onclick="pilihFotoTTD()" class="btn" style="height: 36px; padding: 0 14px; background: #334155 !important; color: #ffffff !important; font-size: 12px; font-weight: 700; border-radius: 6px;">
@@ -1092,7 +1092,7 @@
             </p>
 
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <input type="text" id="inputGeminiApiKeyVal" placeholder="Tempel Gemini API Key di sini (AIzaSy...)" style="flex: 1; min-width: 220px; height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; font-weight: 600; color: #0f172a; background: #ffffff; outline: none; box-sizing: border-box;">
+              <input type="text" id="inputGeminiApiKeyVal_inlineScript" placeholder="Tempel Gemini API Key di sini (AIzaSy...)" style="flex: 1; min-width: 220px; height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; font-weight: 600; color: #0f172a; background: #ffffff; outline: none; box-sizing: border-box;">
               <button type="button" onclick="simpanGeminiApiKeyDariModal()" class="btn" style="height: 38px; padding: 0 14px; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; font-size: 12px; font-weight: 700; border-radius: 6px;">
                 <span class="material-symbols-rounded" style="font-size: 18px;">save</span> SIMPAN KEY
               </button>
@@ -1162,35 +1162,9 @@
       </div>
     </div>
   </div>
-
-  <!-- CHAT BROADCAST MODAL -->
-  <div id="chatBroadcastModal" class="popupOverlay" style="display: none; align-items: center; justify-content: center;">
-    <div class="popupNotifCard" >
-      <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-        <span id="chatHeaderTitle" style="font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-          <span class="material-symbols-rounded">campaign</span> SIARAN PESAN BROADCAST
-        </span>
-        <button type="button" onclick="tutupBroadcastChatModal()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;" style="background: rgba(255,255,255,0.2) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; width: 28px !important; height: 28px !important; font-size: 20px !important; line-height: 1 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">&times;</button>
-      </div>
-      <div id="chatBody" style="padding: 16px;">
-        <label style="font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px; display: block;">PESAN BROADCAST KE SEMUA USER:</label>
-        <textarea id="pesanBroadcastChatInput" rows="4" placeholder="Tuliskan pesan broadcast..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-size: 13px; outline: none;"></textarea>
-        <input type="text" id="chatPesan" style="display:none;">
-        <input type="text" id="cariUserChatInput" style="display:none;">
-        <div id="listUserChatContainer" style="display:none;"></div>
-        <select id="chatUserPicker" style="display:none;"></select>
-        <button id="btnHapusSemuaChatHeader" style="display:none;"></button>
-      </div>
-      <div id="chatFooter" style="padding: 10px 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px;">
-        <button type="button" onclick="tutupBroadcastChatModal()" class="btn-secondary" style="height: 32px; font-size: 12px;">BATAL</button>
-        <button type="button" onclick="kirimBroadcastChatKeSemuaUser()" class="btn-primary" style="height: 32px; font-size: 12px;">KIRIM BROADCAST</button>
-      </div>
-    </div>
-  </div>
-
   <!-- POPUP BANTUAN MODAL -->
     <!-- CHAT WIDGET POPUP (FULL POPUP OVERLAY WITH BACKDROP BLUR) -->
-  <div id="popupBantuan" class="popupOverlay popupBantuan" onclick="if(event.target === this) tutupBantuan()" style="display: none; box-sizing: border-box !important;">
+  <div id="popupBantuan" class="popupOverlay popupBantuan" onclick="if(event.target === this) tutupBantuan()" style="display: none !important; box-sizing: border-box !important;">
     <div class="chatBox" style="margin: auto !important; border-radius: 5px !important; -webkit-clip-path: inset(0 round 5px) !important; clip-path: inset(0 round 5px) !important;">
       <div class="chatHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important;">
         <div class="chatInfo">
@@ -1212,7 +1186,7 @@
       <div id="chatList" style="display:none; flex:1; overflow-y:auto; padding:1mm 0 0 0;"></div>
 
       <!-- Admin User Picker for Starting New Chat -->
-      <div id="chatUserPicker" style="display:none; flex:1; overflow-y:auto; padding:1mm 0 0 0; flex-direction:column;">
+      <div id="chatUserPicker" style="display:none; flex:1; height:100%; min-height:0; overflow:hidden; padding:14px 16px; flex-direction:column; box-sizing:border-box;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <div style="font-weight:700; font-size:13px; color:var(--text-main); display:flex; align-items:center; gap:6px;">
             <span class="material-symbols-rounded" style="color:var(--primary); font-size:18px;">contacts</span> PILIH TOKO / USER
@@ -1220,7 +1194,7 @@
           <button type="button" onclick="tutupUserPickerChat()" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:26px; line-height:1; font-weight:900;" title="TUTUP" style="background: rgba(255,255,255,0.2) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; width: 28px !important; height: 28px !important; font-size: 20px !important; line-height: 1 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">&times;</button>
         </div>
         <input type="text" id="cariUserChatInput" placeholder="Cari nama toko / user / area..." style="width:100%; padding:8px 12px; border-radius: 5px; border:1px solid var(--border-color); background:var(--input-bg, #fff); color:var(--text-main); margin-bottom:8px; font-size:12px;" oninput="filterListUserChat(this.value)">
-        <div id="listUserChatContainer" style="flex:1; overflow-y:auto;"></div>
+        <div id="listUserChatContainer" style="flex:1; height:100%; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:6px; box-sizing:border-box;"></div>
       </div>
 
       <!-- Broadcast Dialog Modal -->
@@ -1246,7 +1220,6 @@
 
       <!-- Chat Footer Input -->
       <div id="chatFooter" class="chatFooter">
-        <button type="button" id="btnBackAdmin" style="display:none; width:36px; height:36px; border-radius:50%; background:#64748b; color:#fff; border:none; cursor:pointer;" onclick="kembaliKeDaftarAdmin()">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
         <input type="text" id="chatPesan" placeholder="KETIK PESAN..." onkeydown="if((event.key==='Enter'||event.keyCode===13)&&!event.shiftKey){event.preventDefault();kirimPesanChat();}">
@@ -1289,15 +1262,12 @@
   <div style="display:none !important;" aria-hidden="true">
     <div id="adminHapusNotifWrap"></div>
     <div id="btnForceLogoutAllAkunWrapper"></div>
-    <div id="chatList"></div>
-    <div id="dashboardRecentTitle"></div>
+        <div id="dashboardRecentTitle"></div>
     
     <span id="icon"></span>
     <div id="modalPilihanCetakPdf"></div>
-    <div id="pdfPrintChoiceModal"></div>
-    <input type="checkbox" id="rememberLogin" checked>
-    <span id="unreadBadge"></span>
-  </div>
+        <input type="checkbox" id="rememberLogin" checked>
+      </div>
 
 <!-- Stray bottom buttons removed -->
 
@@ -1562,8 +1532,7 @@
   </div>
 
   <!-- RESTORED PDF PRINT & MODEL CONTAINERS -->
-  <div id="pdfDocumentContent" style="display: none !important;"></div>
-  <div id="pdfPrintChoiceModal" style="display: none !important;"></div>
+    <div id="pdfPrintChoiceModal" style="display: none !important;"></div>
   <div id="popupPdfModelsModal" class="popupOverlay" style="display: none;">
     <div class="popupBox">
       <div class="modalHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important;">
@@ -1832,7 +1801,7 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
 
 
 <!-- RESTORED ALL SUB-MODALS AND AUXILIARY CONTAINERS -->
-<div id="editStatusPartItemsContainer" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+<div id="editStatusPartItemsContainer_1" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
           <!-- Item list dynamically injected -->
         </div>
 
@@ -1933,7 +1902,7 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
     </div>
   </div>
 
-<div id="pinHapusLokalError" style="display: none; color: #ef4444; font-size: 11.5px; font-weight: 700; margin-bottom: 10px;">
+<div id="pinHapusLokalError_1" style="display: none; color: #ef4444; font-size: 11.5px; font-weight: 700; margin-bottom: 10px;">
           PASSWORD KEAMANAN SALAH! (HARUS 6 DIGIT: 111111)
         </div>
 
@@ -2039,7 +2008,7 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
           <div class="ttdInfo" style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 2mm; line-height: 1.4;">GAMBAR TTD DI CANVAS ATAU AMBIL FOTO TTD KERTAS:</div>
 
           <div style="position: relative; width: 100%; box-sizing: border-box; overflow: hidden; margin-bottom: 2mm;">
-            <canvas id="canvasTTD" style="width: 100% !important; max-width: 100% !important; height: 220px !important; border: 2px dashed var(--primary) !important; border-radius: 6px !important; background: #ffffff !important; display: block !important; box-sizing: border-box !important; margin: 0 auto !important; touch-action: none;"></canvas>
+            <canvas id="canvasTTD" style="width: 100% !important; max-width: 100% !important; max-width: 450px !important; height: 180px !important; border: 2px dashed var(--primary) !important; border-radius: 6px !important; background: #ffffff !important; display: block !important; box-sizing: border-box !important; margin: 0 auto !important; touch-action: none;"></canvas>
 
             <button type="button" onclick="pilihFotoTTD()" title="AMBIL / UPLOAD FOTO TTD DARI KAMERA/KERTAS" style="position: absolute; right: 10px; top: 10px; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none; border-radius: 5px; padding: 6px 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 10; transition: transform 0.2s;">
               <span class="material-symbols-rounded" style="font-size: 17px;">photo_camera</span> FOTO TTD

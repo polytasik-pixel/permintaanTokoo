@@ -6999,7 +6999,9 @@ window.loadRememberedCredentials = loadRememberedCredentials;
 function autoLogin() {
   if (!currentUser) {
     try {
-      const savedSession = appStorage.getItem(SESSION_KEY);
+      const savedSession = (typeof appStorage !== 'undefined' && appStorage) ? appStorage.getItem(SESSION_KEY) : null ||
+        (typeof localStorage !== 'undefined' ? localStorage.getItem(SESSION_KEY) : null) ||
+        (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(SESSION_KEY) : null);
       if (savedSession) {
         currentUser = JSON.parse(savedSession);
       }
@@ -7111,6 +7113,8 @@ async function prosesLogin() {
       }
 
       appStorage.setItem(SESSION_KEY, JSON.stringify(user));
+      try { localStorage.setItem(SESSION_KEY, JSON.stringify(user)); } catch(e) {}
+      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(user)); } catch(e) {}
       if (remember) {
         const credsStr = JSON.stringify({ username: u, password: p });
         appStorage.setItem(STORE_REMEMBER_LOGIN_CREDS_KEY, credsStr);
@@ -14603,114 +14607,197 @@ function tutupTTD() {
   }
 }
 
-let ttdDPR = 1;
-let ttdDisplayW = 500;
-let ttdDisplayH = 220;
+let ttdDPR = Math.max(window.devicePixelRatio || 1, 2);
+let ttdDisplayW = 450;
+let ttdDisplayH = 180;
 let ttdStrokePoints = [];
+let _currentLoadedTtdOriginal = '';
+
+function getTtdCanvases() {
+  const modalCanvas = document.getElementById('canvasTTDModal');
+  const popupCanvas = document.getElementById('canvasTTD');
+  const list = [];
+  if (modalCanvas) list.push(modalCanvas);
+  if (popupCanvas) list.push(popupCanvas);
+  return list;
+}
+window.getTtdCanvases = getTtdCanvases;
 
 function initCanvasTTD() {
-  canvasTTD = document.getElementById('canvasTTD');
-  if (!canvasTTD) return;
+  const canvases = getTtdCanvases();
+  if (!canvases.length) return;
 
-  const rect = canvasTTD.getBoundingClientRect();
-  ttdDisplayW = Math.round(rect.width) || canvasTTD.offsetWidth || 500;
-  ttdDisplayH = Math.round(rect.height) || canvasTTD.offsetHeight || 220;
+  const dpr = Math.max(window.devicePixelRatio || 1, 2);
+  ttdDPR = dpr;
 
-  // GUNAKAN RESOLUSI HIGH-DPI RETINA (MINIMAL 2X / 3X) AGAR HASIL TTD SUPER TAJAM & TIDAK PECAH
-  ttdDPR = Math.max(window.devicePixelRatio || 1, 2);
+  canvases.forEach(c => {
+    c.style.setProperty('touch-action', 'none', 'important');
+    c.style.setProperty('pointer-events', 'auto', 'important');
+    c.style.setProperty('user-select', 'none', 'important');
+    c.style.setProperty('-webkit-user-select', 'none', 'important');
+    c.style.setProperty('cursor', 'crosshair', 'important');
+    c.style.setProperty('background', '#ffffff', 'important');
 
-  canvasTTD.width = Math.round(ttdDisplayW * ttdDPR);
-  canvasTTD.height = Math.round(ttdDisplayH * ttdDPR);
-  canvasTTD.style.width = ttdDisplayW + 'px';
-  canvasTTD.style.height = ttdDisplayH + 'px';
+    const rect = c.getBoundingClientRect();
+    const displayW = Math.round(rect.width) || c.offsetWidth || c.clientWidth || (c.parentElement ? c.parentElement.clientWidth : 0) || 500;
+    const displayH = Math.round(rect.height) || c.offsetHeight || c.clientHeight || 220;
 
-  ctxTTD = canvasTTD.getContext('2d', { willReadFrequently: true });
-  ctxTTD.setTransform(1, 0, 0, 1, 0, 0);
-  ctxTTD.scale(ttdDPR, ttdDPR);
+    c.width = Math.round(displayW * dpr);
+    c.height = Math.round(displayH * dpr);
+    c.style.width = displayW + 'px';
+    c.style.height = displayH + 'px';
 
-  ctxTTD.imageSmoothingEnabled = true;
-  ctxTTD.imageSmoothingQuality = 'high';
-  ctxTTD.lineWidth = 2.8;
-  ctxTTD.lineCap = 'round';
-  ctxTTD.lineJoin = 'round';
-  ctxTTD.strokeStyle = '#0f172a';
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
 
-  ctxTTD.clearRect(0, 0, ttdDisplayW, ttdDisplayH);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a';
+    ctx.fillStyle = '#0f172a';
+    ctx.globalCompositeOperation = 'source-over';
 
-  // RESET SEMUA LISTENER SEBELUMNYA
-  canvasTTD.onmousedown = null;
-  canvasTTD.onmousemove = null;
-  canvasTTD.onmouseup = null;
-  canvasTTD.onmouseleave = null;
+    ctx.clearRect(0, 0, displayW, displayH);
 
-  // UNIFIED POINTER EVENTS (TOUCH, MOUSE, STYLUS DENGAN SUB-PIXEL PRECISION)
-  if (window.PointerEvent) {
-    canvasTTD.onpointerdown = handlePointerDownTTD;
-    canvasTTD.onpointermove = handlePointerMoveTTD;
-    canvasTTD.onpointerup = handlePointerUpTTD;
-    canvasTTD.onpointercancel = handlePointerUpTTD;
-    canvasTTD.onpointerleave = handlePointerUpTTD;
-  } else {
-    canvasTTD.onmousedown = handleMouseDownTTD;
-    canvasTTD.onmousemove = handleMouseMoveTTD;
-    canvasTTD.onmouseup = handlePointerUpTTD;
-    canvasTTD.onmouseleave = handlePointerUpTTD;
+    // RESET LISTENERS
+    c.onmousedown = null;
+    c.onmousemove = null;
+    c.onmouseup = null;
+    c.onmouseleave = null;
+    c.onpointerdown = null;
+    c.onpointermove = null;
+    c.onpointerup = null;
+    c.onpointercancel = null;
+    c.onpointerleave = null;
 
-    canvasTTD.addEventListener('touchstart', handleTouchStartTTD, { passive: false });
-    canvasTTD.addEventListener('touchmove', handleTouchMoveTTD, { passive: false });
-    canvasTTD.addEventListener('touchend', handlePointerUpTTD);
-    canvasTTD.addEventListener('touchcancel', handlePointerUpTTD);
+    if (window.PointerEvent) {
+      c.onpointerdown = handlePointerDownTTD;
+      c.onpointermove = handlePointerMoveTTD;
+      c.onpointerup = handlePointerUpTTD;
+      c.onpointercancel = handlePointerUpTTD;
+      c.onpointerleave = handlePointerUpTTD;
+    } else {
+      c.onmousedown = handleMouseDownTTD;
+      c.onmousemove = handleMouseMoveTTD;
+      c.onmouseup = handlePointerUpTTD;
+      c.onmouseleave = handlePointerUpTTD;
+    }
+
+    try {
+      c.removeEventListener('touchstart', handleTouchStartTTD);
+      c.removeEventListener('touchmove', handleTouchMoveTTD);
+      c.removeEventListener('touchend', handlePointerUpTTD);
+      c.removeEventListener('touchcancel', handlePointerUpTTD);
+    } catch(e) {}
+
+    c.addEventListener('touchstart', handleTouchStartTTD, { passive: false });
+    c.addEventListener('touchmove', handleTouchMoveTTD, { passive: false });
+    c.addEventListener('touchend', handlePointerUpTTD);
+    c.addEventListener('touchcancel', handlePointerUpTTD);
+  });
+
+  const active = canvases.find(c => {
+    const r = c.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && c.offsetParent !== null;
+  }) || canvases[0];
+
+  canvasTTD = active;
+  ctxTTD = active ? active.getContext('2d') : null;
+
+  if (!window._isTtdCanvasDirty && typeof loadTTD === 'function') {
+    loadTTD();
   }
 }
+window.initCanvasTTD = initCanvasTTD;
 
-function getCanvasPointFromEvent(e) {
-  if (!canvasTTD) return { x: 0, y: 0 };
-  const rect = canvasTTD.getBoundingClientRect();
-  let clientX, clientY;
+function getTargetCanvasAndCtx(e) {
+  let target = (e && e.target && typeof e.target.getBoundingClientRect === 'function') ? e.target : null;
+  if (!target || target.tagName !== 'CANVAS') {
+    const canvases = getTtdCanvases();
+    target = canvases.find(c => c.offsetParent !== null && c.getBoundingClientRect().width > 0) || canvasTTD || canvases[0];
+  }
+  if (!target) return { canvas: null, ctx: null };
+
+  let ctx = target.getContext('2d');
+  if (ctx) {
+    ctx.strokeStyle = '#0f172a'; // Navy/Black stroke
+    ctx.fillStyle = '#0f172a';
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  canvasTTD = target;
+  ctxTTD = ctx;
+  return { canvas: target, ctx: ctx };
+}
+
+function getCanvasPointFromEvent(e, targetCanvas) {
+  const c = targetCanvas || (e && e.target && e.target.tagName === 'CANVAS' ? e.target : null) || canvasTTD || document.getElementById('canvasTTDModal') || document.getElementById('canvasTTD');
+  if (!c || typeof c.getBoundingClientRect !== 'function') return { x: 0, y: 0 };
+
+  const rect = c.getBoundingClientRect();
+  let clientX = e.clientX;
+  let clientY = e.clientY;
 
   if (e.touches && e.touches.length > 0) {
     clientX = e.touches[0].clientX;
     clientY = e.touches[0].clientY;
-  } else {
-    clientX = e.clientX;
-    clientY = e.clientY;
+  } else if (e.changedTouches && e.changedTouches.length > 0) {
+    clientX = e.changedTouches[0].clientX;
+    clientY = e.changedTouches[0].clientY;
   }
 
   return {
-    x: clientX - rect.left,
-    y: clientY - rect.top
+    x: (clientX - rect.left),
+    y: (clientY - rect.top)
   };
 }
 
 function handlePointerDownTTD(e) {
   if (e.cancelable) e.preventDefault();
+  const { canvas, ctx } = getTargetCanvasAndCtx(e);
+  if (!canvas || !ctx) return;
+
   isDrawing = true;
   window._isTtdCanvasDirty = true;
   ttdStrokePoints = [];
 
   try {
-    if (e.pointerId && canvasTTD.setPointerCapture) {
-      canvasTTD.setPointerCapture(e.pointerId);
+    if (e.pointerId && canvas.setPointerCapture) {
+      canvas.setPointerCapture(e.pointerId);
     }
   } catch(err) {}
 
-  const pt = getCanvasPointFromEvent(e);
+  const pt = getCanvasPointFromEvent(e, canvas);
   lastX = pt.x;
   lastY = pt.y;
   ttdStrokePoints.push({ x: pt.x, y: pt.y });
 
-  ctxTTD.beginPath();
-  ctxTTD.arc(pt.x, pt.y, (ctxTTD.lineWidth || 2.8) / 2, 0, Math.PI * 2);
-  ctxTTD.fillStyle = ctxTTD.strokeStyle || '#0f172a';
-  ctxTTD.fill();
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(pt.x, pt.y, (ctx.lineWidth || 3.5) / 2, 0, Math.PI * 2);
+  ctx.fillStyle = '#0f172a';
+  ctx.fill();
+  ctx.restore();
 }
 
 function handlePointerMoveTTD(e) {
   if (!isDrawing) return;
   if (e.cancelable) e.preventDefault();
 
-  const pt = getCanvasPointFromEvent(e);
+  const { canvas, ctx } = getTargetCanvasAndCtx(e);
+  if (!canvas || !ctx) return;
+
+  const pt = getCanvasPointFromEvent(e, canvas);
   ttdStrokePoints.push({ x: pt.x, y: pt.y });
+
+  ctx.strokeStyle = '#0f172a';
+  ctx.fillStyle = '#0f172a';
+  ctx.lineWidth = 3.5;
 
   if (ttdStrokePoints.length >= 3) {
     const p0 = ttdStrokePoints[ttdStrokePoints.length - 3];
@@ -14720,17 +14807,17 @@ function handlePointerMoveTTD(e) {
     const mid1 = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
     const mid2 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
 
-    ctxTTD.beginPath();
-    ctxTTD.moveTo(mid1.x, mid1.y);
-    ctxTTD.quadraticCurveTo(p1.x, p1.y, mid2.x, mid2.y);
-    ctxTTD.stroke();
+    ctx.beginPath();
+    ctx.moveTo(mid1.x, mid1.y);
+    ctx.quadraticCurveTo(p1.x, p1.y, mid2.x, mid2.y);
+    ctx.stroke();
   } else if (ttdStrokePoints.length === 2) {
     const p0 = ttdStrokePoints[0];
     const p1 = ttdStrokePoints[1];
-    ctxTTD.beginPath();
-    ctxTTD.moveTo(p0.x, p0.y);
-    ctxTTD.lineTo(p1.x, p1.y);
-    ctxTTD.stroke();
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.stroke();
   }
 
   lastX = pt.x;
@@ -14742,7 +14829,7 @@ function handlePointerUpTTD(e) {
   isDrawing = false;
   ttdStrokePoints = [];
   try {
-    if (e && e.pointerId && canvasTTD.releasePointerCapture) {
+    if (e && e.pointerId && canvasTTD && canvasTTD.releasePointerCapture) {
       canvasTTD.releasePointerCapture(e.pointerId);
     }
   } catch(err) {}
@@ -14770,8 +14857,11 @@ function stopDraw() {
 }
 
 function pilihFotoTTD() {
-  const input = document.getElementById('fotoTTDInput');
-  if (input) input.click();
+  const input = document.getElementById('fotoTTDInputModal') || document.getElementById('fotoTTDInput');
+  if (input) {
+    input.value = '';
+    input.click();
+  }
 }
 window.pilihFotoTTD = pilihFotoTTD;
 
@@ -14789,7 +14879,7 @@ async function prosesFotoKeTTD(event) {
       } catch(e) { img = null; }
     }
     if (!img) {
-const dataUrl = await new Promise(r => {
+      const dataUrl = await new Promise(r => {
         const reader = new FileReader();
         reader.onload = ev => r(ev.target.result);
         reader.onerror = () => r('');
@@ -14803,17 +14893,11 @@ const dataUrl = await new Promise(r => {
       }
       img = new Image();
       img.src = dataUrl;
-await new Promise(r => { img.onload = r; img.onerror = r; });
+      await new Promise(r => { img.onload = r; img.onerror = r; });
     }
 
-    if (!canvasTTD || !ctxTTD) {
-      if (typeof hideLoading === 'function') hideLoading();
-      event.target.value = '';
-      return;
-    }
-
-    const cWidth = canvasTTD.width || Math.round(ttdDisplayW * ttdDPR);
-    const cHeight = canvasTTD.height || Math.round(ttdDisplayH * ttdDPR);
+    const cWidth = 450 * (ttdDPR || 2);
+    const cHeight = 180 * (ttdDPR || 2);
 
     let sourceElement = img;
     let sWidth = img.width;
@@ -14824,131 +14908,143 @@ await new Promise(r => { img.onload = r; img.onerror = r; });
     tempCanvas.width = cWidth;
     tempCanvas.height = cHeight;
 
-        let drawWidth = sWidth;
-        let drawHeight = sHeight;
-        const scale = Math.min(cWidth / drawWidth, cHeight / drawHeight) * 0.86;
+    let drawWidth = sWidth;
+    let drawHeight = sHeight;
+    const scale = Math.min(cWidth / drawWidth, cHeight / drawHeight) * 0.86;
 
-        drawWidth = Math.round(drawWidth * scale);
-        drawHeight = Math.round(drawHeight * scale);
+    drawWidth = Math.round(drawWidth * scale);
+    drawHeight = Math.round(drawHeight * scale);
 
-        const offsetX = Math.round((cWidth - drawWidth) / 2);
-        const offsetY = Math.round((cHeight - drawHeight) / 2);
+    const offsetX = Math.round((cWidth - drawWidth) / 2);
+    const offsetY = Math.round((cHeight - drawHeight) / 2);
 
-        // Isi latar putih murni pada kanvas sementara
-        tCtx.fillStyle = '#ffffff';
-        tCtx.fillRect(0, 0, cWidth, cHeight);
-        tCtx.imageSmoothingEnabled = true;
-        tCtx.imageSmoothingQuality = 'high';
-        tCtx.drawImage(sourceElement, offsetX, offsetY, drawWidth, drawHeight);
+    tCtx.fillStyle = '#ffffff';
+    tCtx.fillRect(0, 0, cWidth, cHeight);
+    tCtx.imageSmoothingEnabled = true;
+    tCtx.imageSmoothingQuality = 'high';
+    tCtx.drawImage(sourceElement, offsetX, offsetY, drawWidth, drawHeight);
 
-        const imgData = tCtx.getImageData(0, 0, cWidth, cHeight);
-        const data = imgData.data;
+    const imgData = tCtx.getImageData(0, 0, cWidth, cHeight);
+    const data = imgData.data;
 
-        // Analisis sampel kecerahan kertas
-        const lums = [];
-        for (let y = offsetY; y < offsetY + drawHeight; y++) {
-          for (let x = offsetX; x < offsetX + drawWidth; x++) {
-            const idx = (y * cWidth + x) * 4;
-            const r = data[idx];
-            const g = data[idx + 1];
-            const b = data[idx + 2];
-            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-            lums.push(lum);
-          }
+    const lums = [];
+    for (let y = offsetY; y < offsetY + drawHeight; y++) {
+      for (let x = offsetX; x < offsetX + drawWidth; x++) {
+        const idx = (y * cWidth + x) * 4;
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        lums.push(lum);
+      }
+    }
+
+    lums.sort((a, b) => a - b);
+    const p85Idx = Math.floor(lums.length * 0.85);
+    const paperLuminance = lums[p85Idx] || 220;
+
+    const paperCutoff = Math.max(120, paperLuminance - 35);
+    const inkCutoff = Math.max(50, paperCutoff - 30);
+    const borderPadding = 8;
+
+    const alphaMap = new Uint8Array(cWidth * cHeight);
+
+    for (let y = 0; y < cHeight; y++) {
+      for (let x = 0; x < cWidth; x++) {
+        if (
+          x < offsetX + borderPadding ||
+          x >= offsetX + drawWidth - borderPadding ||
+          y < offsetY + borderPadding ||
+          y >= offsetY + drawHeight - borderPadding
+        ) {
+          continue;
         }
 
-        lums.sort((a, b) => a - b);
-        const p85Idx = Math.floor(lums.length * 0.85);
-        const paperLuminance = lums[p85Idx] || 220;
+        const i = (y * cWidth + x) * 4;
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
 
-        const paperCutoff = Math.max(120, paperLuminance - 35);
-        const inkCutoff = Math.max(50, paperCutoff - 30);
-        const borderPadding = 8;
+        if (lum < paperCutoff) {
+          if (lum <= inkCutoff) {
+            alphaMap[y * cWidth + x] = 255;
+          } else {
+            const norm = (paperCutoff - lum) / (paperCutoff - inkCutoff);
+            alphaMap[y * cWidth + x] = Math.min(255, Math.max(130, Math.round(norm * 255)));
+          }
+        }
+      }
+    }
 
-        // Map Alpha awal (0-255)
-        const alphaMap = new Uint8Array(cWidth * cHeight);
+    const dilatedMap = new Uint8Array(cWidth * cHeight);
 
-        for (let y = 0; y < cHeight; y++) {
-          for (let x = 0; x < cWidth; x++) {
-            if (
-              x < offsetX + borderPadding ||
-              x >= offsetX + drawWidth - borderPadding ||
-              y < offsetY + borderPadding ||
-              y >= offsetY + drawHeight - borderPadding
-            ) {
-              continue;
-            }
-
-            const i = (y * cWidth + x) * 4;
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-
-            if (lum < paperCutoff) {
-              if (lum <= inkCutoff) {
-                alphaMap[y * cWidth + x] = 255;
-              } else {
-                const norm = (paperCutoff - lum) / (paperCutoff - inkCutoff);
-                alphaMap[y * cWidth + x] = Math.min(255, Math.max(130, Math.round(norm * 255)));
+    for (let y = 0; y < cHeight; y++) {
+      for (let x = 0; x < cWidth; x++) {
+        const a = alphaMap[y * cWidth + x];
+        if (a > 0) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const ny = y + dy;
+            if (ny < 0 || ny >= cHeight) continue;
+            for (let dx = -1; dx <= 1; dx++) {
+              const nx = x + dx;
+              if (nx < 0 || nx >= cWidth) continue;
+              const nIdx = ny * cWidth + nx;
+              if (a > dilatedMap[nIdx]) {
+                dilatedMap[nIdx] = a;
               }
             }
           }
         }
+      }
+    }
 
-        // 2. PENEBATAN & PELEBARAN GORESAN TTD (DILATION / STROKE BOLDENING)
-        const dilatedMap = new Uint8Array(cWidth * cHeight);
+    const procCanvas = document.createElement('canvas');
+    procCanvas.width = cWidth;
+    procCanvas.height = cHeight;
+    const procCtx = procCanvas.getContext('2d');
+    const outputImgData = procCtx.createImageData(cWidth, cHeight);
+    const outData = outputImgData.data;
 
-        for (let y = 0; y < cHeight; y++) {
-          for (let x = 0; x < cWidth; x++) {
-            const a = alphaMap[y * cWidth + x];
-            if (a > 0) {
-              // Spreading ke 3x3 piksel tetangga untuk penebalan dan goresan lebih lebar
-              for (let dy = -1; dy <= 1; dy++) {
-                const ny = y + dy;
-                if (ny < 0 || ny >= cHeight) continue;
-                for (let dx = -1; dx <= 1; dx++) {
-                  const nx = x + dx;
-                  if (nx < 0 || nx >= cWidth) continue;
-                  const nIdx = ny * cWidth + nx;
-                  if (a > dilatedMap[nIdx]) {
-                    dilatedMap[nIdx] = a;
-                  }
-                }
-              }
-            }
-          }
+    for (let y = 0; y < cHeight; y++) {
+      for (let x = 0; x < cWidth; x++) {
+        const i = (y * cWidth + x) * 4;
+        const a = dilatedMap[y * cWidth + x];
+        if (a > 0) {
+          outData[i] = 15;     // R (Pekat Navy)
+          outData[i + 1] = 23; // G
+          outData[i + 2] = 42; // B
+          outData[i + 3] = a;  // Alpha
+        } else {
+          outData[i] = 0;
+          outData[i + 1] = 0;
+          outData[i + 2] = 0;
+          outData[i + 3] = 0;
         }
+      }
+    }
 
-        const outputImgData = ctxTTD.createImageData(cWidth, cHeight);
-        const outData = outputImgData.data;
+    procCtx.putImageData(outputImgData, 0, 0);
 
-        for (let y = 0; y < cHeight; y++) {
-          for (let x = 0; x < cWidth; x++) {
-            const i = (y * cWidth + x) * 4;
-            const a = dilatedMap[y * cWidth + x];
-            if (a > 0) {
-              outData[i] = 15;     // R (Pekat Navy Tinta)
-              outData[i + 1] = 23; // G
-              outData[i + 2] = 42; // B
-              outData[i + 3] = a;  // Alpha tebal
-            } else {
-              outData[i] = 0;
-              outData[i + 1] = 0;
-              outData[i + 2] = 0;
-              outData[i + 3] = 0;
-            }
-          }
-        }
+    const canvases = getTtdCanvases();
+    canvases.forEach(c => {
+      const cCtx = c.getContext('2d');
+      if (cCtx) {
+        cCtx.save();
+        cCtx.setTransform(1, 0, 0, 1, 0, 0);
+        cCtx.clearRect(0, 0, c.width, c.height);
+        cCtx.restore();
+        cCtx.imageSmoothingEnabled = true;
+        cCtx.imageSmoothingQuality = 'high';
+        const dispW = c.style.width ? parseFloat(c.style.width) : (c.width / (ttdDPR || 2));
+        const dispH = c.style.height ? parseFloat(c.style.height) : (c.height / (ttdDPR || 2));
+        cCtx.drawImage(procCanvas, 0, 0, dispW || 450, dispH || 180);
+      }
+    });
 
-        ctxTTD.save();
-        ctxTTD.setTransform(1, 0, 0, 1, 0, 0);
-        ctxTTD.clearRect(0, 0, cWidth, cHeight);
-        ctxTTD.putImageData(outputImgData, 0, 0);
-        ctxTTD.restore();
-
-        if (typeof hideLoading === 'function') hideLoading();
-  } catch (err) {
+    window._isTtdCanvasDirty = true;
+    if (typeof hideLoading === 'function') hideLoading();
+      } catch (err) {
     if (typeof hideLoading === 'function') hideLoading();
     console.error('Proses foto TTD error:', err);
     showNotif('TERJADI KESALAHAN SAAT MEMPROSES FOTO TTD!', 'error');
@@ -14961,24 +15057,41 @@ window.previewFotoTTD = prosesFotoKeTTD;
 function previewFotoTTD(e) { return prosesFotoKeTTD(e); }
 
 function hapusTTD() {
-  if (ctxTTD && canvasTTD) {
-    ctxTTD.save();
-    ctxTTD.setTransform(1, 0, 0, 1, 0, 0);
-    ctxTTD.clearRect(0, 0, canvasTTD.width, canvasTTD.height);
-    ctxTTD.restore();
-  }
+  const canvases = getTtdCanvases();
+  canvases.forEach(c => {
+    const cCtx = c.getContext('2d');
+    if (cCtx) {
+      cCtx.save();
+      cCtx.setTransform(1, 0, 0, 1, 0, 0);
+      cCtx.clearRect(0, 0, c.width, c.height);
+      cCtx.restore();
+    }
+  });
   _currentLoadedTtdOriginal = '';
+  window._isTtdCanvasDirty = false;
 }
 
-let _currentLoadedTtdOriginal = '';
-
 function cropAndCenterCanvasSignature(srcCanvas) {
+  const canvases = getTtdCanvases();
+  if (!srcCanvas) {
+    srcCanvas = canvases.find(c => {
+      try {
+        const ctx = c.getContext('2d');
+        const data = ctx.getImageData(0, 0, c.width, c.height).data;
+        for (let i = 3; i < data.length; i += 4) {
+          if (data[i] > 15) return true;
+        }
+      } catch(e) {}
+      return false;
+    }) || canvases[0];
+  }
   if (!srcCanvas) return '';
+
   try {
     const ctx = srcCanvas.getContext('2d');
     const w = srcCanvas.width;
     const h = srcCanvas.height;
-    
+
     let imgData;
     try {
       imgData = ctx.getImageData(0, 0, w, h);
@@ -15052,30 +15165,39 @@ window.cropAndCenterCanvasSignature = cropAndCenterCanvasSignature;
 async function simpanTTD() {
   showConfirm('SIMPAN TANDA TANGAN DIGITAL INI?', async function() {
     var _asyncTask = async function() {
-      if (!canvasTTD) return;
-      showLoading('MENGUNGGAH TTD DIGITAL KE STORAGE...');
       try {
-        const rawPng = cropAndCenterCanvasSignature(canvasTTD);
-        if (!rawPng || !rawPng.startsWith('data:image/')) {
-          hideLoading();
-          showNotif('TTD KOSONG ATAU TIDAK VALID!', 'warning');
+        if (typeof showLoading === 'function') showLoading('MENYIMPAN TANDA TANGAN DIGITAL...');
+
+        const canvases = getTtdCanvases();
+        let activeCanvas = canvases.find(c => {
+          try {
+            const ctx = c.getContext('2d');
+            const data = ctx.getImageData(0, 0, c.width, c.height).data;
+            for (let i = 3; i < data.length; i += 4) {
+              if (data[i] > 15) return true;
+            }
+          } catch(e) {}
+          return false;
+        }) || canvasTTD || canvases[0];
+
+        if (!activeCanvas) return;
+
+        const rawPng = cropAndCenterCanvasSignature(activeCanvas);
+        if (!rawPng || rawPng.length < 50) {
+          if (typeof hideLoading === 'function') hideLoading();
+          showNotif('TANDA TANGAN MASIH KOSONG!', 'warning');
           return;
         }
 
-        // Unggah gambar ke Supabase Storage untuk mendapatkan URL publik (HTTP/HTTPS)
-        const ttdUrl = await uploadSignatureDataUrlToSupabaseStorage(
-          rawPng, 
-          `TTD_${(currentUser && currentUser.username ? currentUser.username : 'USER')}_${Date.now()}.png`
-        );
-        
-        // WAJIB FORMAT URL HTTP/HTTPS (TIDAK BOLEH FORMAT BASE64)
+        const ttdUrl = await uploadSignatureDataUrlToSupabaseStorage(rawPng, `TTD_${currentUser ? (currentUser.username || currentUser.id) : 'USER'}_${Date.now()}.png`);
+
         if (!ttdUrl || typeof ttdUrl !== 'string' || (!ttdUrl.startsWith('http://') && !ttdUrl.startsWith('https://'))) {
           hideLoading();
           showNotif('GAGAL MENGUNGGAH TTD: HASIL HARUS FORMAT URL HTTP/HTTPS (BUKAN BASE64)!', 'error');
           return;
         }
 
-        // SIMPAN TTD HANYA PADA OBJEK USER TERKAIT (DI MENU/DATABASE USERS)
+        // SIMPAN TTD HANYA PADA OBJEK USER TERKAIT
         if (currentUser) {
           currentUser.ttd = ttdUrl;
         }
@@ -15096,13 +15218,13 @@ async function simpanTTD() {
           try {
             const rtdb = typeof getDbRealtime === 'function' ? getDbRealtime() : null;
             if (rtdb && currentUser) {
-              const keyUser = String(currentUser.username || currentUser.id).replace(/[\/\.#$\[\]]/g, '_');
+              const keyUser = String(currentUser.username || currentUser.id).replace(/[/.#$\[\]]/g, '_');
               rtdb.ref(`users/${keyUser}/ttd`).set(ttdUrl).catch(() => {});
               rtdb.ref(`user_signatures/${keyUser}`).set(ttdUrl).catch(() => {});
             }
             const fs = typeof getDbFirestore === 'function' ? getDbFirestore() : null;
             if (fs && currentUser) {
-              const keyUser = String(currentUser.username || currentUser.id).replace(/[\/\.#$\[\]]/g, '_');
+              const keyUser = String(currentUser.username || currentUser.id).replace(/[/.#$\[\]]/g, '_');
               fs.collection('users').doc(keyUser).set({ ttd: ttdUrl, updatedAt: new Date().toISOString() }, { merge: true }).catch(() => {});
               fs.collection('user_signatures').doc(keyUser).set({ ttd: ttdUrl, updatedAt: new Date().toISOString() }, { merge: true }).catch(() => {});
             }
@@ -15112,6 +15234,8 @@ async function simpanTTD() {
         if (currentUser) {
           if (currentUser.id) appStorage.setItem(`LOCAL_TTD_${currentUser.id}`, ttdUrl);
           if (currentUser.username) appStorage.setItem(`LOCAL_TTD_${currentUser.username}`, ttdUrl);
+          const userKey = currentUser.id || currentUser.username;
+          if (userKey && rawPng) appStorage.setItem(`LOCAL_TTD_DATAURL_${userKey}`, rawPng);
         }
 
         try {
@@ -15144,8 +15268,9 @@ async function simpanTTD() {
         if (typeof pushCentralCloudDB === 'function') pushCentralCloudDB();
 
         hideLoading();
-        tutupTTD();
-        showNotif('TANDA TANGAN DIGITAL BERHASIL!', 'success');
+        if (typeof tutupTTD === 'function') tutupTTD();
+        if (typeof loadTTD === 'function') loadTTD();
+        showNotif('TANDA TANGAN DIGITAL BERHASIL DISIMPAN!', 'success');
       } catch(err) {
         hideLoading();
         console.error('[SIMPAN TTD ERROR]:', err);
@@ -15155,67 +15280,122 @@ async function simpanTTD() {
     _asyncTask();
   });
 }
+window.simpanTTD = simpanTTD;
 
 async function loadTTD() {
   if (!currentUser) return;
-  
-  const allUsers = getUsersFromDB();
+
+  const userKey = currentUser.id || currentUser.username;
+  const cachedDataUrl = userKey ? (appStorage.getItem(`LOCAL_TTD_DATAURL_${userKey}`) || localStorage.getItem(`LOCAL_TTD_DATAURL_${userKey}`)) : null;
+
+  const allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
   const freshUser = allUsers.find(u => u && (
     (u.id && String(u.id) === String(currentUser.id)) ||
     (u.username && String(u.username).toUpperCase() === String(currentUser.username).toUpperCase())
   ));
-  
-  const data = (currentUser && isValidSig(currentUser.ttd)) 
-    ? currentUser.ttd 
+
+  const data = (currentUser && isValidSig(currentUser.ttd))
+    ? currentUser.ttd
     : (freshUser && isValidSig(freshUser.ttd) ? freshUser.ttd : (
         localStorage.getItem(`LOCAL_TTD_${currentUser.id}`) || localStorage.getItem(`LOCAL_TTD_${currentUser.username}`)
       ));
-  
+
   if (data) {
     _currentLoadedTtdOriginal = data;
   }
 
-  if (data && ctxTTD && canvasTTD) {
-    try {
-      let finalSrc = data;
-      // Jika data adalah URL eksternal (http/https), konversi ke base64 DataURL via fetch + blob agar canvas TIDAK TAINTED
+  const canvases = getTtdCanvases();
+  if (!canvases.length) return;
+
+  const drawImgToCanvases = (imgObj) => {
+    canvases.forEach(c => {
+      const cCtx = c.getContext('2d');
+      if (cCtx) {
+        cCtx.save();
+        cCtx.setTransform(1, 0, 0, 1, 0, 0);
+        cCtx.clearRect(0, 0, c.width, c.height);
+        cCtx.restore();
+        cCtx.imageSmoothingEnabled = true;
+        cCtx.imageSmoothingQuality = 'high';
+        const dispW = c.style.width ? parseFloat(c.style.width) : (c.width / (ttdDPR || 2));
+        const dispH = c.style.height ? parseFloat(c.style.height) : (c.height / (ttdDPR || 2));
+        cCtx.drawImage(imgObj, 0, 0, dispW || 450, dispH || 180);
+      }
+    });
+  };
+
+  // 1. INSTANT RENDER FROM LOCAL DATAURL CACHE (0ms delay)
+  if (cachedDataUrl && cachedDataUrl.startsWith('data:image/')) {
+    const quickImg = new Image();
+    quickImg.onload = () => drawImgToCanvases(quickImg);
+    quickImg.src = cachedDataUrl;
+  }
+
+  // 2. DIRECT INSTANT IMAGE LOAD (without blocking fetch)
+  if (data) {
+    if (data.startsWith('data:image/')) {
+      const directImg = new Image();
+      directImg.onload = () => drawImgToCanvases(directImg);
+      directImg.src = data;
+      if (userKey) {
+        appStorage.setItem(`LOCAL_TTD_DATAURL_${userKey}`, data);
+        try { localStorage.setItem(`LOCAL_TTD_DATAURL_${userKey}`, data); } catch(e) {}
+      }
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      drawImgToCanvases(img);
+      // Cache DataURL for instant 0ms render next time
+      try {
+        const tempC = document.createElement('canvas');
+        tempC.width = img.width || 450;
+        tempC.height = img.height || 180;
+        const tempCtx = tempC.getContext('2d');
+        tempCtx.drawImage(img, 0, 0);
+        const dataUrl = tempC.toDataURL('image/png');
+        if (dataUrl && userKey) {
+          appStorage.setItem(`LOCAL_TTD_DATAURL_${userKey}`, dataUrl);
+          try { localStorage.setItem(`LOCAL_TTD_DATAURL_${userKey}`, dataUrl); } catch(e) {}
+        }
+      } catch(e) {}
+    };
+
+    // If direct load fails (e.g. CORS), fallback to fetch blob conversion
+    img.onerror = async () => {
       if (typeof data === 'string' && (data.startsWith('http://') || data.startsWith('https://'))) {
         try {
           const res = await fetch(data, { mode: 'cors' });
           if (res.ok) {
             const blob = await res.blob();
-            finalSrc = await new Promise((resolve) => {
+            const fallbackDataUrl = await new Promise((resolve) => {
               const r = new FileReader();
               r.onloadend = () => resolve(r.result);
               r.readAsDataURL(blob);
             });
+            if (fallbackDataUrl) {
+              const fallbackImg = new Image();
+              fallbackImg.onload = () => {
+                drawImgToCanvases(fallbackImg);
+                if (userKey) {
+                  appStorage.setItem(`LOCAL_TTD_DATAURL_${userKey}`, fallbackDataUrl);
+                  try { localStorage.setItem(`LOCAL_TTD_DATAURL_${userKey}`, fallbackDataUrl); } catch(e) {}
+                }
+              };
+              fallbackImg.src = fallbackDataUrl;
+            }
           }
-        } catch(fetchErr) {
-          console.warn('[LOAD TTD FETCH CORS FALLBACK]:', fetchErr);
-        }
+        } catch(e) {}
       }
+    };
 
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        if (ctxTTD && canvasTTD) {
-          ctxTTD.save();
-          ctxTTD.setTransform(1, 0, 0, 1, 0, 0);
-          ctxTTD.clearRect(0, 0, canvasTTD.width, canvasTTD.height);
-          ctxTTD.restore();
-          ctxTTD.imageSmoothingEnabled = true;
-          ctxTTD.imageSmoothingQuality = 'high';
-          const dispW = ttdDisplayW || 500;
-          const dispH = ttdDisplayH || 220;
-          ctxTTD.drawImage(img, 0, 0, dispW, dispH);
-        }
-      };
-      img.src = finalSrc;
-    } catch(err) {
-      console.warn('[LOAD TTD ERROR]:', err);
-    }
+    img.src = data;
   }
 }
+window.loadTTD = loadTTD;
+
 
 let activeChatRefreshInterval = null;
 
@@ -15354,23 +15534,29 @@ async function bukaBantuan() {
     popup.classList.add('show');
   }
 
+  const chatList = document.getElementById('chatList');
+  const chatUserPicker = document.getElementById('chatUserPicker');
+  const chatBody = document.getElementById('chatBody');
+  const chatFooter = document.getElementById('chatFooter');
+  const btnBackAdmin = document.getElementById('btnBackAdmin');
+
   if (isAdminChat) {
-    // ADMIN / SERVICE SUPPORT VIEW
+    // ADMIN / SERVICE SUPPORT VIEW: Hanya tampilkan chatList
     document.getElementById('chatHeaderTitle').textContent = 'PUSAT SUPPORT ADMIN / SERVICE';
-    document.getElementById('chatList').style.display = 'block';
-    document.getElementById('chatBody').style.display = 'none';
-    document.getElementById('chatFooter').style.display = 'none';
-    const btnBackAdmin = document.getElementById('btnBackAdmin');
-    if (btnBackAdmin) btnBackAdmin.style.display = 'none';
+    if (chatList) chatList.style.setProperty('display', 'block', 'important');
+    if (chatUserPicker) chatUserPicker.style.setProperty('display', 'none', 'important');
+    if (chatBody) chatBody.style.setProperty('display', 'none', 'important');
+    if (chatFooter) chatFooter.style.setProperty('display', 'none', 'important');
+    if (btnBackAdmin) btnBackAdmin.style.setProperty('display', 'none', 'important');
     loadDaftarChatAdmin();
   } else {
-    // USER / TOKO VIEW
+    // USER / TOKO VIEW: Hanya tampilkan chatBody & chatFooter
     document.getElementById('chatHeaderTitle').textContent = 'ADMIN SUPPORT';
-    document.getElementById('chatList').style.display = 'none';
-    document.getElementById('chatBody').style.display = 'flex';
-    document.getElementById('chatFooter').style.display = 'flex';
-    const btnBackAdmin = document.getElementById('btnBackAdmin');
-    if (btnBackAdmin) btnBackAdmin.style.display = 'none';
+    if (chatList) chatList.style.setProperty('display', 'none', 'important');
+    if (chatUserPicker) chatUserPicker.style.setProperty('display', 'none', 'important');
+    if (chatBody) chatBody.style.setProperty('display', 'flex', 'important');
+    if (chatFooter) chatFooter.style.setProperty('display', 'flex', 'important');
+    if (btnBackAdmin) btnBackAdmin.style.setProperty('display', 'none', 'important');
     loadChatUser();
   }
 
@@ -15379,18 +15565,6 @@ async function bukaBantuan() {
 window.bukaBantuan = bukaBantuan;
 
 function tutupBantuan(forceClose = false) {
-  const chatBody = document.getElementById('chatBody');
-  const isAdm = typeof isServiceTSMUser === 'function' ? isServiceTSMUser() : false;
-  const isChatBodyOpen = chatBody && (chatBody.style.display === 'block' || chatBody.style.display === 'flex');
-
-  // JIKA ADMIN/SERVICE SEDANG DI DALAM RUANG CHAT CONVERSATION (DAN BUKAN FORCE CLOSE): KEMBALI KE DAFTAR CHAT DULU!
-  if (!forceClose && isAdm && isChatBodyOpen) {
-    if (typeof kembaliKeDaftarAdmin === 'function') {
-      kembaliKeDaftarAdmin();
-      return;
-    }
-  }
-
   stopActiveChatRefresh();
 
   const popup = document.getElementById('popupBantuan');
@@ -15485,7 +15659,7 @@ function loadDaftarChatAdmin() {
     const hasUnread = (Number(r.unreadAdmin) || 0) > 0 || isRoomUnreadInChats;
     const bgNormal = hasUnread ? 'rgba(2, 132, 199, 0.18)' : 'transparent';
     const borderStyle = hasUnread ? 'border:2px solid #0284c7 !important; border-left:7px solid #0284c7 !important;' : 'border-bottom:1px solid var(--border-color); border-left:7px solid transparent;';
-    const unreadBadgeHtml = hasUnread ? `<span style="background:#ef4444; color:#ffffff; border-radius:10px; padding:3px 10px; font-size:11px; font-weight:900; box-shadow:0 2px 6px rgba(239,68,68,0.5); letter-spacing:0.4px;">PESAN BARU</span>` : '';
+    const unreadBadgeHtml = hasUnread ? `<span style="background:#ef4444; color:#ffffff; border-radius:5px !important; padding:3px 10px; font-size:11px; font-weight:900; box-shadow:0 2px 6px rgba(239,68,68,0.5); letter-spacing:0.4px;">PESAN BARU</span>` : '';
     
     item.style.cssText = `padding:10px 12px; ${borderStyle} background:${bgNormal} !important; cursor:pointer; transition:all 0.2s ease; display:flex; justify-content:space-between; align-items:center; border-radius:8px; margin-bottom:2.5mm; box-sizing:border-box;`;
     item.onmouseover = () => item.style.background = hasUnread ? 'rgba(2, 132, 199, 0.28) !important' : 'rgba(59,130,246,0.08) !important';
@@ -15522,10 +15696,14 @@ function bukaModalPilihUserChat() {
   }
   const chatList = document.getElementById('chatList');
   const chatUserPicker = document.getElementById('chatUserPicker');
+  const chatBody = document.getElementById('chatBody');
+  const chatFooter = document.getElementById('chatFooter');
   const searchInput = document.getElementById('cariUserChatInput');
 
-  if (chatList) chatList.style.display = 'none';
-  if (chatUserPicker) chatUserPicker.style.display = 'flex';
+  if (chatList) chatList.style.setProperty('display', 'none', 'important');
+  if (chatBody) chatBody.style.setProperty('display', 'none', 'important');
+  if (chatFooter) chatFooter.style.setProperty('display', 'none', 'important');
+  if (chatUserPicker) chatUserPicker.style.setProperty('display', 'flex', 'important');
   if (searchInput) {
     searchInput.value = '';
     setTimeout(() => searchInput.focus(), 100);
@@ -15538,9 +15716,13 @@ window.bukaModalPilihUserChat = bukaModalPilihUserChat;
 function tutupUserPickerChat() {
   const chatList = document.getElementById('chatList');
   const chatUserPicker = document.getElementById('chatUserPicker');
+  const chatBody = document.getElementById('chatBody');
+  const chatFooter = document.getElementById('chatFooter');
 
-  if (chatUserPicker) chatUserPicker.style.display = 'none';
-  if (chatList) chatList.style.display = 'block';
+  if (chatUserPicker) chatUserPicker.style.setProperty('display', 'none', 'important');
+  if (chatBody) chatBody.style.setProperty('display', 'none', 'important');
+  if (chatFooter) chatFooter.style.setProperty('display', 'none', 'important');
+  if (chatList) chatList.style.setProperty('display', 'block', 'important');
 }
 window.tutupUserPickerChat = tutupUserPickerChat;
 
@@ -15759,11 +15941,11 @@ function bukaRoomAdmin(room, user, fullName, area) {
   const btnBack = document.getElementById('btnBackAdmin');
   const headerTitle = document.getElementById('chatHeaderTitle');
 
-  if (chatList) chatList.style.display = 'none';
-  if (chatUserPicker) chatUserPicker.style.display = 'none';
-  if (chatBody) chatBody.style.display = 'block';
-  if (chatFooter) chatFooter.style.display = 'flex';
-  if (btnBack) btnBack.style.display = 'inline-block';
+  if (chatList) chatList.style.setProperty('display', 'none', 'important');
+  if (chatUserPicker) chatUserPicker.style.setProperty('display', 'none', 'important');
+  if (chatBody) chatBody.style.setProperty('display', 'flex', 'important');
+  if (chatFooter) chatFooter.style.setProperty('display', 'flex', 'important');
+  if (btnBack) btnBack.style.setProperty('display', 'inline-block', 'important');
 
   const displayTitle = fullName ? `${fullName} (${area || 'TSM'})` : user;
   if (headerTitle) headerTitle.innerText = 'CHAT: ' + displayTitle;
@@ -16005,12 +16187,12 @@ function kembaliKeDaftarAdmin() {
   const btnBack = document.getElementById('btnBackAdmin');
   const headerTitle = document.getElementById('chatHeaderTitle');
 
-  if (chatUserPicker) chatUserPicker.style.display = 'none';
-  if (chatBody) chatBody.style.display = 'none';
-  if (chatFooter) chatFooter.style.display = 'none';
-  if (btnBack) btnBack.style.display = 'none';
-  if (chatList) chatList.style.display = 'block';
-  if (headerTitle) headerTitle.innerText = 'CHAT MASUK - SERVICE TSM';
+  if (chatUserPicker) chatUserPicker.style.setProperty('display', 'none', 'important');
+  if (chatBody) chatBody.style.setProperty('display', 'none', 'important');
+  if (chatFooter) chatFooter.style.setProperty('display', 'none', 'important');
+  if (btnBack) btnBack.style.setProperty('display', 'none', 'important');
+  if (chatList) chatList.style.setProperty('display', 'block', 'important');
+  if (headerTitle) headerTitle.innerText = 'PUSAT SUPPORT ADMIN / SERVICE';
   loadDaftarChatAdmin();
 }
 window.kembaliKeDaftarAdmin = kembaliKeDaftarAdmin;
@@ -17886,6 +18068,7 @@ async function prosesUploadExcelLookup(event) {
 }
 
 function bukaAkun() {
+  setTimeout(() => { if (typeof initCanvasTTD === "function") initCanvasTTD(); }, 150);
   if (!currentUser) return;
   if (typeof tutupPdfModal === 'function') tutupPdfModal();
   if (typeof tutupDetailBarangV2 === 'function') tutupDetailBarangV2();
@@ -23629,6 +23812,14 @@ function tampilkanPilihanCetakPdf(noSurat) {
   }
   const partials = typeof getPartialBreakdownsFromDB === 'function' ? getPartialBreakdownsFromDB(noSurat) : [];
   const approvedPartials = partials.filter(p => p && (p.status === 'APPROVE' || p.status === 'DONE'));
+
+  // JIKA TIDAK ADA SURAT PARSIAL: LANGSUNG CETAK SURAT UTAMA INDUK!
+  if (!approvedPartials || approvedPartials.length === 0) {
+    if (typeof bukaPdfModal === 'function') {
+      bukaPdfModal(noSurat, true, true);
+    }
+    return;
+  }
 
   const existing = document.getElementById('modalPilihanCetakPdf');
   if (existing) existing.remove();

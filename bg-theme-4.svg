@@ -1,0 +1,209 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%">
+  <defs>
+    <!-- Realistic Night Sky Atmosphere -->
+    <linearGradient id="realNightSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#02030a"/>
+      <stop offset="30%" stop-color="#070a21"/>
+      <stop offset="60%" stop-color="#111438"/>
+      <stop offset="85%" stop-color="#1e1840"/>
+      <stop offset="100%" stop-color="#2a1a45"/>
+    </linearGradient>
+
+    <!-- Photorealistic Luminous Moon -->
+    <radialGradient id="realMoonHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="20%" stop-color="#f0f9ff"/>
+      <stop offset="45%" stop-color="#bae6fd" stop-opacity="0.6"/>
+      <stop offset="70%" stop-color="#6366f1" stop-opacity="0.25"/>
+      <stop offset="90%" stop-color="#312e81" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="realMoonSphere" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#f8fafc"/>
+      <stop offset="75%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </radialGradient>
+
+    <!-- Milky Way Galaxy Glow Line -->
+    <linearGradient id="milkyWayGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(167,139,250,0)"/>
+      <stop offset="35%" stop-color="rgba(192,132,252,0.2)"/>
+      <stop offset="50%" stop-color="rgba(125,211,252,0.3)"/>
+      <stop offset="65%" stop-color="rgba(167,139,250,0.2)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </linearGradient>
+
+    <!-- Photorealistic Cloud Layer Gradients with Silver Rim Highlights -->
+    <linearGradient id="realCloudTop" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(224,242,254,0.45)"/>
+      <stop offset="30%" stop-color="rgba(147,197,253,0.25)"/>
+      <stop offset="70%" stop-color="rgba(49,46,129,0.3)"/>
+      <stop offset="100%" stop-color="rgba(15,23,42,0.7)"/>
+    </linearGradient>
+
+    <linearGradient id="realCloudMid" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(240,249,255,0.35)"/>
+      <stop offset="40%" stop-color="rgba(129,140,248,0.2)"/>
+      <stop offset="85%" stop-color="rgba(30,27,75,0.65)"/>
+      <stop offset="100%" stop-color="rgba(2,6,23,0.85)"/>
+    </linearGradient>
+
+    <!-- Photorealistic Mountain Snow Cap & Rock Shading -->
+    <linearGradient id="snowHighlight" x1="30%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#e0f2fe"/>
+      <stop offset="80%" stop-color="#7dd3fc" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="realMountainDistant" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#31254a"/>
+      <stop offset="50%" stop-color="#1d1633"/>
+      <stop offset="100%" stop-color="#0d091a"/>
+    </linearGradient>
+
+    <linearGradient id="realMountainMid" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e1436"/>
+      <stop offset="60%" stop-color="#100a21"/>
+      <stop offset="100%" stop-color="#05030d"/>
+    </linearGradient>
+
+    <linearGradient id="realMountainFore" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0d071a"/>
+      <stop offset="100%" stop-color="#020105"/>
+    </linearGradient>
+
+    <!-- Soft Valley Fog Mist -->
+    <linearGradient id="realValleyFog" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(186,230,253,0.35)"/>
+      <stop offset="50%" stop-color="rgba(99,102,241,0.18)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </linearGradient>
+
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="moonGlowFilter">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 1. Real Night Sky Background -->
+  <rect width="1920" height="1080" fill="url(#realNightSky)"/>
+
+  <!-- 2. Milky Way Galaxy Ambient Dust Lane -->
+  <polygon points="100,0 700,0 1850,1080 1250,1080" fill="url(#milkyWayGlow)"/>
+
+  <!-- 3. Photorealistic High Density Stars -->
+  <g id="realStars" filter="url(#softGlow)">
+    <!-- Major Bright Stars with Realistic Optical Lens Flare -->
+    <circle cx="150" cy="70" r="3.2" fill="#ffffff"/>
+    <circle cx="360" cy="120" r="3.8" fill="#e0f2fe"/>
+    <circle cx="610" cy="65" r="4.2" fill="#bae6fd"/>
+    <circle cx="880" cy="95" r="3.5" fill="#ffffff"/>
+    <circle cx="1120" cy="75" r="4.0" fill="#e0e7ff"/>
+    <circle cx="1480" cy="110" r="4.5" fill="#ffffff"/>
+    <circle cx="1790" cy="65" r="3.2" fill="#bae6fd"/>
+
+    <circle cx="80" cy="280" r="3.5" fill="#ffffff"/>
+    <circle cx="290" cy="220" r="3.8" fill="#e0f2fe"/>
+    <circle cx="680" cy="260" r="3.0" fill="#bae6fd"/>
+    <circle cx="970" cy="190" r="4.2" fill="#ffffff"/>
+    <circle cx="1250" cy="250" r="3.5" fill="#e0e7ff"/>
+    <circle cx="1650" cy="200" r="4.0" fill="#ffffff"/>
+
+    <!-- Star Optical Cross Flares -->
+    <path d="M 610,53 L 610,77 M 598,65 L 622,65" stroke="#ffffff" stroke-width="1.2" opacity="0.9"/>
+    <path d="M 1480,98 L 1480,122 M 1468,110 L 1492,110" stroke="#ffffff" stroke-width="1.4" opacity="0.9"/>
+    <path d="M 970,178 L 970,202 M 958,190 L 982,190" stroke="#bae6fd" stroke-width="1.2" opacity="0.85"/>
+  </g>
+
+  <!-- Fine Natural Star Field Particles -->
+  <g fill="rgba(255,255,255,0.9)">
+    <circle cx="90" cy="140" r="1.2"/><circle cx="230" cy="80" r="1.6"/><circle cx="480" cy="170" r="1.4"/>
+    <circle cx="740" cy="110" r="1.8"/><circle cx="1020" cy="150" r="1.2"/><circle cx="1350" cy="70" r="1.6"/>
+    <circle cx="1580" cy="150" r="1.4"/><circle cx="1840" cy="110" r="1.8"/>
+
+    <circle cx="180" cy="340" r="1.4"/><circle cx="420" cy="270" r="1.8"/><circle cx="790" cy="320" r="1.2"/>
+    <circle cx="1080" cy="290" r="1.6"/><circle cx="1390" cy="310" r="1.4"/><circle cx="1740" cy="270" r="1.8"/>
+  </g>
+
+  <!-- 4. PHOTOREALISTIC LUMINOUS FULL MOON (Top Center-Right) -->
+  <g id="realMoonGroup">
+    <!-- Atmospheric Multi-layered Halo -->
+    <circle cx="1380" cy="200" r="180" fill="url(#realMoonHalo)" filter="url(#moonGlowFilter)"/>
+    <!-- Moon Body Sphere -->
+    <circle cx="1380" cy="200" r="92" fill="url(#realMoonSphere)" filter="url(#softGlow)"/>
+    <!-- Photorealistic Surface Craters & Maria Shadows -->
+    <ellipse cx="1345" cy="165" rx="22" ry="18" fill="rgba(100,116,139,0.32)"/>
+    <ellipse cx="1410" cy="215" rx="28" ry="24" fill="rgba(100,116,139,0.28)"/>
+    <ellipse cx="1360" cy="235" rx="18" ry="14" fill="rgba(100,116,139,0.25)"/>
+    <ellipse cx="1425" cy="160" rx="15" ry="12" fill="rgba(100,116,139,0.22)"/>
+    <circle cx="1380" cy="180" r="8" fill="rgba(100,116,139,0.2)"/>
+  </g>
+
+  <!-- 5. REALISTIC DRIFTING NIGHT CLOUDS (Top & Middle Sky) -->
+  <g id="realClouds">
+    <!-- Top Left Volumetric Clouds -->
+    <path d="M -80,160 Q 60,80 220,130 Q 360,60 520,120 Q 660,75 800,150 Q 900,210 -80,260 Z" fill="url(#realCloudTop)"/>
+    <path d="M -50,140 Q 80,65 210,115 Q 340,45 490,105 Q 630,60 760,135" fill="none" stroke="rgba(240,249,255,0.45)" stroke-width="2.5"/>
+
+    <!-- Upper Center-Right Clouds Lit By The Moon -->
+    <path d="M 820,210 Q 1000,120 1200,170 Q 1390,100 1600,160 Q 1780,100 2000,190 L 2000,380 Q 1680,440 1350,390 Q 1020,430 820,340 Z" fill="url(#realCloudMid)"/>
+    <path d="M 960,155 Q 1140,95 1320,145 Q 1500,85 1680,140 Q 1830,90 1980,165" fill="none" stroke="rgba(224,242,254,0.6)" stroke-width="3"/>
+
+    <!-- Low Soft Atmospheric Wispy Clouds -->
+    <path d="M 120,370 Q 360,290 620,350 Q 900,280 1180,360 Q 1460,300 1760,380 L 2000,440 L -80,440 Z" fill="rgba(99,102,241,0.14)"/>
+  </g>
+
+  <!-- 6. REALISTIC SNOW-CAPPED MOUNTAIN RANGES & VALLEY MIST -->
+  <g id="realMountainRanges">
+    <!-- Distant Majestic Alps Peaks -->
+    <polygon points="-80,700 100,510 260,610 480,420 670,560 900,390 1100,530 1340,360 1570,490 1820,380 2000,520 2000,1080 -80,1080" fill="url(#realMountainDistant)"/>
+    
+    <!-- Realistic Snow Cap Moonlight Highlights on Distant Peaks -->
+    <!-- Peak 1 (x=480, y=420) -->
+    <polygon points="480,420 520,470 470,480" fill="url(#snowHighlight)"/>
+    <path d="M 480,420 L 530,485 L 590,470" fill="none" stroke="rgba(224,242,254,0.85)" stroke-width="3"/>
+    <!-- Peak 2 (x=900, y=390) -->
+    <polygon points="900,390 945,450 890,460" fill="url(#snowHighlight)"/>
+    <path d="M 900,390 L 950,460 L 1010,440" fill="none" stroke="rgba(224,242,254,0.9)" stroke-width="3.5"/>
+    <!-- Peak 3 Main (x=1340, y=360) -->
+    <polygon points="1340,360 1390,430 1330,440" fill="url(#snowHighlight)"/>
+    <path d="M 1340,360 L 1395,435 L 1460,410" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="4"/>
+    <!-- Peak 4 (x=1820, y=380) -->
+    <polygon points="1820,380 1865,440 1810,450" fill="url(#snowHighlight)"/>
+    <path d="M 1820,380 L 1870,445 L 1930,430" fill="none" stroke="rgba(224,242,254,0.85)" stroke-width="3"/>
+
+    <!-- Photorealistic Valley Fog Layer -->
+    <rect x="0" y="500" width="1920" height="260" fill="url(#realValleyFog)"/>
+
+    <!-- Mid-ground Sharp Rocky Ridge Layer -->
+    <polygon points="-80,800 160,580 380,700 620,490 840,650 1080,460 1310,620 1530,440 1760,600 2000,480 2000,1080 -80,1080" fill="url(#realMountainMid)"/>
+    <!-- Mid Ridge Snow Slopes & Moon Rim Highlights -->
+    <path d="M 620,490 L 695,610 L 760,590" fill="none" stroke="rgba(186,230,253,0.7)" stroke-width="2.5"/>
+    <path d="M 1080,460 L 1155,580 L 1230,560" fill="none" stroke="rgba(224,242,254,0.8)" stroke-width="3"/>
+    <path d="M 1530,440 L 1610,570 L 1680,550" fill="none" stroke="rgba(224,242,254,0.85)" stroke-width="3"/>
+
+    <!-- Foreground Misty Pine Forest Ridge (Bottom Layer) -->
+    <polygon points="-80,900 120,720 260,820 450,660 650,790 870,630 1120,770 1380,600 1610,740 1850,620 2000,700 2000,1080 -80,1080" fill="url(#realMountainFore)"/>
+
+    <!-- Realistic Detailed Pine Trees Silhouette Accent Ridges -->
+    <g fill="#07040f">
+      <polygon points="445,660 450,642 455,660"/><polygon points="451,660 456,638 461,660"/>
+      <polygon points="865,630 870,612 875,630"/><polygon points="871,630 876,605 881,630"/><polygon points="877,630 882,615 887,630"/>
+      <polygon points="1375,600 1380,578 1385,600"/><polygon points="1381,600 1386,572 1391,600"/><polygon points="1387,600 1392,582 1397,600"/>
+    </g>
+  </g>
+</svg>
