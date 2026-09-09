@@ -25,7 +25,7 @@
 :root {
   --topbar-bg: linear-gradient(135deg, #0284c7, #0369a1);
   --topbar-height: 54px;
-  --sidebar-width: 240px;
+  --sidebar-width: 242px;
   
   --primary-red: #dc2626;
   --primary-red-dark: #b91c1c;
@@ -114,7 +114,13 @@ html, body {
 .topbar-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  width: calc(var(--sidebar-width, 242px) - 16px) !important;
+  min-width: calc(var(--sidebar-width, 242px) - 16px) !important;
+  max-width: calc(var(--sidebar-width, 242px) - 16px) !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  padding-right: 4px !important;
 }
 
 .topbar-toggle-btn {
@@ -150,7 +156,8 @@ html, body {
 .topbar-center {
   flex: 1;
   max-width: 480px;
-  margin: 0 20px;
+  margin-left: 0 !important;
+  margin-right: auto !important;
 }
 
 .topbar-search {
@@ -227,7 +234,7 @@ html, body {
   gap: 8px;
   background: rgba(255, 255, 255, 0.2);
   padding: 4px 10px 4px 5px;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   cursor: pointer;
   transition: background 0.2s, transform 0.2s;
 }
@@ -252,12 +259,14 @@ html, body {
 
 .user-name-text {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-white);
-  max-width: 140px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: none !important;
+  width: auto !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  flex-shrink: 0 !important;
 }
 
 /* SIDEBAR NAVIGATION ACCORDION */
@@ -1236,7 +1245,7 @@ button:hover, .btn:hover, .btn-secondary:hover, .btnCari:hover, .btnSimpan:hover
 }
 
 #popupDetailBarangV2 .popupBox, #popupDetailBarangV2 > div, #popupDetail > div {
-  width: calc(100vw - var(--sidebar-width, 240px)) !important;
+  width: calc(100vw - var(--sidebar-width, 242px)) !important;
   max-width: 1400px !important;
   min-width: 320px !important;
   height: 100vh !important;
@@ -2624,7 +2633,7 @@ button[onclick*="bukaModalPdfModels"]:hover {
 #rejectOverlay,
 #confirmOverlay,
 #popupNotif,
-#popupDetailBarangV2,
+#popupDetailBarangV2:not(.mode-b),
 #popupTTD,
 #scannerModal,
 #pdfModal,
@@ -2661,7 +2670,7 @@ button[onclick*="bukaModalPdfModels"]:hover {
 #rejectOverlay.show,
 #confirmOverlay.show,
 #popupNotif.show,
-#popupDetailBarangV2.show,
+#popupDetailBarangV2.show:not(.mode-b),
 #popupTTD.show,
 #scannerModal.show,
 #pdfModal.show,
@@ -2809,8 +2818,8 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
    POPUP DETAIL PERMINTAAN BARANG V2 - 100% FULL SCREEN LAYOUT
    ========================================================================== */
 
-#popupDetailBarangV2,
-#popupDetailBarangV2.show {
+#popupDetailBarangV2:not(.mode-b),
+#popupDetailBarangV2.show:not(.mode-b) {
   display: none;
   position: fixed !important;
   top: 0 !important;
@@ -2828,12 +2837,12 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
   box-sizing: border-box !important;
 }
 
-#popupDetailBarangV2.show {
+#popupDetailBarangV2.show:not(.mode-b) {
   display: flex !important;
 }
 
-#popupDetailBarangV2 .popupBox,
-#popupDetailBarangV2 > div {
+#popupDetailBarangV2:not(.mode-b) .popupBox,
+#popupDetailBarangV2:not(.mode-b) > div {
   width: 100vw !important;
   max-width: 100vw !important;
   min-width: 100vw !important;
@@ -3037,10 +3046,10 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 /* MAIN CONTENT CONTAINER: MUST START RIGHT OF SIDEBAR AND FILL 100% RIGHT SCREEN EDGE */
 .app-main {
   margin-top: var(--topbar-height, 54px) !important;
-  margin-left: var(--sidebar-width, 240px) !important;
+  margin-left: var(--sidebar-width, 242px) !important;
   flex: 1 !important;
-  width: calc(100% - var(--sidebar-width, 240px)) !important;
-  max-width: calc(100% - var(--sidebar-width, 240px)) !important;
+  width: calc(100% - var(--sidebar-width, 242px)) !important;
+  max-width: calc(100% - var(--sidebar-width, 242px)) !important;
   min-height: calc(100vh - var(--topbar-height, 54px)) !important;
   padding: 8px 12px !important;
   box-sizing: border-box !important;
@@ -3147,7 +3156,7 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
   top: var(--topbar-height, 54px) !important;
   left: 0 !important;
   bottom: 0 !important;
-  width: var(--sidebar-width, 240px) !important;
+  width: var(--sidebar-width, 242px) !important;
   background: var(--bg-card, #ffffff) !important;
   border-right: 1px solid var(--border-color, #e2e8f0) !important;
   z-index: 990 !important;
@@ -3165,12 +3174,12 @@ body.sidebar-open .app-sidebar {
 
 body.sidebar-open .app-main {
   margin-top: var(--topbar-height, 54px) !important;
-  margin-left: var(--sidebar-width, 240px) !important;
+  margin-left: var(--sidebar-width, 242px) !important;
   flex: 1 !important;
-  width: calc(100% - var(--sidebar-width, 240px)) !important;
-  max-width: calc(100% - var(--sidebar-width, 240px)) !important;
+  width: calc(100vw - var(--sidebar-width, 242px)) !important;
+  max-width: calc(100vw - var(--sidebar-width, 242px)) !important;
   min-height: calc(100vh - var(--topbar-height, 54px)) !important;
-  padding: 12px 16px 24px 16px !important;
+  padding: 16px 20px 32px 20px !important;
   box-sizing: border-box !important;
   transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
@@ -3416,7 +3425,7 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
   z-index: 2147483647 !important;
 }
 
-#popupDetailBarangV2.popupOverlay, #popupDetailBarangV2 {
+#popupDetailBarangV2.popupOverlay:not(.mode-b), #popupDetailBarangV2:not(.mode-b) {
   z-index: 2147483640 !important;
 }
 
@@ -3773,10 +3782,10 @@ html, body {
 
 body.sidebar-open .app-main {
   margin-top: var(--topbar-height, 54px) !important;
-  margin-left: var(--sidebar-width, 240px) !important;
+  margin-left: var(--sidebar-width, 242px) !important;
   flex: 1 !important;
-  width: calc(100vw - var(--sidebar-width, 240px)) !important;
-  max-width: calc(100vw - var(--sidebar-width, 240px)) !important;
+  width: calc(100vw - var(--sidebar-width, 242px)) !important;
+  max-width: calc(100vw - var(--sidebar-width, 242px)) !important;
   min-height: calc(100vh - var(--topbar-height, 54px)) !important;
   padding: 16px 20px 32px 20px !important;
   box-sizing: border-box !important;
@@ -3903,7 +3912,7 @@ body:not(.sidebar-open) .app-main {
 
 .dashboardTable tbody tr:not(.empty-grid-row):nth-child(even),
 .historyTable tbody tr:not(.empty-grid-row):nth-child(even) {
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc !important;
 }
 
 .dashboardTable tbody tr:not(.empty-grid-row):hover,
@@ -4244,15 +4253,15 @@ div.popupOverlay > div.popupBox {
 /* ==========================================================================
    IRONCLAD Z-INDEX STACKING (IMAGE VIEWER & ARTEMIS ALWAYS ABOVE DETAIL MODAL)
    ========================================================================== */
-#popupDetailBarangV2,
-#popupDetailBarangV2.show,
-#popupDetailBarangV2.popupOverlay,
-#popupDetail {
+#popupDetailBarangV2:not(.mode-b),
+#popupDetailBarangV2.show:not(.mode-b),
+#popupDetailBarangV2.popupOverlay:not(.mode-b),
+#popupDetail:not(.mode-b) {
   z-index: 2147483640 !important;
 }
 
-#popupDetailBarangV2 > div,
-#popupDetailBarangV2 .popupBox {
+#popupDetailBarangV2:not(.mode-b) > div,
+#popupDetailBarangV2:not(.mode-b) .popupBox {
   z-index: 2147483640 !important;
 }
 
@@ -4612,13 +4621,13 @@ div.popupOverlay > div.popupBox {
   position: sticky !important;
   top: 0 !important;
   z-index: 10 !important;
-  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-  background-color: #0284c7 !important;
+  background: #475569 !important;
+  background-color: #475569 !important;
 }
 
 .userModalTable thead th,
 .userModalTable th {
-  background-color: #0284c7 !important;
+  background-color: #475569 !important;
   color: #ffffff !important;
   font-weight: 800 !important;
   font-size: 11.5px !important;
@@ -4880,31 +4889,26 @@ div.popupOverlay > div.popupBox {
    UNIFIED BLUE HEADER & TITLE COLOR ENFORCEMENT (#0284c7 / BIRU CERAH KLASIK)
    ============================================================================= */
 
-/* ALL POPUP & MODAL HEADERS -> UNIFORM BLUE GRADIENT (#0284c7 -> #0369a1) */
+/* ALL POPUP & MODAL HEADERS -> UNIFORM CRISP SLATE GREY (#e2e8f0) */
 .popupHeader,
 .popupHeaderV2,
 .rejectHeaderPopup,
 .artemisHeaderPopup,
 .modalHeader,
 .modalKeyHeader,
-.userManagementHeader,
 .chatHeader,
-#popupTambahToko .popupHeader,
 #popupBantuan .chatHeader,
 #modalSetupSupabaseKeys .rejectHeaderPopup,
-#popupUserManagementModal .userManagementHeader,
-#excelTemplateOverlay .excelTemplateHeader,
 #artemisOverlay .artemisHeaderPopup,
-#uploadBuktiPermintaanOverlay .artemisHeaderPopup,
 #popupForwardService .rejectHeaderPopup,
 #popupUbahStatusAdminModal .rejectHeaderPopup,
-#pdfModal .popupHeader,
 #popupPdfModelsModal .popupHeader,
-#modalGeminiApiKey .modalKeyHeader,
-#popupSecurityPinHapusLokal .popupBox > div:first-child {
-  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-  background-color: #0284c7 !important;
-  color: #ffffff !important;
+#modalGeminiApiKey .modalKeyHeader {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  background-image: none !important;
+  color: #0f172a !important;
+  border-bottom: 2px solid #cbd5e1 !important;
 }
 
 .popupHeader *,
@@ -4913,16 +4917,12 @@ div.popupOverlay > div.popupBox {
 .artemisHeaderPopup *,
 .modalHeader *,
 .modalKeyHeader *,
-.userManagementHeader *,
 .chatHeader *,
-#popupTambahToko .popupHeader *,
 #popupBantuan .chatHeader *,
 #modalSetupSupabaseKeys .rejectHeaderPopup *,
-#popupUserManagementModal .userManagementHeader *,
 #excelTemplateOverlay .excelTemplateHeader *,
-#pdfModal .popupHeader *,
 #popupPdfModelsModal .popupHeader * {
-  color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 /* ALL POPUP TITLES, SECTION HEADINGS & ACCENT LABELS -> BLUE #0284c7 */
@@ -4944,7 +4944,7 @@ div.popupOverlay > div.popupBox {
   color: #0284c7 !important;
 }
 
-/* ALL TABLE HEADERS (TH) -> UNIFORM BLUE #0284c7 */
+/* ALL TABLE HEADERS (TH) -> UNIFORM CRISP SLATE GREY #e2e8f0 WITH DARK SLATE BOLD TEXT */
 table th,
 thead th,
 .historyTable th,
@@ -4954,10 +4954,12 @@ thead th,
 .detailTableV2 th,
 .userModalTable th,
 #tabelDaftarTokoModal th {
-  background: #0284c7 !important;
-  background-color: #0284c7 !important;
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
   background-image: none !important;
-  color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
 }
 
 /* ALL PRIMARY BUTTONS & ACTION BUTTONS -> UNIFORM OCEAN BLUE #0284c7 */
@@ -5043,7 +5045,7 @@ button[onclick*="prosesReject"]:hover {
   color: #ffffff !important;
 }
 
-/* POPUP HEADER CLOSE (X) BUTTONS -> PURE WHITE */
+/* POPUP HEADER CLOSE (X) BUTTONS -> DARK SLATE / BLACK (#0f172a) FOR HIGH CONTRAST ON #e2e8f0 */
 .popupClose,
 .popupCloseV2,
 .btnHeaderCloseX,
@@ -5061,20 +5063,27 @@ button[onclick*="prosesReject"]:hover {
 #modalSetupSupabaseKeys .btnHeaderCloseX,
 #popupUserManagementModal .btnTutupUserModal,
 #popupUserManagementModal .btnTutupUserModal .material-symbols-rounded {
-  color: #ffffff !important;
+  color: #0f172a !important;
+  background: #cbd5e1 !important;
+  background-color: #cbd5e1 !important;
+  border: 1px solid #94a3b8 !important;
   -webkit-text-stroke: 0px transparent !important;
   opacity: 1 !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+  text-shadow: none !important;
 }
 
 .popupClose:hover,
 .popupCloseV2:hover,
 .btnHeaderCloseX:hover,
 .btnTutupUserModal:hover,
-.chatClose:hover {
+.chatClose:hover,
+.popupHeader button:hover,
+.modalHeader button:hover {
+  background: #94a3b8 !important;
+  background-color: #94a3b8 !important;
   color: #ffffff !important;
-  opacity: 0.85 !important;
-  transform: scale(1.1) !important;
+  opacity: 1 !important;
+  transform: scale(1.05) !important;
 }
 
 
@@ -5136,16 +5145,14 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
 }
 
 
-/* =============================================================================
-   BLUE BACKGROUND + WHITE X FOR MODAL CLOSE BUTTONS
-   ============================================================================= */
+/* CRISP CONTRAST FOR MODAL CLOSE BUTTONS */
 .btnHeaderCloseX,
 .btnTutupUserModal,
 .popupClose {
-  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-  background-color: #0284c7 !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  background: #cbd5e1 !important;
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  border: 1px solid #94a3b8 !important;
   border-radius: 6px !important;
   width: 32px !important;
   height: 32px !important;
@@ -5155,17 +5162,17 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
   font-size: 20px !important;
   font-weight: 800 !important;
   cursor: pointer !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
   transition: all 0.2s ease !important;
 }
 
 .btnHeaderCloseX:hover,
 .btnTutupUserModal:hover,
 .popupClose:hover {
-  background: linear-gradient(135deg, #0369a1, #075985) !important;
-  background-color: #0369a1 !important;
+  background: #94a3b8 !important;
+  background-color: #94a3b8 !important;
   color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
+  border-color: #64748b !important;
   transform: scale(1.05) !important;
 }
 
@@ -5173,7 +5180,7 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
 .btnTutupUserModal i,
 .popupClose i,
 .btnHeaderCloseX i {
-  color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 
@@ -5183,12 +5190,29 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
 #popupTambahToko .popupHeader {
   background: linear-gradient(135deg, #0284c7, #0369a1) !important;
   background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 #popupTambahToko .popupHeader span,
 #popupTambahToko .popupHeader h3,
+#popupTambahToko .popupHeader h4,
 #popupTambahToko .popupHeader .material-symbols-rounded,
 #popupTambahToko .popupHeader i {
+  color: #ffffff !important;
+}
+
+#popupTambahToko .popupHeader .popupClose,
+#popupTambahToko .popupHeader button {
+  background: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+#popupTambahToko .popupHeader .popupClose:hover,
+#popupTambahToko .popupHeader button:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
 }
 
@@ -5204,18 +5228,34 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
   background: linear-gradient(135deg, #0284c7, #0369a1) !important;
   background-color: #0284c7 !important;
   color: #ffffff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 .userManagementHeader h3,
 .userManagementHeader span,
 .userManagementHeader div,
 .userManagementHeader .material-symbols-rounded,
+#popupUserManagementModal .userManagementHeader *,
 #popupTambahToko .popupHeader span,
 #popupTambahToko .popupHeader h3,
 #popupTambahToko .popupHeader .material-symbols-rounded,
 #modalSetupSupabaseKeys .rejectHeaderPopup h4,
 #modalSetupSupabaseKeys .rejectHeaderPopup span,
 #modalSetupSupabaseKeys .rejectHeaderPopup .material-symbols-rounded {
+  color: #ffffff !important;
+}
+
+.userManagementHeader .btnTutupUserModal,
+#popupUserManagementModal .btnTutupUserModal {
+  background: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.userManagementHeader .btnTutupUserModal:hover,
+#popupUserManagementModal .btnTutupUserModal:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
 }
 
@@ -5319,7 +5359,7 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
 #popupTambahToko table tbody tr:nth-child(even),
 #tokoDaftarTableBody tr:nth-child(even),
 #daftarTokoTableBody tr:nth-child(even) {
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc !important;
 }
 
 
@@ -5399,7 +5439,7 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
    ============================================================================= */
 :root {
   --row-odd-bg: #ffffff;
-  --row-even-bg: #f1f5f9;
+  --row-even-bg: #f8fafc;
 }
 
 body.dark-mode {
@@ -5416,7 +5456,7 @@ body.dark-mode {
 #tabelDaftarTokoModal tbody tr:nth-child(even),
 #tokoDaftarTableBody tr:nth-child(even),
 #daftarTokoTableBody tr:nth-child(even) {
-  background-color: var(--row-even-bg, #f1f5f9) !important;
+  background-color: var(--row-even-bg, #f8fafc) !important;
 }
 
 
@@ -5433,8 +5473,8 @@ body.dark-mode {
 #tabelDaftarTokoModal tbody tr:nth-child(even),
 #tabelDaftarTokoModal tr:nth-child(even),
 #daftarTokoTableBody tr:nth-child(even) {
-  background: #f1f5f9 !important;
-  background-color: #f1f5f9 !important;
+  background: #f8fafc !important;
+  background-color: #f8fafc !important;
 }
 
 
@@ -5463,8 +5503,8 @@ body.dark-mode {
 #tabelDaftarTokoModal tbody tr:nth-child(even) td,
 #daftarTokoTableBody tr:nth-child(even) td,
 #tokoDaftarTableBody tr:nth-child(even) td {
-  background-color: #f1f5f9 !important;
-  background: #f1f5f9 !important;
+  background-color: #f8fafc !important;
+  background: #f8fafc !important;
 }
 
 
@@ -5568,8 +5608,8 @@ body.dark-mode {
 #tokoDaftarTableBody tr:nth-child(even) td,
 #popupTambahToko table tbody tr:nth-child(even),
 #popupTambahToko table tbody tr:nth-child(even) td {
-  background: #f0f6fa !important;
-  background-color: #f0f6fa !important;
+  background: #f8fafc !important;
+  background-color: #f8fafc !important;
   color: #1e293b !important;
 }
 
@@ -5683,19 +5723,33 @@ body.dark-mode {
 
 .rejectHeaderPopup button,
 .rejectHeaderPopup .btnRejectCloseX,
+.rejectHeaderPopup .btnHeaderCloseX,
 .rejectHeaderPopup .popupClose {
   background: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
   font-weight: 900 !important;
 }
 
+.rejectHeaderPopup button:hover,
+.rejectHeaderPopup .btnRejectCloseX:hover,
+.rejectHeaderPopup .btnHeaderCloseX:hover,
+.rejectHeaderPopup .popupClose:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.rejectHeaderPopup button *,
+.rejectHeaderPopup .btnRejectCloseX *,
+.rejectHeaderPopup .btnHeaderCloseX *,
+.rejectHeaderPopup .popupClose *,
 .rejectHeaderPopup button .material-symbols-rounded,
 .rejectHeaderPopup .btnRejectCloseX .material-symbols-rounded,
 .rejectHeaderPopup .popupClose .material-symbols-rounded {
   color: #ffffff !important;
   font-weight: 900 !important;
-  -webkit-text-stroke: 0.5px #ffffff !important;
+  -webkit-text-stroke: 0px transparent !important;
 }
 
 
@@ -5792,8 +5846,11 @@ body.dark-mode {
 /* Modal Header Bar */
 .modalHeader, .popupHeader, .rejectHeaderPopup, .userManagementHeader, 
 .chatHeader, .notifHeader {
-  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-  color: #ffffff !important;
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  background-image: none !important;
+  color: #0f172a !important;
+  border-bottom: 2px solid #cbd5e1 !important;
   padding: 14px 20px !important;
   display: flex !important;
   justify-content: space-between !important;
@@ -6024,12 +6081,12 @@ body.dark-mode {
 #tabelDaftarTokoModal thead th,
 #popupTambahToko table thead tr,
 #popupTambahToko table thead th {
-  background: #0284c7 !important;
-  background-color: #0284c7 !important;
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
   background-image: none !important;
-  color: #ffffff !important;
-  border-bottom: 1px solid #0369a1 !important;
-  font-weight: 700 !important;
+  color: #0f172a !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  font-weight: 800 !important;
   box-shadow: none !important;
 }
 
@@ -6224,10 +6281,10 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 /* ==========================================================================
    FULL SCREEN POPUP DETAIL PERMINTAAN & SINGLE TABLE AUTO FIT WITH WRAP TEXT
    ========================================================================== */
-#popupDetailBarangV2,
-#popupDetailBarangV2.show,
-#popupDetailBarangV2.popupOverlay,
-#popupDetailBarangV2[style*="display"] {
+#popupDetailBarangV2:not(.mode-b),
+#popupDetailBarangV2.show:not(.mode-b),
+#popupDetailBarangV2.popupOverlay:not(.mode-b),
+#popupDetailBarangV2[style*="display"]:not(.mode-b) {
   display: flex !important;
   position: fixed !important;
   top: 0 !important;
@@ -6245,10 +6302,10 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
   background: #f8fafc !important;
 }
 
-#popupDetailBarangV2 .popupBox,
-#popupDetailBarangV2 > div,
-#popupDetailBarangV2.show .popupBox,
-#popupDetailBarangV2[style*="display"] .popupBox {
+#popupDetailBarangV2:not(.mode-b) .popupBox,
+#popupDetailBarangV2:not(.mode-b) > div,
+#popupDetailBarangV2.show:not(.mode-b) .popupBox,
+#popupDetailBarangV2[style*="display"]:not(.mode-b) .popupBox {
   width: 100vw !important;
   max-width: 100vw !important;
   min-width: 100vw !important;
@@ -6288,11 +6345,11 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
   position: sticky !important;
   top: 0 !important;
   z-index: 300 !important;
-  background: #0284c7 !important;
-  color: #ffffff !important;
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
   padding: 10px 12px !important;
   font-size: 12px !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important;
   text-align: center !important;
   vertical-align: middle !important;
   border-right: 1px solid rgba(255,255,255,0.3) !important;
@@ -6335,11 +6392,11 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
   display: none !important;
 }
 
-#popupDetailBarangV2.show,
-#popupDetailBarangV2[style*="display: flex"],
-#popupDetailBarangV2[style*="display:flex"],
-#popupDetailBarangV2[style*="display: block"],
-#popupDetailBarangV2[style*="display:block"] {
+#popupDetailBarangV2.show:not(.mode-b),
+#popupDetailBarangV2[style*="display: flex"]:not(.mode-b),
+#popupDetailBarangV2[style*="display:flex"]:not(.mode-b),
+#popupDetailBarangV2[style*="display: block"]:not(.mode-b),
+#popupDetailBarangV2[style*="display:block"]:not(.mode-b) {
   display: flex !important;
   position: fixed !important;
   top: 0 !important;
@@ -6357,11 +6414,11 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
   background: #f8fafc !important;
 }
 
-#popupDetailBarangV2.show .popupBox,
-#popupDetailBarangV2[style*="display: flex"] .popupBox,
-#popupDetailBarangV2[style*="display:flex"] .popupBox,
-#popupDetailBarangV2[style*="display: block"] .popupBox,
-#popupDetailBarangV2[style*="display:block"] .popupBox {
+#popupDetailBarangV2.show:not(.mode-b) .popupBox,
+#popupDetailBarangV2[style*="display: flex"]:not(.mode-b) .popupBox,
+#popupDetailBarangV2[style*="display:flex"]:not(.mode-b) .popupBox,
+#popupDetailBarangV2[style*="display: block"]:not(.mode-b) .popupBox,
+#popupDetailBarangV2[style*="display:block"]:not(.mode-b) .popupBox {
   width: 100vw !important;
   max-width: 100vw !important;
   min-width: 100vw !important;
@@ -6401,11 +6458,11 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
   position: sticky !important;
   top: 0 !important;
   z-index: 300 !important;
-  background: #0284c7 !important;
-  color: #ffffff !important;
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
   padding: 10px 12px !important;
   font-size: 12px !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important;
   text-align: center !important;
   vertical-align: middle !important;
   border-right: 1px solid rgba(255,255,255,0.3) !important;
@@ -6595,18 +6652,121 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
   overflow: hidden !important;
 }
 
-#artemisOverlay .modalHeader,
-#uploadBuktiPermintaanOverlay .artemisHeaderPopup {
-  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-  color: #ffffff !important;
+#artemisOverlay .modalHeader {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  background-image: none !important;
+  color: #0f172a !important;
   border-radius: 6px 6px 0 0 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-bottom: 2px solid #cbd5e1 !important;
 }
 
 #artemisOverlay .modalHeader span,
-#artemisOverlay .modalHeader span *,
+#artemisOverlay .modalHeader span * {
+  color: #0f172a !important;
+}
+
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 6px 6px 0 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
 #uploadBuktiPermintaanOverlay .artemisHeaderPopup span,
-#uploadBuktiPermintaanOverlay .artemisHeaderPopup span * {
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup span *,
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup .material-symbols-rounded,
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup #uploadBuktiTitle {
+  color: #ffffff !important;
+}
+
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup .btnHeaderCloseX,
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup button {
+  background: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup .btnHeaderCloseX:hover,
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup button:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+#popupSecurityPinHapusLokal .popupBox > div:first-child {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 6px 6px 0 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+#popupSecurityPinHapusLokal .popupBox > div:first-child *,
+#popupSecurityPinHapusLokal .popupBox > div:first-child span,
+#popupSecurityPinHapusLokal .popupBox > div:first-child .material-symbols-rounded {
+  color: #ffffff !important;
+}
+
+#popupSecurityPinHapusLokal .popupBox > div:first-child button,
+#popupSecurityPinHapusLokal .popupBox > div:first-child .btnHeaderCloseX {
+  background: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+#popupSecurityPinHapusLokal .popupBox > div:first-child button:hover,
+#popupSecurityPinHapusLokal .popupBox > div:first-child .btnHeaderCloseX:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.excelTemplateHeader,
+#excelTemplateOverlay .excelTemplateHeader,
+#modalPilihanCetakPdfCard > div:first-child,
+#scannerModal .modalHeader,
+#confirmBoxCard > div:first-child,
+#confirmOverlay .confirmBoxCard > div:first-child,
+#pdfModal .popupHeader {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.excelTemplateHeader *,
+#excelTemplateOverlay .excelTemplateHeader *,
+#modalPilihanCetakPdfCard > div:first-child *,
+#scannerModal .modalHeader *,
+#confirmBoxCard > div:first-child *,
+#confirmOverlay .confirmBoxCard > div:first-child *,
+#pdfModal .popupHeader * {
+  color: #ffffff !important;
+}
+
+.excelTemplateHeader button,
+#excelTemplateOverlay .excelTemplateHeader button,
+#modalPilihanCetakPdfCard > div:first-child button,
+#scannerModal .modalHeader button,
+#confirmBoxCard > div:first-child button,
+#confirmOverlay .confirmBoxCard > div:first-child button,
+#pdfModal .popupHeader .popupClose {
+  background: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.excelTemplateHeader button:hover,
+#excelTemplateOverlay .excelTemplateHeader button:hover,
+#modalPilihanCetakPdfCard > div:first-child button:hover,
+#scannerModal .modalHeader button:hover,
+#confirmBoxCard > div:first-child button:hover,
+#confirmOverlay .confirmBoxCard > div:first-child button:hover,
+#pdfModal .popupHeader .popupClose:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
 }
 
@@ -6768,7 +6928,7 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  background-color: #64748b !important;
+  background-color: #cbd5e1 !important;
   transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease !important;
   border-radius: 34px !important;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
@@ -6832,8 +6992,8 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 #modalDetailParsialSub table tbody tr:nth-child(even) td,
 #modalRiwayatParsialList table tbody tr:nth-child(even),
 #modalRiwayatParsialList table tbody tr:nth-child(even) td {
-  background-color: #f0f6fa !important;
-  background: #f0f6fa !important;
+  background-color: #f8fafc !important;
+  background: #f8fafc !important;
 }
 
 /* =============================================================================
@@ -6883,8 +7043,8 @@ button[onclick*="bukaModalRiwayatParsialList"] {
 
 #popupDetailBarangV2 table tbody tr:nth-child(even),
 #popupDetailBarangV2 table tbody tr:nth-child(even) td {
-  background-color: #f0f6fa !important;
-  background: #f0f6fa !important;
+  background-color: #f8fafc !important;
+  background: #f8fafc !important;
 }
 
 /* =============================================================================
@@ -7029,6 +7189,8 @@ button[onclick*="simpanData"]:hover {
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
 }
 
 #popupBantuan .chatHeader {
@@ -7661,3 +7823,423 @@ canvas#canvasTTDModal,
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
+
+
+/* =============================================================================
+   POPUP DETAIL & PARSIAL MODE A / MODE B LAYOUT STYLING
+   ============================================================================= */
+
+/* MODE A (DEFAULT FULLSCREEN OVERLAY) */
+#popupDetailBarangV2.mode-a,
+#popupDetailBarangV2:not(.mode-b),
+#popupDetail.mode-a,
+#pdfModal.mode-a {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483630 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#modalBuatParsial.mode-a,
+#modalRiwayatParsialList.mode-a {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483640 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#modalDetailParsialSub.mode-a {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483650 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#modalArtemisParsial.mode-a,
+#popupDoneParsial.mode-a {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483660 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#popupDetailBarangV2.mode-a .popupBox,
+#popupDetailBarangV2:not(.mode-b) .popupBox,
+#popupDetail.mode-a .popupBox,
+#modalDetailParsialSub.mode-a .popupBox,
+#modalBuatParsial.mode-a .popupBox,
+#modalRiwayatParsialList.mode-a .popupBox {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 100% !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* MODE B (CONTAINED WITHIN WORKSPACE WITH SOLID BACKGROUND SO PAGE BENEATH IS COVERED) */
+#popupDetailBarangV2.mode-b,
+#popupDetail.mode-b,
+#pdfModal.mode-b {
+  position: fixed !important;
+  top: var(--topbar-height, 54px) !important;
+  left: var(--sidebar-width, 242px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 950 !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 6px !important;
+  border: none !important;
+  background: #f8fafc !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), top 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#modalBuatParsial.mode-b,
+#modalRiwayatParsialList.mode-b {
+  position: fixed !important;
+  top: var(--topbar-height, 54px) !important;
+  left: var(--sidebar-width, 242px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 960 !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 6px !important;
+  border: none !important;
+  background: #f8fafc !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), top 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#modalDetailParsialSub.mode-b {
+  position: fixed !important;
+  top: var(--topbar-height, 54px) !important;
+  left: var(--sidebar-width, 242px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 970 !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 6px !important;
+  border: none !important;
+  background: #f8fafc !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), top 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#modalArtemisParsial.mode-b,
+#popupDoneParsial.mode-b {
+  position: fixed !important;
+  top: var(--topbar-height, 54px) !important;
+  left: var(--sidebar-width, 242px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 980 !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 6px !important;
+  border: none !important;
+  background: #f8fafc !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), top 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* When sidebar is closed / hidden (body:not(.sidebar-open)), 6px gap from left edge */
+body:not(.sidebar-open) #popupDetailBarangV2.mode-b,
+body:not(.sidebar-open) #popupDetail.mode-b,
+body:not(.sidebar-open) #modalDetailParsialSub.mode-b,
+body:not(.sidebar-open) #modalBuatParsial.mode-b,
+body:not(.sidebar-open) #modalRiwayatParsialList.mode-b,
+body:not(.sidebar-open) #pdfModal.mode-b {
+  left: 0 !important;
+}
+
+/* Mobile viewport adaptation (< 768px) */
+@media (max-width: 768px) {
+  #popupDetailBarangV2.mode-b,
+  #popupDetail.mode-b,
+  #modalDetailParsialSub.mode-b,
+  #modalBuatParsial.mode-b,
+  #modalRiwayatParsialList.mode-b,
+  #pdfModal.mode-b {
+    top: var(--topbar-height, 54px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    padding: 4px !important;
+  }
+}
+
+#popupDetailBarangV2.mode-b .popupBox,
+#popupDetailBarangV2.mode-b > div,
+#popupDetail.mode-b .popupBox,
+#modalDetailParsialSub.mode-b .popupBox,
+#modalDetailParsialSub.mode-b > div,
+#modalBuatParsial.mode-b .popupBox,
+#modalBuatParsial.mode-b > div,
+#modalRiwayatParsialList.mode-b .popupBox,
+#modalRiwayatParsialList.mode-b > div,
+#pdfModal.mode-b .popupBox {
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 100% !important;
+  border-radius: 6px !important;
+  margin: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
+  border: 1px solid #cbd5e1 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* SLIDE IN / SLIDE OUT ANIMATIONS FOR DETAIL & PARSIAL POPUPS */
+@keyframes popupSlideInFromRight {
+  0% {
+    transform: translateX(100%);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes popupSlideOutToRight {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+#popupDetailBarangV2.show .popupBox,
+#popupDetailBarangV2[style*="display: flex"] .popupBox,
+#popupDetailBarangV2[style*="display:flex"] .popupBox,
+#popupDetail.show .popupBox,
+#modalBuatParsial.show .popupBox,
+#modalBuatParsial.active .popupBox,
+#modalRiwayatParsialList.show .popupBox,
+#modalRiwayatParsialList.active .popupBox,
+#modalDetailParsialSub.show .popupBox,
+#modalDetailParsialSub.active .popupBox {
+  animation: popupSlideInFromRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+#popupDetailBarangV2.closing .popupBox,
+#popupDetail.closing .popupBox,
+#modalBuatParsial.closing .popupBox,
+#modalRiwayatParsialList.closing .popupBox,
+#modalDetailParsialSub.closing .popupBox {
+  animation: popupSlideOutToRight 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+
+/* IRONCLAD STANDALONE Z-INDEX FOR PARSIAL BREAKDOWN MODALS */
+#modalRiwayatParsialList,
+#modalRiwayatParsialList.popupOverlay,
+#modalRiwayatParsialList.show,
+#modalRiwayatParsialList.active {
+  z-index: 2100 !important;
+}
+
+#modalDetailParsialSub,
+#modalDetailParsialSub.popupOverlay,
+#modalDetailParsialSub.show,
+#modalDetailParsialSub.active {
+  z-index: 2200 !important;
+}
+
+
+/* HIDE NAMAUSER & AREAUSER AND RAISE DASHBOARD METRIC CARDS WITH ZERO MARGIN/PADDING */
+#namaUser,
+#areaUser,
+.dashboardTop .header {
+  display: none !important;
+}
+
+.dashboardTop {
+  width: 100% !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  margin-bottom: 16px !important;
+}
+
+.stats {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* AVATAR BADGE SHOWING USER AREA CODE (e.g. SKB, BDG, TSM) */
+.user-avatar,
+#topUserAvatarInitials {
+  width: auto !important;
+  min-width: 32px !important;
+  height: 28px !important;
+  padding: 0 6px !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  color: #0284c7 !important;
+  font-weight: 800 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+  white-space: nowrap !important;
+}
+
+/* Topbar User Badge & Full Name Auto-Fit Override (No Truncation & Soft 90 Deg Corners) */
+.topbar-user-badge {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  padding: 4px 10px 4px 5px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: background 0.2s, transform 0.2s !important;
+  width: auto !important;
+  max-width: none !important;
+  flex-shrink: 0 !important;
+}
+
+.user-avatar,
+#topUserAvatarInitials {
+  border-radius: 4px !important;
+}
+
+.user-name-text,
+#namaUserTopHeader {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  max-width: none !important;
+  width: auto !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  flex-shrink: 0 !important;
+}
+
+/* =============================================================================
+   UNIVERSAL POPUP/MODAL HEADER & TABLE HEADER OVERRIDE: CRISP SLATE GREY (#e2e8f0) & DARK BOLD TEXT
+   ============================================================================= */
+.popupHeader,
+.popupHeaderV2,
+.artemisHeaderPopup,
+.modalHeader,
+.modalKeyHeader,
+.userManagementHeader,
+.chatHeader,
+.notifHeader,
+.excelTemplateHeader,
+#popupDetailBarangV2 .popupHeader,
+#popupDetailBarangV2 .modalHeader,
+#artemisOverlay .modalHeader,
+#modalBuatParsial .modalHeader,
+#modalDetailParsialSub .modalHeader,
+#modalRiwayatParsialList .modalHeader,
+th,
+thead,
+thead tr,
+thead th,
+table th,
+.historyTable th,
+.dashboardTable th,
+.masterDbTable th,
+.detailTable th,
+.detailTable2 th,
+.detailTableV2 th,
+.userModalTable th,
+.userManagementTable th,
+#tabelDaftarTokoModal th,
+#tabelDaftarTokoModal thead th,
+#popupTambahToko table thead th,
+#popupDetailBarangV2 table.detailTableV2 th {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  background-image: none !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+
+.popupHeader *,
+.popupHeaderV2 *,
+.artemisHeaderPopup *,
+.modalHeader *,
+.modalKeyHeader *,
+.userManagementHeader *,
+.chatHeader *,
+.notifHeader *,
+.excelTemplateHeader *,
+th *,
+thead th *,
+.historyTable th *,
+.dashboardTable th *,
+.detailTable th * {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+

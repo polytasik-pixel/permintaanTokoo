@@ -1,4 +1,38 @@
 
+/* =============================================================================
+   FORCE CLOSE ALL DETAIL MODALS & PARSIAL POPUPS WHEN NAVIGATING PAGES
+   ============================================================================= */
+function forceCloseAllDetailPopups() {
+  window._isClosingDetailModal = true;
+  const targetIds = [
+    'popupDetailBarangV2',
+    'popupDetail',
+    'pdfModal',
+    'modalDetailParsialSub',
+    'modalBuatParsial',
+    'modalRiwayatParsialList',
+    'modalRejectParsial',
+    'artemisOverlay',
+    'rejectOverlay',
+    'popupUbahStatusAdminModal'
+  ];
+
+  targetIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove('show', 'active', 'mode-a', 'mode-b');
+      el.style.setProperty('display', 'none', 'important');
+      // Do not remove static elements from DOM
+    }
+  });
+
+  setTimeout(() => {
+    window._isClosingDetailModal = false;
+  }, 100);
+}
+window.forceCloseAllDetailPopups = forceCloseAllDetailPopups;
+
+
 // Global helper function for HTML escaping to prevent XSS and ReferenceErrors
 function escapeHTML(str) {
   if (str === null || str === undefined) return '';
@@ -3377,6 +3411,9 @@ let supabaseRealtimeChannel = null;
 // ==========================================
 async function initSupabaseRealtimeEngine() {
   if (typeof supabase === 'undefined' || !supabase) return;
+  if (typeof syncSupabaseAppSettingsToLocalCache === 'function') {
+    syncSupabaseAppSettingsToLocalCache().catch(() => {});
+  }
 
   if (supabaseRealtimeChannel) {
     try {
@@ -7764,6 +7801,7 @@ function isFormDirtyOrFilled() {
 window.isFormDirtyOrFilled = isFormDirtyOrFilled;
 
 function showPage(pageId) {
+  if (typeof forceCloseAllDetailPopups === "function") forceCloseAllDetailPopups();
   const currentActivePage = typeof getCurrentActivePageId === 'function' ? getCurrentActivePageId() : '';
 
   // 1. CHECKS IF ON AKUN PAGE AND HAS UNSAVED CHANGES
@@ -7925,10 +7963,10 @@ function initMobileBackButtonEngine() {
       { id: 'pdfModal', closeFn: () => { if (typeof tutupPdfModal === 'function') tutupPdfModal(); } },
       { id: 'popupPdfModelsModal', closeFn: () => { if (typeof tutupModalPdfModels === 'function') tutupModalPdfModels(); } },
       { id: 'modalPilihanCetakPdf', closeFn: () => { const el = document.getElementById('modalPilihanCetakPdf'); if (el) el.remove(); } },
-      { id: 'modalDetailParsialSub', closeFn: () => { if (typeof tutupModalDetailParsialSub === 'function') { tutupModalDetailParsialSub(); } else { const el = document.getElementById('modalDetailParsialSub'); if (el) el.remove(); } } },
-      { id: 'modalRejectParsial', closeFn: () => { const el = document.getElementById('modalRejectParsial'); if (el) el.remove(); } },
-      { id: 'modalRiwayatParsialList', closeFn: () => { const el = document.getElementById('modalRiwayatParsialList'); if (el) el.remove(); } },
-      { id: 'modalBuatParsial', closeFn: () => { const el = document.getElementById('modalBuatParsial'); if (el) el.remove(); } },
+      { id: 'modalDetailParsialSub', closeFn: () => { if (typeof tutupModalDetailParsialSub === 'function') { tutupModalDetailParsialSub(); } else { const el = document.getElementById('modalDetailParsialSub'); if (el) { el.classList.remove('show'); el.style.setProperty('display', 'none', 'important'); } } } },
+      { id: 'modalRejectParsial', closeFn: () => { const el = document.getElementById('modalRejectParsial'); if (el) { el.classList.remove('show'); el.style.setProperty('display', 'none', 'important'); } } },
+      { id: 'modalRiwayatParsialList', closeFn: () => { const el = document.getElementById('modalRiwayatParsialList'); if (el) { el.classList.remove('show'); el.style.setProperty('display', 'none', 'important'); } } },
+      { id: 'modalBuatParsial', closeFn: () => { const el = document.getElementById('modalBuatParsial'); if (el) { el.classList.remove('show'); el.style.setProperty('display', 'none', 'important'); } } },
       { id: 'artemisOverlay', closeFn: () => { if (typeof closeArtemisModal === 'function') closeArtemisModal(); } },
       { id: 'rejectOverlay', closeFn: () => { if (typeof tutupRejectModal === 'function') tutupRejectModal(); } },
       { id: 'popupOfflineSafetyModal', closeFn: () => { if (typeof tutupModalOfflineSafety === 'function') tutupModalOfflineSafety(); } },
@@ -8108,6 +8146,7 @@ function setupBottomMenuAutoHide() {
 }
 
 function pindahHalaman(pageId, pushHistory = true) {
+  if (typeof forceCloseAllDetailPopups === "function") forceCloseAllDetailPopups();
   updateAdminNavVisibility();
 
   if ((pageId === 'masterDbPage' || pageId === 'userManagementPage') && !checkIsAdminUser()) {
@@ -8215,8 +8254,8 @@ function loadDashboard() {
 
   const nameEl = document.getElementById('namaUser');
   const areaEl = document.getElementById('areaUser');
-  if (nameEl) nameEl.textContent = currentUser.fullName;
-  if (areaEl) areaEl.textContent = `${currentUser.category} - ${formatUserAreaDisplay(currentUser.area)}`;
+  if (nameEl) nameEl.style.display = 'none';
+  if (areaEl) areaEl.style.display = 'none';
 
   try {
     let savedVal = localStorage.getItem(BG_OPACITY_KEY) || '48';
@@ -9058,19 +9097,19 @@ function hapusRow(btn) {
   }
 }
 
-function kompresiFoto(file, maxDimension = 720, quality = 0.65) {
+function kompresiFoto(file, maxDimension = 1280, quality = 0.85) {
   return new Promise((resolve) => {
-    if (!file || !file.type.startsWith('image/')) {
+    if (!file) {
       resolve('');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
+
+    const processSrc = (src) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+        let width = img.naturalWidth || img.width || 1280;
+        let height = img.naturalHeight || img.height || 1280;
 
         if (width > height) {
           if (width > maxDimension) {
@@ -9087,15 +9126,27 @@ function kompresiFoto(file, maxDimension = 720, quality = 0.65) {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
 
         const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
         resolve(compressedBase64);
       };
-      img.onerror = () => resolve(e.target.result || '');
-      img.src = e.target.result;
+      img.onerror = () => resolve(typeof src === 'string' ? src : '');
+      img.src = src;
     };
-    reader.readAsDataURL(file);
+
+    if (typeof file === 'string') {
+      processSrc(file);
+    } else if (file instanceof Blob || file instanceof File) {
+      const reader = new FileReader();
+      reader.onload = (e) => processSrc(e.target.result);
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    } else {
+      resolve('');
+    }
   });
 }
 
@@ -9256,15 +9307,14 @@ async function uploadPhotoToSupabaseStorage(fileOrBlob) {
     return fileOrBlob;
   }
 
-  // 1. KOMPRESI GAMBAR TERLEBIH DAHULU (Max 720px, Quality 0.65 JPEG -> ~40-60 KB)
+  // 1. KOMPRESI GAMBAR HD HIGH QUALITY (Max 1280px, Quality 0.85 JPEG -> ~120-250 KB)
   let compressedDataUrl = '';
-  if (typeof fileOrBlob === 'string' && fileOrBlob.startsWith('data:image/')) {
-    compressedDataUrl = fileOrBlob;
-  } else {
-    try {
-      compressedDataUrl = await kompresiFoto(fileOrBlob, 720, 0.65);
-    } catch(e) {
-      console.warn('[KOMPRESI FOTO NOTICE]:', e);
+  try {
+    compressedDataUrl = await kompresiFoto(fileOrBlob, 1280, 0.85);
+  } catch(e) {
+    console.warn('[KOMPRESI FOTO NOTICE]:', e);
+    if (typeof fileOrBlob === 'string' && fileOrBlob.startsWith('data:image/')) {
+      compressedDataUrl = fileOrBlob;
     }
   }
 
@@ -9919,6 +9969,7 @@ function isPdfButtonAllowed(req) {
 window.isPdfButtonAllowed = isPdfButtonAllowed;
 
 function loadRiwayat() {
+  if (typeof updateExcelDownloadButtonState === 'function') updateExcelDownloadButtonState();
   const dropdown = document.getElementById('filterStatusDropdown');
   if (dropdown && filterStatusRiwayat) {
     dropdown.value = filterStatusRiwayat;
@@ -10037,10 +10088,8 @@ function filterRiwayat() {
             <button class="btnIcon btnReject" onclick="tolakServiceModal('${r.noSurat}', 'DM')" title="REJECT DM"><span class="material-symbols-rounded">cancel</span></button>
           `;
         } else if (r.status === 'APPROVE') {
-          const userCanFwRow = currentUser && (currentUser.canForward !== false && currentUser.can_forward !== false);
           aksi += `
             <button class="btnIcon btnDone" onclick="doneService('${r.noSurat}')" title="DONE"><span class="material-symbols-rounded">task_alt</span></button>
-            ${userCanFwRow ? `<button class="btnIcon" onclick="bukaModalForwardService('${r.noSurat}')" title="FORWARD SERVICE AREA" style="background: linear-gradient(135deg, #7c3aed, #6d28d9) !important; color: #ffffff !important;"><span class="material-symbols-rounded">forward</span></button>` : ''}
           `;
         }
       } else if (role === 'SERVICE') {
@@ -10050,10 +10099,8 @@ function filterRiwayat() {
             <button class="btnIcon btnReject" onclick="tolakServiceModal('${r.noSurat}', 'SERVICE')" title="REJECT SERVICE"><span class="material-symbols-rounded">cancel</span></button>
           `;
         } else if (r.status === 'APPROVE') {
-          const userCanFwRow = currentUser && (currentUser.canForward !== false && currentUser.can_forward !== false);
           aksi += `
             <button class="btnIcon btnDone" onclick="doneService('${r.noSurat}')" title="DONE"><span class="material-symbols-rounded">task_alt</span></button>
-            ${userCanFwRow ? `<button class="btnIcon" onclick="bukaModalForwardService('${r.noSurat}')" title="FORWARD SERVICE AREA" style="background: linear-gradient(135deg, #7c3aed, #6d28d9) !important; color: #ffffff !important;"><span class="material-symbols-rounded">forward</span></button>` : ''}
           `;
         }
       } else if (role === 'DM') {
@@ -11429,18 +11476,24 @@ function tutupDetailBarangV2(fromPopState = false) {
 
   const detailModal = document.getElementById('popupDetailBarangV2');
   if (detailModal) {
-    detailModal.style.setProperty('display', 'none', 'important');
-    detailModal.classList.remove('show');
-    detailModal.dataset.active = "false";
-    detailModal.dataset.noSurat = "";
+    detailModal.classList.add('closing');
+    setTimeout(() => {
+      detailModal.style.setProperty('display', 'none', 'important');
+      detailModal.classList.remove('show', 'closing');
+      detailModal.dataset.active = "false";
+      detailModal.dataset.noSurat = "";
+    }, 180);
   }
 
   const oldDetailModal = document.getElementById('popupDetail');
   if (oldDetailModal) {
-    oldDetailModal.style.setProperty('display', 'none', 'important');
-    oldDetailModal.classList.remove('show');
-    oldDetailModal.dataset.active = "false";
-    oldDetailModal.dataset.noSurat = "";
+    oldDetailModal.classList.add('closing');
+    setTimeout(() => {
+      oldDetailModal.style.setProperty('display', 'none', 'important');
+      oldDetailModal.classList.remove('show', 'closing');
+      oldDetailModal.dataset.active = "false";
+      oldDetailModal.dataset.noSurat = "";
+    }, 180);
   }
 
   // Jika ditutup manual via tombol X / overlay (bukan tombol Back HP/Browser), bersihkan history state
@@ -11597,32 +11650,18 @@ function updateBatchButtonsUI() {
   const checkedBoxes = Array.from(document.querySelectorAll('.chkDetailItem:checked'));
   const count = checkedBoxes.length;
 
-  const topArea = document.getElementById('topBreakdownHeaderArea');
-  if (topArea) {
-    const noSurat = topArea.getAttribute('data-nosurat') || '';
-    if (noSurat) {
-      if (count > 0) {
-        const existingInput = document.getElementById('inputBatchKetPart');
-        const currentText = existingInput ? existingInput.value : '';
-
-        topArea.innerHTML = `
-          <div id="containerBatchKetPart" style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-            <input type="text" id="inputBatchKetPart" value="${currentText.replace(/"/g, '&quot;')}" placeholder="Isi Keterangan Part..." style="padding: 5px 10px; font-size: 12px; font-weight: 700; border: 1.5px solid #0284c7; border-radius: 6px; outline: none; background: var(--bg-box, #ffffff); color: var(--text-main, #0f172a); width: 170px; box-shadow: 0 1px 4px rgba(0,0,0,0.15);" onkeyup="if(event.key==='Enter') simpanBatchKetPart('${noSurat}')">
-            <button type="button" id="btnBatchSimpanKetPart" onclick="simpanBatchKetPart('${noSurat}')" style="padding: 6px 14px; font-size: 11.5px; font-weight: 800; background: #0284c7 !important; color: #ffffff !important; border-radius: 6px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3); border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
-              <span class="material-symbols-rounded" style="font-size: 16px;">save</span> SIMPAN (${count})
-            </button>
-          </div>
-        `;
-        const newInput = document.getElementById('inputBatchKetPart');
-        if (newInput && !currentText) {
-          try { newInput.focus(); } catch(e) {}
-        }
-      } else {
-        if (window._defaultTopBreakdownHtmlMap && window._defaultTopBreakdownHtmlMap[noSurat] !== undefined) {
-          topArea.innerHTML = window._defaultTopBreakdownHtmlMap[noSurat];
-        }
-      }
+  const container = document.getElementById('containerBatchKetPart');
+  if (container) {
+    if (count > 0) {
+      container.style.setProperty('display', 'inline-flex', 'important');
+    } else {
+      container.style.setProperty('display', 'none', 'important');
     }
+  }
+
+  const badge = document.getElementById('batchCountBadge');
+  if (badge) {
+    badge.textContent = `(${count} Item)`;
   }
 
   const btnSetujuiBatch = document.getElementById('btnBatchSetujuiDetail');
@@ -11634,12 +11673,6 @@ window.updateBatchButtonsUI = updateBatchButtonsUI;
 
 async function simpanBatchKetPart(noSurat) {
   if (!noSurat) return;
-  const checkedBoxes = Array.from(document.querySelectorAll('.chkDetailItem:checked'));
-  if (checkedBoxes.length === 0) {
-    showNotif('PILIH MINIMAL 1 ITEM DENGAN CENTANG KOTAK DI KOLOM AKSI!', 'warning');
-    return;
-  }
-
   const inputEl = document.getElementById('inputBatchKetPart');
   const inputVal = inputEl ? inputEl.value.trim().toUpperCase() : '';
 
@@ -11649,14 +11682,26 @@ async function simpanBatchKetPart(noSurat) {
     return;
   }
 
-  const indices = checkedBoxes.map(cb => parseInt(cb.getAttribute('data-item-index'), 10)).filter(n => !isNaN(n));
-  
+  const checkedBoxes = Array.from(document.querySelectorAll('.chkDetailItem:checked'));
+  let indices = [];
+  if (checkedBoxes.length > 0) {
+    indices = checkedBoxes.map(cb => parseInt(cb.getAttribute('data-item-index'), 10)).filter(n => !isNaN(n));
+  } else {
+    // Jika tidak ada item yang dicentang spesifik, terapkan ke seluruh item yang tersedia
+    const allBoxes = Array.from(document.querySelectorAll('.chkDetailItem:not(:disabled)'));
+    indices = allBoxes.map(cb => parseInt(cb.getAttribute('data-item-index'), 10)).filter(n => !isNaN(n));
+  }
+
+  if (indices.length === 0) {
+    showNotif('TIDAK ADA ITEM YANG DAPAT DIPERBARUI KETERANGANNYA!', 'warning');
+    return;
+  }
+
   if (typeof tampilkanLoadingProses === 'function') {
     tampilkanLoadingProses('MENYIMPAN KETERANGAN PART... MOHON TUNGGU');
   } else {
     showLoading('MENYIMPAN KETERANGAN PART... MOHON TUNGGU');
   }
-  const _startTime = Date.now();
 
   try {
     const requests = getRequestsFromDB();
@@ -11694,13 +11739,6 @@ async function simpanBatchKetPart(noSurat) {
     });
 
     saveRequestsToDB(requests);
-
-    // Ensure total 8 seconds loading animation
-    const _elapsed = Date.now() - _startTime;
-    const _remaining = Math.max(0, 8000 - _elapsed);
-    if (_remaining > 0) {
-await new Promise(resolve => setTimeout(resolve, _remaining));
-    }
 
     if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
     hideLoading();
@@ -11810,6 +11848,8 @@ showConfirm(`APAKAH ANDA YAKIN INGIN MENYIMPAN PERUBAHAN ITEM PERMINTAAN #${noSu
 window.simpanPerubahanDetailAdmin = simpanPerubahanDetailAdmin;
 
 async function lihatDetail(noSuratOrObj, fromDashboard = false) {
+  window._lastDetailOpenTime = Date.now();
+  if (typeof applyDetailPopupModeUI === 'function') applyDetailPopupModeUI();
   const btnRefreshInit = document.getElementById('btnRefreshDetailV2');
   if (btnRefreshInit) btnRefreshInit.style.setProperty('display', 'none', 'important');
   _isClosingDetailModal = false;
@@ -11884,6 +11924,13 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
 
   const partialsList = typeof getPartialBreakdownsFromDB === 'function' ? getPartialBreakdownsFromDB(req.noSurat) : [];
   
+  const role = currentUser ? (currentUser.category || '').toUpperCase() : '';
+  const isAdminUser = currentUser && (role === 'ADMIN' || (currentUser.username && currentUser.username.toUpperCase() === 'ADMIN'));
+  const isServiceUser = (role === 'SERVICE' || isAdminUser);
+  
+  const canServiceRowActions = isServiceUser && (req.status === 'APPROVE');
+  const showKetPartCol = (req.status === 'APPROVE' || req.status === 'DONE');
+
   let topBreakdownButtonsHtml = '';
   const reqStatusUpper = String(req.status || '').toUpperCase();
   // HANYA MUNCULKAN TOMBOL AJUKAN BREAKDOWN JIKA STATUS SURAT ADALAH 'APPROVE'
@@ -11906,8 +11953,21 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
       `;
     }
 
+    let batchKetInputHtml = '';
+    if (showKetPartCol || canServiceRowActions) {
+      batchKetInputHtml = `
+        <div id="containerBatchKetPart" style="display: none !important; align-items: center !important; gap: 6px !important; flex-wrap: wrap !important; background: rgba(2, 132, 199, 0.08) !important; padding: 4px 8px !important; border-radius: 3px !important; border: 1px solid rgba(2, 132, 199, 0.3) !important;">
+          <input type="text" id="inputBatchKetPart" placeholder="Keterangan Part Masal..." style="padding: 5px 10px !important; font-size: 12px !important; font-weight: 700 !important; border: 1.5px solid #0284c7 !important; border-radius: 3px !important; outline: none !important; background: #ffffff !important; color: #0f172a !important; width: 175px !important; box-shadow: 0 1px 4px rgba(0,0,0,0.1) !important;" onkeyup="if(event.key==='Enter') simpanBatchKetPart('${req.noSurat}')">
+          <button type="button" id="btnBatchSimpanKetPart" onclick="simpanBatchKetPart('${req.noSurat}')" style="padding: 5px 12px !important; font-size: 11.5px !important; font-weight: 800 !important; background: #10b981 !important; color: #ffffff !important; border-radius: 3px !important; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4) !important; border: none !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 4px !important;" title="Simpan Keterangan Part untuk item centang">
+            <span class="material-symbols-rounded" style="font-size: 16px !important;">edit_note</span> EDIT KET. MASAL <span id="batchCountBadge" style="font-size: 11px !important; opacity: 0.9 !important; margin-left: 2px !important;">(0 Item)</span>
+          </button>
+        </div>
+      `;
+    }
+
     topBreakdownButtonsHtml = `
       <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        ${batchKetInputHtml}
         ${btnAjukanHtml}
         ${btnPermintaanParsialHtml}
       </div>
@@ -11941,7 +12001,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
 
 
 
-  const thBase = "background: #0284c7 !important; color: #ffffff !important; padding: 8px 12px !important; border: none !important; border-right: 1px solid rgba(255,255,255,0.35) !important; border-bottom: 2px solid rgba(0,0,0,0.18) !important; border-radius: 0 !important; border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; position: sticky !important; top: 0 !important; z-index: 300 !important; font-size: 11.5px !important; font-weight: 700 !important; letter-spacing: 0.3px !important; text-align: center !important; vertical-align: middle !important; white-space: nowrap !important; word-break: keep-all !important; overflow-wrap: normal !important; box-shadow: none !important; text-shadow: none !important; -webkit-clip-path: none !important; clip-path: none !important;";
+  const thBase = "background: #e2e8f0 !important; color: #0f172a !important; padding: 8px 12px !important; border: none !important; border-right: 1px solid #cbd5e1 !important; border-bottom: 2px solid #cbd5e1 !important; border-radius: 0 !important; border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; position: sticky !important; top: 0 !important; z-index: 300 !important; font-size: 11.5px !important; font-weight: 800 !important; letter-spacing: 0.3px !important; text-align: center !important; vertical-align: middle !important; white-space: nowrap !important; word-break: keep-all !important; overflow-wrap: normal !important; box-shadow: none !important; text-shadow: none !important; -webkit-clip-path: none !important; clip-path: none !important;";
   const thStyleAutofit = `${thBase} width: 1% !important; white-space: nowrap !important; text-align: center !important;`;
   const thStyleCenter = `${thBase} text-align: center !important; white-space: nowrap !important; word-break: keep-all !important; overflow-wrap: normal !important;`;
   const thStyleAutofitLast = `${thBase} width: 1% !important; white-space: nowrap !important; text-align: center !important; border-right: none !important;`;
@@ -11955,12 +12015,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
   const getTdStyleAutofit = (idx, total) => `${tdBase} ${getTdBorder(idx, total)} width: 1% !important; white-space: nowrap !important; text-align: center !important;`;
   const getTdStyleLeft = (idx, total) => `${tdBase} ${getTdBorder(idx, total)} text-align: left !important;`;
 
-  const role = currentUser ? (currentUser.category || '').toUpperCase() : '';
-  const isAdminUser = currentUser && (role === 'ADMIN' || (currentUser.username && currentUser.username.toUpperCase() === 'ADMIN'));
-  const isServiceUser = (role === 'SERVICE' || isAdminUser);
-  
-  const canServiceRowActions = isServiceUser && (req.status === 'APPROVE');
-  const showKetPartCol = (req.status === 'APPROVE' || req.status === 'DONE');
+
 
   const thStyleAutofitLeft = `${thBase} text-align: left !important; white-space: nowrap !important;`;
   const thStyleFlex50 = `${thBase} text-align: left !important; white-space: nowrap !important;`;
@@ -12172,7 +12227,8 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
     `);
   }
 
-  if (!isDeletedReq) {
+  const canDownloadExcelInDetail = typeof checkUserCanDownloadExcel === 'function' ? checkUserCanDownloadExcel(currentUser) : true;
+  if (!isDeletedReq && canDownloadExcelInDetail) {
     group1Buttons.push(`
       <button type="button" class="btnIcon btnIconOnly" title="DOWNLOAD EXCEL DETAIL (.XLSX)" onclick="downloadSingleDetailExcel('${req.noSurat}');" style="background: #107c41 !important; color: #ffffff !important;">
         <span class="material-symbols-rounded">file_download</span>
@@ -12338,8 +12394,8 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
   const thActionHtml = canServiceRowActions ? `
     <th class="th-aksi-col" style="${thStyleLeftLast} white-space: nowrap !important; text-align: right !important; vertical-align: middle !important; padding: 8px 12px !important;">
       <div style="display: inline-flex !important; align-items: center !important; justify-content: flex-end !important; gap: 6px !important; width: 100% !important; vertical-align: middle !important;">
-        <span style="font-size: 11px !important; font-weight: 800 !important; letter-spacing: 0.5px !important; color: #ffffff !important;">AKSI</span>
-        <label class="chkBoxBoxHeader" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; border: 1.5px solid rgba(255, 255, 255, 0.7) !important; border-radius: 6px !important; background: rgba(255, 255, 255, 0.2) !important; cursor: pointer !important; box-sizing: border-box !important; vertical-align: middle !important; transition: all 0.15s ease !important; margin: 0 !important;" title="PILIH SEMUA ITEM">
+        <span style="font-size: 11px !important; font-weight: 800 !important; letter-spacing: 0.5px !important; color: #0f172a !important;">AKSI</span>
+        <label class="chkBoxBoxHeader" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; border: 1.5px solid #64748b !important; border-radius: 6px !important; background: #cbd5e1 !important; cursor: pointer !important; box-sizing: border-box !important; vertical-align: middle !important; transition: all 0.15s ease !important; margin: 0 !important;" title="PILIH SEMUA ITEM">
           <input type="checkbox" id="chkAllDetailItems" onchange="toggleAllDetailItems(this, '${req.noSurat}')" style="cursor: pointer !important; width: 16px !important; height: 16px !important; accent-color: #0284c7 !important; margin: 0 !important; padding: 0 !important; vertical-align: middle !important;">
         </label>
       </div>
@@ -12348,7 +12404,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
 
   const tableHeaderHtml = isDus ? `
     <thead>
-      <tr style="background: #0284c7 !important; color: #ffffff !important;">
+      <tr style="background: #e2e8f0 !important; color: #0f172a !important;">
         <th class="col-no" style="${thStyleAutofit}">NO</th>
         <th class="col-type-seri" style="${thStyleAutofitLeft}">TYPE</th>
         <th class="col-type-seri" style="${thStyleAutofitLeft}">SERI BARANG</th>
@@ -12362,7 +12418,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
     </thead>
   ` : `
     <thead>
-      <tr style="background: #0284c7 !important; color: #ffffff !important;">
+      <tr style="background: #e2e8f0 !important; color: #0f172a !important;">
         <th class="col-no" style="${thStyleAutofit}">NO</th>
         <th class="col-type-seri" style="${thStyleAutofitLeft}">TYPE</th>
         <th class="col-type-seri" style="${thStyleAutofitLeft}">SERI BARANG</th>
@@ -12457,7 +12513,8 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
 
   if (popupDetailV2) {
     popupDetailV2.style.setProperty('display', 'flex', 'important');
-    popupDetailV2.style.setProperty('z-index', '2147483630', 'important');
+    const _curModeZ = (typeof getDetailPopupMode === 'function' ? getDetailPopupMode() : 'A') === 'B' ? '950' : '2147483630';
+    popupDetailV2.style.setProperty('z-index', _curModeZ, 'important');
     popupDetailV2.classList.add('show');
     popupDetailV2.dataset.active = "true";
     popupDetailV2.dataset.noSurat = req.noSurat;
@@ -13163,8 +13220,8 @@ function prosesPilihFotoBuktiPart(event) {
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        // Kompresi foto canvas max 1024px
-        const maxDim = 1024;
+        // Kompresi foto canvas max 1280px (HD High Quality 0.85)
+        const maxDim = 1280;
         let w = img.width;
         let h = img.height;
         if (w > maxDim || h > maxDim) {
@@ -13184,7 +13241,7 @@ function prosesPilihFotoBuktiPart(event) {
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, w, h);
 
-        const compressedDataUrl = c.toDataURL('image/jpeg', 0.82);
+        const compressedDataUrl = c.toDataURL('image/jpeg', 0.85);
 
         const hiddenInput = document.getElementById('editKetPartSingleFotoUrl');
         if (hiddenInput) hiddenInput.value = compressedDataUrl;
@@ -13570,43 +13627,62 @@ function isValidSig(s) {
   if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return false;
   if (trimmed.startsWith('blob:')) return false; // BLOB URLs are local to device browser and fail on other devices
   if (trimmed.includes('DIGITALLY VERIFIED') || trimmed.includes('OfficialDigitalSignatureStamp') || trimmed.includes('rect x="1.5"') || trimmed.includes('<svg') || trimmed.includes('APPROVED')) return false;
-  return trimmed.startsWith('data:image/') || trimmed.startsWith('http://') || trimmed.startsWith('https://');
+  return trimmed.startsWith('data:image/') || trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('TTD_') || trimmed.endsWith('.png') || trimmed.endsWith('.jpg');
 }
 window.isValidSig = isValidSig;
 
+function formatSupabaseStorageUrl(urlOrFileName) {
+  if (!urlOrFileName || typeof urlOrFileName !== 'string') return '';
+  const trimmed = urlOrFileName.trim();
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined' || trimmed === 'false' || trimmed === '[]' || trimmed === '{}') return '';
+  if (trimmed.startsWith('data:image/') || trimmed.startsWith('blob:')) return trimmed;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+
+  const sb = (typeof supabase !== 'undefined' && supabase) ? supabase : ((typeof window.supabaseClient !== 'undefined' && window.supabaseClient) ? window.supabaseClient : null);
+  const cleanName = trimmed.replace(/^photos\//, '').replace(/^\//, '');
+  if (sb && sb.storage) {
+    try {
+      const { data } = sb.storage.from('photos').getPublicUrl(cleanName);
+      if (data && data.publicUrl) return data.publicUrl;
+    } catch(e) {}
+  }
+  return `https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/${cleanName}`;
+}
+window.formatSupabaseStorageUrl = formatSupabaseStorageUrl;
+
 function renderSafeTtdImageTag(sigUrl, styleAttr = 'max-height: 52px; max-width: 100%; object-fit: contain;') {
   if (!isValidSig(sigUrl)) return '';
-  return `<img src="${sigUrl.trim()}" style="${styleAttr}">`;
+  const fullUrl = formatSupabaseStorageUrl(sigUrl);
+  if (!fullUrl) return '';
+  return `<img src="${fullUrl}" style="${styleAttr}" onerror="this.style.display='none';">`;
 }
 window.renderSafeTtdImageTag = renderSafeTtdImageTag;
 
 async function preloadAndConvertTtdToBase64(sigUrl) {
   if (!sigUrl || typeof sigUrl !== 'string') return '';
-  const trimmed = sigUrl.trim();
-  if (!trimmed || trimmed === 'null' || trimmed === 'undefined' || trimmed === 'false') return '';
+  const fullUrl = formatSupabaseStorageUrl(sigUrl);
+  if (!fullUrl) return '';
 
-  if (trimmed.startsWith('blob:')) return '';
-
-  // 1. JIKA SUDAH BASE64 DATA URI
-  if (trimmed.startsWith('data:image/')) {
-    return trimmed;
+  if (fullUrl.startsWith('data:image/')) {
+    return fullUrl;
   }
 
-  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+  if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
     return '';
   }
 
-  // 2. JIKA LINK URL ONLINE: Beri Batas Maksimal 1.5 Detik per gambar agar PDF TIDAK MACET/BLOCKED
-  const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(trimmed), 1500));
+  const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(''), 1500));
 
   const convertPromise = (async () => {
     try {
-      const cacheBustUrl = trimmed.includes('?') ? `${trimmed}&_t=${Date.now()}` : `${trimmed}?_t=${Date.now()}`;
-      const res = await fetch(cacheBustUrl, { cache: 'force-cache' });
+      const isSupabase = fullUrl.includes('supabase.co') || fullUrl.includes('storage/v1/object');
+      const fetchUrl = isSupabase ? fullUrl : (fullUrl.includes('?') ? `${fullUrl}&_t=${Date.now()}` : `${fullUrl}?_t=${Date.now()}`);
+      
+      const res = await fetch(fetchUrl, { cache: 'force-cache' });
       if (res.ok) {
         const blob = await res.blob();
         if (blob && blob.size > 0) {
-const base64Str = await new Promise((resolve) => {
+          const base64Str = await new Promise((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result || '');
             reader.onerror = () => resolve('');
@@ -13616,12 +13692,15 @@ const base64Str = await new Promise((resolve) => {
             return base64Str;
           }
         }
+      } else {
+        return '';
       }
-    } catch (e) {}
+    } catch (e) {
+      return '';
+    }
 
-    // Fallback Canvas
     try {
-const imgBase64 = await new Promise((resolve) => {
+      const imgBase64 = await new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
@@ -13632,21 +13711,21 @@ const imgBase64 = await new Promise((resolve) => {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
             const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-            resolve(dataUrl.startsWith('data:image/') ? dataUrl : trimmed);
+            resolve(dataUrl.startsWith('data:image/') ? dataUrl : '');
           } catch(e) {
-            resolve(trimmed);
+            resolve('');
           }
         };
-        img.onerror = () => resolve(trimmed);
-        img.src = trimmed;
+        img.onerror = () => resolve('');
+        img.src = fullUrl;
       });
       if (imgBase64) return imgBase64;
     } catch (e) {}
 
-    return trimmed;
+    return '';
   })();
 
-  return Promise.race([convertPromise, timeoutPromise]).catch(() => trimmed);
+  return Promise.race([convertPromise, timeoutPromise]).catch(() => '');
 }
 window.preloadAndConvertTtdToBase64 = preloadAndConvertTtdToBase64;
 
@@ -13852,7 +13931,7 @@ function renderFullPdfPreviewDocument(modelId) {
 
   const m = PDF_MODELS_DATA.find(x => x.id === modelId) || PDF_MODELS_DATA[0];
 
-  let tableHeaderBg = '#0284c7';
+  let tableHeaderBg = '#475569';
   let headerTitleHtml = `
     <div style="text-align: center; font-size: 20px; font-weight: 800; border-bottom: 2.5px solid #0f172a; padding-bottom: 8px; margin-bottom: 36px; letter-spacing: 0.5px; color: #0f172a; text-transform: uppercase;">
       PERMINTAAN TOKO
@@ -14307,14 +14386,14 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
           <div style="font-size: 11px; font-weight: bold; margin-bottom: 6px; color: #0f172a;">DETAIL PERMINTAAN:</div>
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11.5px; border: 1px solid #cbd5e1;">
             <thead>
-              <tr style="background: ${tableHeaderBg}; color: #ffffff;">
-                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; font-weight:700; white-space: nowrap !important;">NO</th>
-                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; font-weight:700; text-align:center; white-space: nowrap !important;">TIPE BARANG</th>
-                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; font-weight:700; text-align:center; white-space: nowrap !important;">NO. SERI</th>
-                ${req.jenis === 'DUS' ? `<th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; font-weight:700; text-align:center; white-space: nowrap !important;">NO. SERI DUS</th>` : ''}
-                <th style="padding:7px 8px; border:1px solid #cbd5e1; font-weight:700; text-align:center; white-space: normal !important;">PERMINTAAN BARANG</th>
-                <th style="padding:7px 8px; border:1px solid #cbd5e1; font-weight:700; text-align:center; white-space: normal !important;">ALASAN PERMINTAAN</th>
-                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; font-weight:700; white-space: nowrap !important;">QTY</th>
+              <tr style="background: ${tableHeaderBg} !important; color: #ffffff !important;">
+                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">NO</th>
+                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">TIPE BARANG</th>
+                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI</th>
+                ${req.jenis === 'DUS' ? `<th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI DUS</th>` : ''}
+                <th style="padding:7px 8px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">PERMINTAAN BARANG</th>
+                <th style="padding:7px 8px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">ALASAN PERMINTAAN</th>
+                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">QTY</th>
               </tr>
             </thead>
             <tbody>${itemRowsHtml}</tbody>
@@ -14390,30 +14469,34 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
       </div>
     `;
 
+    const previewImgs = Array.from(pdfContainer.querySelectorAll('img'));
+    if (previewImgs.length > 0) {
+      await Promise.all(previewImgs.map(img => {
+        if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+        return new Promise(r => { img.onload = r; img.onerror = r; setTimeout(r, 2000); });
+      }));
+    }
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+
+    const pdfModal = document.getElementById('pdfModal');
+    if (pdfModal) {
+      if (!autoPrint) {
+        pdfModal.style.setProperty('display', 'flex', 'important');
+        pdfModal.style.setProperty('z-index', '2147483647', 'important');
+        pdfModal.classList.add('show');
+        if (typeof applyDetailPopupModeUI === 'function') applyDetailPopupModeUI();
+        if (typeof pushPopupHistoryState === 'function') pushPopupHistoryState();
+      } else {
+        pdfModal.style.setProperty('display', 'none', 'important');
+        pdfModal.classList.remove('show');
+      }
+    }
+
     if (autoPrint) {
       if (typeof cetakDokumenPdf === 'function') {
         await cetakDokumenPdf();
       } else {
-        if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
         window.print();
-      }
-    } else {
-      // Decode preview images in pdfContainer before showing preview modal
-      const previewImgs = Array.from(pdfContainer.querySelectorAll('img'));
-      if (previewImgs.length > 0) {
-await Promise.all(previewImgs.map(img => {
-          if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
-          return new Promise(r => { img.onload = r; img.onerror = r; setTimeout(r, 2000); });
-        }));
-      }
-      if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
-
-      const pdfModal = document.getElementById('pdfModal');
-      if (pdfModal) {
-        pdfModal.style.setProperty('display', 'flex', 'important');
-        pdfModal.style.setProperty('z-index', '2147483647', 'important');
-        pdfModal.classList.add('show');
-        if (typeof pushPopupHistoryState === 'function') pushPopupHistoryState();
       }
     }
   } catch(e) {
@@ -14537,6 +14620,15 @@ async function cetakDokumenPdf() {
             table {
               width: 100% !important;
               border-collapse: collapse !important;
+            }
+            table thead tr {
+              background: #0284c7 !important;
+              color: #ffffff !important;
+            }
+            table thead th {
+              background: #0284c7 !important;
+              color: #ffffff !important;
+              font-weight: 800 !important;
             }
           </style>
         </head>
@@ -18184,7 +18276,7 @@ function isAkunDirty() {
   if (window._origAkunSnapshot) {
     const namaChanged = currentNama !== window._origAkunSnapshot.nama;
     const hpChanged = currentHP !== window._origAkunSnapshot.hp;
-    const passChanged = currentPass !== window._origAkunSnapshot.pass;
+    const passChanged = (currentPass.length > 0 && currentPass !== window._origAkunSnapshot.pass);
     const ttdChanged = !!window._isTtdCanvasDirty;
     return (namaChanged || hpChanged || passChanged || ttdChanged);
   }
@@ -18196,7 +18288,7 @@ function isAkunDirty() {
 
   const namaChanged = (currentNama !== origNama && currentNama.length > 0);
   const hpChanged = (currentHP !== origHP && currentHP !== origHPAlt);
-  const passChanged = (currentPass !== origPass && currentPass.length > 0);
+  const passChanged = (currentPass.length > 0 && currentPass !== origPass);
   const ttdChanged = !!window._isTtdCanvasDirty;
 
   return (namaChanged || hpChanged || passChanged || ttdChanged);
@@ -18350,6 +18442,13 @@ async function eksekusiSimpanAkun(autoClose = false) {
       hideLoading();
 
       showNotif('PROFIL AKUN BERHASIL DIPERBARUI!', 'success');
+
+      window._isTtdCanvasDirty = false;
+      window._origAkunSnapshot = {
+        nama: (currentUser.fullName || '').trim().toUpperCase(),
+        hp: (currentUser.phone || '-').trim(),
+        pass: (currentUser.password || '').trim()
+      };
 
       const akunArea = document.getElementById('akunArea');
       if (akunArea) akunArea.value = `${currentUser.area} - ${formatUserAreaDisplay(currentUser.area)}`;
@@ -22371,6 +22470,7 @@ window.bukaModalDoneParsial = bukaModalDoneParsial;
 // =======================================================================
 
 function bukaModalBuatParsial(noSurat) {
+  setTimeout(() => { if (typeof applyDetailPopupModeUI === "function") applyDetailPopupModeUI(); }, 0);
   if (!noSurat) return;
   const cleanTargetNoSurat = String(noSurat || '').trim().toUpperCase();
   const reqsCheck = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
@@ -22456,7 +22556,7 @@ function bukaModalBuatParsial(noSurat) {
     const i = el.item;
     const reqQty = Number(i.qty || i.jumlah || 1);
     const delQty = calcItemDeliveredQty(req, el.idx);
-    const bgRow = idxSeq % 2 === 0 ? '#ffffff' : '#f0f6fa';
+    const bgRow = idxSeq % 2 === 0 ? '#ffffff' : '#f8fafc';
     
     const wasRejectedByDM = rejectedPartials.some(p => Array.isArray(p.items) && p.items.some(pi => {
       if (pi.itemIdx !== undefined && pi.itemIdx !== null) {
@@ -22485,20 +22585,15 @@ function bukaModalBuatParsial(noSurat) {
   }).join('');
 
   const modalHtml = `
-    <div id="modalBuatParsial" data-nosurat="${noSurat}" class="modal-overlay active show" onclick="if (event.target === this) tutupModalBuatParsial();" style="display: flex !important; position: fixed !important; inset: 0 !important; background: rgba(0,0,0,0.75) !important; backdrop-filter: blur(4px) !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 1mm 0.5mm !important; box-sizing: border-box !important;">
-      <div style="background: var(--bg-card); color: var(--text-main); width: calc(100vw - 1mm); height: calc(100vh - 2mm); margin: 1mm 0.5mm !important; border-radius: 8px !important; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.4); border: 1px solid var(--border-color); animation: popupSlideRightToLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;">
+    <div id="modalBuatParsial" data-nosurat="${noSurat}" class="popupOverlay active show ${getDetailPopupMode() === 'B' ? 'mode-b' : 'mode-a'}" onclick="if (event.target === this) tutupModalBuatParsial();">
+      <div class="popupBox" style="background: var(--bg-card); color: var(--text-main); display: flex; flex-direction: column; overflow: hidden; position: relative !important;">
         
-        <!-- HEADER 90 DERAJAT DEGNAN GARIS PEMBATAS RATA TENGAH -->
-        <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 16px !important; display: flex; justify-content: space-between; align-items: center; border-radius: 0px !important; border-bottom: 1px solid rgba(255,255,255,0.25) !important; flex-shrink: 0; position: relative !important;">
-          <div style="text-align: center !important; width: 100%;">
-            <div style="font-weight: 800; font-size: 14px; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #ffffff !important; text-align: center !important;">
-              <span class="material-symbols-rounded" style="color: #ffffff !important;">call_split</span> AJUKAN SURAT JALAN PARSIAL (${nextPartialId})
-            </div>
-            <div style="font-size: 11px; opacity: 0.95; margin-top: 2px; color: #ffffff !important; text-align: center !important;">
-              No. Surat Induk: <strong style="color: #fef08a;">${noSurat}</strong> | Toko: <strong>${req.toko || '-'}</strong>
-            </div>
+        <!-- HEADER -->
+        <div style="background: #e2e8f0 !important; color: #0f172a !important; padding: 12px 16px !important; display: flex; justify-content: space-between; align-items: center; border-radius: 0px !important; border-bottom: 2px solid #cbd5e1 !important; flex-shrink: 0; position: relative !important;">
+          <div style="font-weight: 800; font-size: 14.5px; color: #0f172a !important; text-align: center !important; width: 100%;">
+            AJUKAN SURAT JALAN PARSIAL (${nextPartialId})
           </div>
-          <button type="button" onclick="tutupModalBuatParsial()" title="TUTUP" style="font-size: 28px !important; font-weight: 900 !important; color: #ffffff !important; background: transparent !important; border: none !important; cursor: pointer !important; line-height: 1 !important; outline: none !important; padding: 0 4px !important; margin: 0 !important; opacity: 0.95;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.95'">&times;</button>
+          <button type="button" onclick="tutupModalBuatParsial()" title="TUTUP" style="background: #cbd5e1 !important; color: #0f172a !important; border: 1px solid #94a3b8 !important; border-radius: 6px !important; width: 28px !important; min-width: 28px !important; height: 28px !important; font-size: 20px !important; line-height: 1 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-weight: 700 !important; flex-shrink: 0 !important;">&times;</button>
         </div>
 
         <!-- BODY CONTENT -->
@@ -22511,33 +22606,32 @@ function bukaModalBuatParsial(noSurat) {
           <!-- KOLOM PENCARIAN & UNGGAH BUKTI FOTO (BERDAMPINGAN DILAYOUT ATAS) -->
           <div style="margin: 0 2mm 2mm 2mm !important; display: flex; gap: 2mm !important; align-items: center; flex-wrap: wrap; flex-shrink: 0;">
             <div style="position: relative; flex: 1; min-width: 220px;">
-              <span class="material-symbols-rounded" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--text-muted); pointer-events: none;">search</span>
-              <input type="text" id="inputCariItemParsial" oninput="filterTableItemParsial()" placeholder="Cari Type, Seri Barang, Permintaan..." style="width: 100%; padding: 6px 28px 6px 30px; border-radius: 0px !important; border: 1px solid var(--border-color); background: var(--bg-box); color: var(--text-main); font-size: 11.5px; box-sizing: border-box !important;">
+              <input type="text" id="inputCariItemParsial" oninput="filterTableItemParsial()" placeholder="Cari Type, Seri Barang, Permintaan..." style="width: 100%; padding: 6px 28px 6px 10px; border-radius: 0px !important; border: 1px solid var(--border-color); background: var(--bg-box); color: var(--text-main); font-size: 11.5px; box-sizing: border-box !important;">
               <button type="button" id="btnHapusCariItemParsial" onclick="resetCariItemParsial()" title="Hapus Pencarian" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent !important; border: none !important; color: #0f172a !important; font-size: 18px !important; font-weight: 900 !important; cursor: pointer !important; padding: 0 4px !important; line-height: 1 !important; outline: none !important; display: none; box-shadow: none !important; -webkit-appearance: none !important; appearance: none !important;">&times;</button>
             </div>
 
             <!-- TOMBOL UNGGAH BUKTI FOTO PARSIAL -->
-            <input type="file" id="inputFotoParsialFile" accept="image/*" multiple onchange="handleFotoParsialFileSelected(event)" style="display: none;">
+            <input type="file" id="inputFotoParsialFile" accept="image/jpeg,image/jpg,image/png,image/*,application/pdf,.pdf" multiple onchange="handleFotoParsialFileSelected(event)" style="display: none;">
             <button type="button" onclick="document.getElementById('inputFotoParsialFile').click()" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none !important; padding: 5px 14px; height: 32px; border-radius: 4px !important; font-weight: 800; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap !important; box-shadow: 0 3px 8px rgba(2,132,199,0.3) !important;">
-              <span class="material-symbols-rounded" style="font-size: 15px; color: #ffffff !important;">add_a_photo</span> UNGGAH BUKTI FOTO <span style="color: #e0f2fe; font-weight: 600; font-size: 10.5px;">(OPSIONAL)</span>
+              <span class="material-symbols-rounded" style="font-size: 15px; color: #ffffff !important;">add_a_photo</span> UNGGAH BUKTI (FOTO / PDF) <span style="color: #e0f2fe; font-weight: 600; font-size: 10.5px;">(OPSIONAL)</span>
             </button>
             <div id="previewFotoParsialContainer" style="display: flex; gap: 2mm !important; flex-wrap: wrap; align-items: center;"></div>
           </div>
 
           <div style="overflow-x: auto; width: 100%; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); border-left: none !important; border-right: none !important; margin: 0 !important; border-radius: 0px !important; flex: 1;">
             <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; border-radius: 0px !important;">
-              <thead style="position: sticky; top: 0; z-index: 5; background: var(--primary) !important; border-radius: 0px !important;">
-                <tr style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; border-bottom: 1px solid var(--border-color); color: #ffffff !important; white-space: nowrap !important; border-radius: 0px !important;">
-                  <th style="padding: 2mm !important; text-align: center !important; width: 35px; white-space: nowrap !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; border-radius: 0px !important; border-right: 1px solid rgba(255,255,255,0.2) !important;">
+              <thead style="position: sticky; top: 0; z-index: 5; background: #e2e8f0 !important; border-radius: 0px !important;">
+                <tr style="background: #e2e8f0 !important; border-bottom: 2px solid #cbd5e1; color: #0f172a !important; white-space: nowrap !important; border-radius: 0px !important;">
+                  <th style="padding: 2mm !important; text-align: center !important; width: 35px; white-space: nowrap !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-radius: 0px !important; border-right: 1px solid #cbd5e1 !important;">
           <input type="checkbox" id="chkParsialSelectAll" onchange="toggleSelectAllParsial(this)" title="Centang / Batal Centang Semua" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
         </th>
-                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; border-right: 1px solid rgba(255,255,255,0.2) !important;">TYPE</th>
-                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; border-right: 1px solid rgba(255,255,255,0.2) !important;">SERI BARANG</th>
-                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; border-right: 1px solid rgba(255,255,255,0.2) !important;">PERMINTAAN</th>
-                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; border-right: 1px solid rgba(255,255,255,0.2) !important;">MINTA</th>
-                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; border-right: 1px solid rgba(255,255,255,0.2) !important;">TERKIRIM</th>
-                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; border-right: 1px solid rgba(255,255,255,0.2) !important;">SISA</th>
-                  <th style="padding: 2mm !important; text-align: center !important; width: 80px; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important;">SERAHKAN</th>
+                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">TYPE</th>
+                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">SERI BARANG</th>
+                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">PERMINTAAN</th>
+                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">MINTA</th>
+                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">TERKIRIM</th>
+                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">SISA</th>
+                  <th style="padding: 2mm !important; text-align: center !important; width: 80px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important;">SERAHKAN</th>
                 </tr>
               </thead>
               <tbody id="tableBodyBuatParsial" style="background: var(--bg-card) !important; color: var(--text-main) !important; border-radius: 0px !important;">
@@ -22549,7 +22643,7 @@ function bukaModalBuatParsial(noSurat) {
 
         <!-- FOOTER -->
         <div style="padding: 2mm !important; background: var(--bg-header); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 4px 4px !important; flex-shrink: 0;">
-          <button type="button" onclick="tutupModalBuatParsial()" style="background: #64748b; color: #fff; border: none; padding: 6px 14px; border-radius: 4px !important; font-weight: 700; font-size: 12px; cursor: pointer;">BATAL</button>
+          <button type="button" onclick="tutupModalBuatParsial()" style="background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 4px !important; font-weight: 700; font-size: 12px; cursor: pointer;">BATAL</button>
           <button type="button" onclick="prosesKirimPengajuanBreakdown()" style="background: linear-gradient(135deg, #10b981, #059669) !important; color: #ffffff !important; border: none; padding: 6px 18px; border-radius: 4px !important; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.2);">
             <span class="material-symbols-rounded" style="font-size: 16px;">send</span> KIRIM PENGAJUAN PARSIAL (${nextPartialId})
           </button>
@@ -22562,7 +22656,9 @@ function bukaModalBuatParsial(noSurat) {
   document.body.insertAdjacentHTML('beforeend', modalHtml);
   const newlyCreatedModal = document.getElementById('modalBuatParsial');
   if (newlyCreatedModal) {
+    const isB = (typeof getDetailPopupMode === 'function' ? getDetailPopupMode() : 'A') === 'B';
     newlyCreatedModal.style.setProperty('display', 'flex', 'important');
+    newlyCreatedModal.style.setProperty('z-index', isB ? '2100' : '2147483640', 'important');
     newlyCreatedModal.classList.add('show');
   }
 }
@@ -22621,9 +22717,18 @@ window.toggleParsialRow = toggleParsialRow;
 
 function tutupModalBuatParsial() {
   const modal = document.getElementById('modalBuatParsial');
-  if (modal) modal.remove();
-  if (typeof pastikanDetailPermintaanTetapTerbuka === 'function') {
-    pastikanDetailPermintaanTetapTerbuka();
+  if (modal) {
+    modal.classList.add('closing');
+    setTimeout(() => {
+      modal.remove();
+      if (typeof pastikanDetailPermintaanTetapTerbuka === 'function') {
+        pastikanDetailPermintaanTetapTerbuka();
+      }
+    }, 180);
+  } else {
+    if (typeof pastikanDetailPermintaanTetapTerbuka === 'function') {
+      pastikanDetailPermintaanTetapTerbuka();
+    }
   }
 }
 window.tutupModalBuatParsial = tutupModalBuatParsial;
@@ -22715,12 +22820,25 @@ function renderTempFotoParsialPreviews() {
     return;
   }
 
-  container.innerHTML = photos.map((url, idx) => `
-    <div style="position: relative; width: 32px; height: 32px; border-radius: 4px; border: 1.5px solid #0284c7; box-shadow: 0 2px 5px rgba(2,132,199,0.3); background: #0f172a; flex-shrink: 0; display: inline-block; vertical-align: middle; margin-left: 4px;">
-      <img src="${url}" onclick="if (typeof bukaViewGambar === 'function') bukaViewGambar(['${url}'], 0)" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; border-radius: 3px; display: block;" title="Klik untuk memperbesar foto">
-      <button type="button" onclick="hapusTempFotoParsial(${idx})" title="Hapus foto ini" style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: #ffffff; border: 1px solid #ffffff; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">&times;</button>
-    </div>
-  `).join('');
+  container.innerHTML = photos.map((url, idx) => {
+    const isPdf = typeof url === 'string' && (url.includes('application/pdf') || url.toLowerCase().includes('.pdf'));
+    if (isPdf) {
+      return `
+        <div style="position: relative; height: 32px; padding: 0 8px; border-radius: 4px; border: 1.5px solid #ea580c; background: #fff7ed; color: #c2410c; font-size: 11px; font-weight: 800; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; margin-left: 4px; vertical-align: middle;">
+          <span class="material-symbols-rounded" style="font-size: 16px; color: #ea580c;">picture_as_pdf</span>
+          <button type="button" onclick="bukaViewPdfDokumen('${url.replace(/'/g, "\'")}', 'Bukti_Parsial_${idx+1}.pdf')" style="background: #ea580c; color: #ffffff; border: none; border-radius: 3px; padding: 2px 6px; font-size: 10px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" title="Lihat PDF">LIHAT PDF</button>
+          <button type="button" onclick="downloadPdfFile('${url.replace(/'/g, "\'")}', 'Bukti_Parsial_${idx+1}.pdf')" style="background: #10b981; color: #ffffff; border: none; border-radius: 3px; padding: 2px 6px; font-size: 10px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" title="Download PDF">DOWNLOAD</button>
+          <button type="button" onclick="hapusTempFotoParsial(${idx})" title="Hapus PDF" style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: #ffffff; border: 1px solid #ffffff; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">&times;</button>
+        </div>
+      `;
+    }
+    return `
+      <div style="position: relative; width: 32px; height: 32px; border-radius: 4px; border: 1.5px solid #0284c7; box-shadow: 0 2px 5px rgba(2,132,199,0.3); background: #0f172a; flex-shrink: 0; display: inline-block; vertical-align: middle; margin-left: 4px;">
+        <img src="${url}" onclick="if (typeof bukaViewGambar === 'function') bukaViewGambar(['${url}'], 0)" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; border-radius: 3px; display: block;" title="Klik untuk memperbesar foto">
+        <button type="button" onclick="hapusTempFotoParsial(${idx})" title="Hapus foto ini" style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: #ffffff; border: 1px solid #ffffff; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">&times;</button>
+      </div>
+    `;
+  }).join('');
 }
 window.renderTempFotoParsialPreviews = renderTempFotoParsialPreviews;
 
@@ -22950,7 +23068,7 @@ async function bukaModalRiwayatParsialList(noSurat) {
     const itemsCount = Array.isArray(p.items) ? p.items.length : 0;
     const totalQtySerah = Array.isArray(p.items) ? p.items.reduce((acc, curr) => acc + Number(curr.qtyDiserahkan || curr.qty || 1), 0) : 0;
     
-    const cardBg = pIdx % 2 === 0 ? '#ffffff' : '#f0f6fa';
+    const cardBg = pIdx % 2 === 0 ? '#ffffff' : '#f8fafc';
     return `
         <div style="background: ${cardBg} !important; border-radius: 4px !important; border: 1px solid var(--border-color); margin-bottom: 2mm !important; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 2mm 3mm !important;">
           <div style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; flex-wrap: wrap; text-align: left;">
@@ -23045,19 +23163,14 @@ async function bukaModalRiwayatParsialList(noSurat) {
   }).join('');
 
   const modalFullscreenHtml = `
-    <div id="modalRiwayatParsialList" data-nosurat="${cleanNoSuratRaw}" class="modal-overlay active" onclick="if (event.target === this) tutupModalRiwayatParsialList('${cleanNoSuratRaw}');" style="display: flex !important; position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.75) !important; backdrop-filter: blur(5px) !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 1mm 0.5mm !important; box-sizing: border-box !important;">
-      <div style="background: var(--bg-card); color: var(--text-main); width: calc(100vw - 1mm); height: calc(100vh - 2mm); margin: 1mm 0.5mm !important; border-radius: 8px !important; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); animation: popupSlideRightToLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; position: relative !important; z-index: 2147483647 !important;">
+    <div id="modalRiwayatParsialList" data-nosurat="${cleanNoSuratRaw}" class="popupOverlay active show ${getDetailPopupMode() === 'B' ? 'mode-b' : 'mode-a'}" onclick="if (event.target === this) tutupModalRiwayatParsialList('${cleanNoSuratRaw}');">
+      <div class="popupBox" style="background: var(--bg-card); color: var(--text-main); display: flex; flex-direction: column; overflow: hidden; position: relative !important;">
         
-        <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 16px !important; display: flex; justify-content: space-between; align-items: center; border-radius: 0px !important; border-bottom: 1px solid rgba(255,255,255,0.25) !important; flex-shrink: 0; position: relative !important;">
-          <div style="text-align: center !important; width: 100%;">
-            <div style="font-weight: 800; font-size: 15px; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #ffffff !important; text-align: center !important;">
-              <span class="material-symbols-rounded" style="color: #ffffff !important;">call_split</span> DETAIL PENGAJUAN BREAKDOWN SURAT
-            </div>
-            <div style="font-size: 11px; opacity: 0.9; margin-top: 2px; color: #ffffff !important; text-align: center !important;">
-              Surat Induk: <strong style="color: #fef08a;">${cleanNoSuratRaw}</strong> | Toko: <strong>${req.toko || '-'}</strong> | Total Breakdown: <strong>${partials.length} Transaksi</strong>
-            </div>
+        <div style="background: #e2e8f0 !important; color: #0f172a !important; padding: 12px 16px !important; display: flex; justify-content: space-between; align-items: center; border-radius: 0px !important; border-bottom: 2px solid #cbd5e1 !important; flex-shrink: 0; position: relative !important;">
+          <div style="font-weight: 800; font-size: 14.5px; color: #0f172a !important; text-align: center !important; width: 100%;">
+            DETAIL PENGAJUAN BREAKDOWN SURAT
           </div>
-          <button type="button" onclick="tutupModalRiwayatParsialList('${cleanNoSuratRaw}')" title="TUTUP" style="font-size: 28px !important; font-weight: 900 !important; color: #ffffff !important; background: transparent !important; border: none !important; cursor: pointer !important; line-height: 1 !important; outline: none !important; padding: 0 4px !important; margin: 0 !important; opacity: 0.95;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.95'">&times;</button>
+          <button type="button" onclick="tutupModalRiwayatParsialList('${cleanNoSuratRaw}')" title="TUTUP" style="background: #cbd5e1 !important; color: #0f172a !important; border: 1px solid #94a3b8 !important; border-radius: 6px !important; width: 28px !important; min-width: 28px !important; height: 28px !important; font-size: 20px !important; line-height: 1 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-weight: 700 !important; flex-shrink: 0 !important;">&times;</button>
         </div>
 
         <div style="padding: 2mm !important; overflow-y: auto; flex: 1; background: var(--bg-box);">
@@ -23069,15 +23182,26 @@ async function bukaModalRiwayatParsialList(noSurat) {
   `;
 
   document.body.insertAdjacentHTML('beforeend', modalFullscreenHtml);
+  const newlyCreatedListEl = document.getElementById('modalRiwayatParsialList');
+  if (newlyCreatedListEl) {
+    const isB = (typeof getDetailPopupMode === 'function' ? getDetailPopupMode() : 'A') === 'B';
+    newlyCreatedListEl.style.setProperty('z-index', isB ? '2100' : '2147483645', 'important');
+  }
+  if (typeof applyDetailPopupModeUI === 'function') applyDetailPopupModeUI();
 }
 window.bukaModalRiwayatParsialList = bukaModalRiwayatParsialList;
 
 function tutupModalRiwayatParsialList(noSurat) {
   const el = document.getElementById('modalRiwayatParsialList');
-  if (el) el.remove();
-  const detailPopup = document.getElementById('popupDetailBarangV2');
-  if (detailPopup) {
-    detailPopup.style.setProperty('display', 'flex', 'important');
+  if (el) {
+    el.classList.add('closing');
+    setTimeout(() => {
+      el.remove();
+      const detailPopup = document.getElementById('popupDetailBarangV2');
+      if (detailPopup) {
+        detailPopup.style.setProperty('display', 'flex', 'important');
+      }
+    }, 180);
   }
 }
 window.tutupModalRiwayatParsialList = tutupModalRiwayatParsialList;
@@ -23392,7 +23516,7 @@ async function batalSuratParsial(noSurat, partialId) {
         if (remaining.length > 0) {
           bukaModalRiwayatParsialList(noSurat);
         } else {
-          document.getElementById('modalRiwayatParsialList').remove();
+          const elList = document.getElementById('modalRiwayatParsialList'); if (elList) { elList.classList.remove('show'); elList.style.setProperty('display', 'none', 'important'); }
         }
       }
       if (typeof lihatDetail === 'function') {
@@ -23406,6 +23530,7 @@ async function batalSuratParsial(noSurat, partialId) {
 window.batalSuratParsial = batalSuratParsial;
 
 function bukaDetailSuratParsial(noSurat, partialId) {
+  setTimeout(() => { if (typeof applyDetailPopupModeUI === "function") applyDetailPopupModeUI(); }, 0);
   if (!noSurat || !partialId) return;
   if (typeof pushPopupHistoryState === 'function') pushPopupHistoryState();
 
@@ -23435,7 +23560,7 @@ function bukaDetailSuratParsial(noSurat, partialId) {
 
   const rowsHtml = items.map((it, i) => {
     const isEven = (i % 2 === 1);
-    const rowBg = isEven ? '#f0f6fa' : '#ffffff';
+    const rowBg = isEven ? '#f8fafc' : '#ffffff';
     return `
     <tr style="border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap !important; background-color: ${rowBg} !important; background: ${rowBg} !important;">
       <td style="padding: 2mm !important; text-align: center; font-weight: 500; color: #1e293b !important; white-space: nowrap !important; background-color: inherit !important;">${i + 1}</td>
@@ -23461,11 +23586,11 @@ function bukaDetailSuratParsial(noSurat, partialId) {
   else if (pStatSub === 'PENDING' && isRequireDMSub) statusTextSub = 'PENDING (MENUNGGU APPROVAL DM)';
 
   const modalHtml = `
-    <div id="modalDetailParsialSub" data-nosurat="${cleanNoSuratRaw}" class="modal-overlay active" onclick="if (event.target === this) tutupModalDetailParsialSub('${cleanNoSuratRaw}');" style="display: flex !important; position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.85) !important; backdrop-filter: blur(5px) !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 1mm 0.5mm !important; box-sizing: border-box !important;">
-      <div style="background: var(--bg-card); color: var(--text-main); width: calc(100vw - 1mm); height: calc(100vh - 2mm); margin: 1mm 0.5mm !important; border-radius: 8px !important; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 1px solid var(--border-color); animation: popupSlideRightToLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; position: relative !important; z-index: 2147483647 !important;">
+    <div id="modalDetailParsialSub" data-nosurat="${cleanNoSuratRaw}" class="popupOverlay active show ${getDetailPopupMode() === 'B' ? 'mode-b' : 'mode-a'}" onclick="if (event.target === this) tutupModalDetailParsialSub('${cleanNoSuratRaw}');">
+      <div class="popupBox" style="background: var(--bg-card); color: var(--text-main); display: flex; flex-direction: column; overflow: hidden; position: relative !important;">
         
-        <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 16px !important; display: flex; justify-content: space-between; align-items: center; border-radius: 0px !important; border-bottom: 1px solid rgba(255,255,255,0.25) !important; flex-shrink: 0; position: relative !important;">
-          <div style="font-weight: 800; font-size: 14.5px; color: #ffffff !important; text-align: center !important; width: 100%;">
+        <div style="background: #e2e8f0 !important; color: #0f172a !important; padding: 12px 16px !important; display: flex; justify-content: space-between; align-items: center; border-radius: 0px !important; border-bottom: 2px solid #cbd5e1 !important; flex-shrink: 0; position: relative !important;">
+          <div style="font-weight: 800; font-size: 14.5px; color: #0f172a !important; text-align: center !important; width: 100%;">
             DETAIL PERMINTAAN BREAKDOWN
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -23474,7 +23599,7 @@ function bukaDetailSuratParsial(noSurat, partialId) {
                 <span class="material-symbols-rounded" style="font-size: 14px;">photo_library</span> VIEW FOTO (${subPhotos.length})
               </button>
             ` : ''}
-            <button type="button" onclick="tutupModalDetailParsialSub('${cleanNoSuratRaw}')" title="TUTUP" style="font-size: 28px !important; font-weight: 900 !important; color: #ffffff !important; background: transparent !important; border: none !important; cursor: pointer !important; line-height: 1 !important; outline: none !important; padding: 0 4px !important; margin: 0 !important; opacity: 0.95;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.95'">&times;</button>
+            <button type="button" onclick="tutupModalDetailParsialSub('${cleanNoSuratRaw}')" title="TUTUP" style="background: #cbd5e1 !important; color: #0f172a !important; border: 1px solid #94a3b8 !important; border-radius: 6px !important; width: 28px !important; min-width: 28px !important; height: 28px !important; font-size: 20px !important; line-height: 1 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-weight: 700 !important; flex-shrink: 0 !important;">&times;</button>
           </div>
         </div>
 
@@ -23487,15 +23612,15 @@ function bukaDetailSuratParsial(noSurat, partialId) {
 
           <div style="overflow-x: auto; width: 100%; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); border-left: none !important; border-right: none !important; margin: 0 !important; border-radius: 0px !important; flex: 1;">
             <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; border-radius: 0px !important;">
-              <thead style="position: sticky; top: 0; z-index: 5; background: var(--primary) !important; border-radius: 0px !important;">
-                <tr style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; border-bottom: 1px solid var(--border-color); color: #ffffff !important; white-space: nowrap !important; font-weight: 900 !important; border-radius: 0px !important;">
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid rgba(255,255,255,0.2) !important;">NO</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid rgba(255,255,255,0.2) !important;">TYPE</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid rgba(255,255,255,0.2) !important;">SERI BARANG</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid rgba(255,255,255,0.2) !important;">PERMINTAAN</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid rgba(255,255,255,0.2) !important;">ALASAN</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; width: 75px; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid rgba(255,255,255,0.2) !important;">QTY</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: var(--primary) !important; color: #ffffff !important; font-weight: 900 !important; letter-spacing: 0.5px;">KETERANGAN PART</th>
+              <thead style="position: sticky; top: 0; z-index: 5; background: #e2e8f0 !important; border-radius: 0px !important;">
+                <tr style="background: #e2e8f0 !important; border-bottom: 2px solid #cbd5e1; color: #0f172a !important; white-space: nowrap !important; font-weight: 900 !important; border-radius: 0px !important;">
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">NO</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">TYPE</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">SERI BARANG</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">PERMINTAAN</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">ALASAN</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; width: 75px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">QTY</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px;">KETERANGAN PART</th>
                 </tr>
               </thead>
               <tbody>
@@ -23511,12 +23636,91 @@ function bukaDetailSuratParsial(noSurat, partialId) {
 
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
+
+
+/* =============================================================================
+   MODE A / MODE B POPUP DETAIL & PARSIAL CONTROLLER
+   ============================================================================= */
+function getDetailPopupMode() {
+  return (typeof localStorage !== 'undefined' ? localStorage.getItem('PREF_POPUP_DETAIL_MODE') : null) || 'A';
+}
+window.getDetailPopupMode = getDetailPopupMode;
+
+function setDetailPopupMode(mode) {
+  const finalMode = (mode === 'B') ? 'B' : 'A';
+  try { localStorage.setItem('PREF_POPUP_DETAIL_MODE', finalMode); } catch(e) {}
+  applyDetailPopupModeUI(finalMode);
+}
+window.setDetailPopupMode = setDetailPopupMode;
+
+function toggleDetailPopupMode() {
+  const current = getDetailPopupMode();
+  const next = (current === 'A') ? 'B' : 'A';
+  setDetailPopupMode(next);
+}
+window.toggleDetailPopupMode = toggleDetailPopupMode;
+
+function applyDetailPopupModeUI(mode = getDetailPopupMode()) {
+  const popupV2 = document.getElementById('popupDetailBarangV2');
+  const popupOld = document.getElementById('popupDetail');
+  const pdfModal = document.getElementById('pdfModal');
+  const parsialSubModal = document.getElementById('modalDetailParsialSub');
+  const buatParsialModal = document.getElementById('modalBuatParsial');
+  const listParsialModal = document.getElementById('modalRiwayatParsialList');
+
+  const targets = [
+    popupV2, popupOld, pdfModal, parsialSubModal, buatParsialModal, listParsialModal,
+    ...Array.from(document.querySelectorAll('#popupDetailBarangV2, #popupDetail, #pdfModal, #modalDetailParsialSub, #modalBuatParsial, #modalRiwayatParsialList'))
+  ].filter(Boolean);
+
+  const iconEl = document.getElementById('iconToggleDetailMode');
+  const textEl = document.getElementById('textToggleDetailMode');
+  const btnEl = document.getElementById('btnToggleDetailModeV2');
+
+  if (mode === 'B') {
+    targets.forEach(el => {
+      el.classList.remove('mode-a');
+      el.classList.add('mode-b');
+    });
+    if (popupV2) popupV2.style.setProperty('z-index', '950', 'important');
+    if (popupOld) popupOld.style.setProperty('z-index', '950', 'important');
+    if (buatParsialModal) buatParsialModal.style.setProperty('z-index', '2100', 'important');
+    if (listParsialModal) listParsialModal.style.setProperty('z-index', '2100', 'important');
+    if (parsialSubModal) parsialSubModal.style.setProperty('z-index', '2200', 'important');
+
+    if (iconEl) iconEl.textContent = 'width_normal';
+    if (textEl) textEl.textContent = 'MODE B';
+    if (btnEl) {
+      btnEl.title = 'Tukar Ke MODE A (Fullscreen Layar)';
+      btnEl.style.setProperty('background', 'rgba(255,255,255,0.35)', 'important');
+    }
+  } else {
+    targets.forEach(el => {
+      el.classList.remove('mode-b');
+      el.classList.add('mode-a');
+    });
+    if (popupV2) popupV2.style.setProperty('z-index', '2147483630', 'important');
+    if (popupOld) popupOld.style.setProperty('z-index', '2147483630', 'important');
+    if (buatParsialModal) buatParsialModal.style.setProperty('z-index', '2147483640', 'important');
+    if (listParsialModal) listParsialModal.style.setProperty('z-index', '2147483645', 'important');
+    if (parsialSubModal) parsialSubModal.style.setProperty('z-index', '2147483650', 'important');
+
+    if (iconEl) iconEl.textContent = 'fullscreen';
+    if (textEl) textEl.textContent = 'MODE A';
+    if (btnEl) {
+      btnEl.title = 'Tukar Ke MODE B (Di Dalam Area Konten Utama)';
+      btnEl.style.setProperty('background', 'rgba(255,255,255,0.2)', 'important');
+    }
+  }
+}
+window.applyDetailPopupModeUI = applyDetailPopupModeUI;
+
 window.bukaDetailSuratParsial = bukaDetailSuratParsial;
 
 function tutupModalDetailParsialSub(noSurat) {
   const el = document.getElementById('modalDetailParsialSub');
   const ns = noSurat || (el ? el.getAttribute('data-nosurat') : null);
-  if (el) el.remove();
+  if (el) { el.classList.remove('show'); el.style.setProperty('display', 'none', 'important'); }
   
   if (ns && typeof bukaModalRiwayatParsialList === 'function') {
     const listEl = document.getElementById('modalRiwayatParsialList');
@@ -23727,14 +23931,14 @@ async function cetakPdfSuratParsial(noSurat, partialId) {
           <div style="font-size: 11px; font-weight: bold; margin-bottom: 6px; color: #0f172a;">DETAIL PERMINTAAN:</div>
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11.5px; border: 1px solid #cbd5e1;">
             <thead>
-              <tr style="background: #0284c7; color: #ffffff;">
-                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; font-weight:700; white-space: nowrap !important;">NO</th>
-                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; font-weight:700; text-align:center; white-space: nowrap !important;">TIPE BARANG</th>
-                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; font-weight:700; text-align:center; white-space: nowrap !important;">NO. SERI</th>
-                ${req.jenis === 'DUS' ? `<th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; font-weight:700; text-align:center; white-space: nowrap !important;">NO. SERI DUS</th>` : ''}
-                <th style="padding:7px 8px; border:1px solid #cbd5e1; font-weight:700; text-align:center; white-space: normal !important;">PERMINTAAN BARANG</th>
-                <th style="padding:7px 8px; border:1px solid #cbd5e1; font-weight:700; text-align:center; white-space: normal !important;">ALASAN PERMINTAAN</th>
-                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; font-weight:700; white-space: nowrap !important;">QTY</th>
+              <tr style="background: #0284c7 !important; color: #ffffff !important;">
+                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">NO</th>
+                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">TIPE BARANG</th>
+                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI</th>
+                ${req.jenis === 'DUS' ? `<th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI DUS</th>` : ''}
+                <th style="padding:7px 8px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">PERMINTAAN BARANG</th>
+                <th style="padding:7px 8px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">ALASAN PERMINTAAN</th>
+                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">QTY</th>
               </tr>
             </thead>
             <tbody>
@@ -23788,10 +23992,24 @@ async function cetakPdfSuratParsial(noSurat, partialId) {
       </div>
     `;
 
+    const previewImgs = Array.from(pdfContainer.querySelectorAll('img'));
+    if (previewImgs.length > 0) {
+      await Promise.all(previewImgs.map(img => {
+        if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+        return new Promise(r => { img.onload = r; img.onerror = r; setTimeout(r, 2000); });
+      }));
+    }
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+
+    const pdfModal = document.getElementById('pdfModal');
+    if (pdfModal) {
+      pdfModal.style.setProperty('display', 'none', 'important');
+      pdfModal.classList.remove('show');
+    }
+
     if (typeof cetakDokumenPdf === 'function') {
       await cetakDokumenPdf();
     } else {
-      if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
       window.print();
     }
   } catch(e) {
@@ -23858,17 +24076,18 @@ function tampilkanPilihanCetakPdf(noSurat) {
   `;
 
   if (typeof pushPopupHistoryState === 'function') pushPopupHistoryState();
+  window._lastPrintChoiceOpenTime = Date.now();
 
   const modalHtml = `
     <div id="modalPilihanCetakPdf" class="modal-overlay active" onclick="if (event.target === this) this.remove();" style="display: flex !important; position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.75) !important; backdrop-filter: blur(4px) !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 16px !important; box-sizing: border-box !important;">
       <div id="modalPilihanCetakPdfCard" style="background: #ffffff !important; color: #0f172a !important; width: fit-content !important; min-width: 260px !important; max-width: min(95vw, 1120px) !important; height: auto !important; border-radius: 4px !important; margin: auto !important; overflow: hidden !important; box-shadow: 0 20px 45px rgba(0,0,0,0.5) !important; border: 1px solid #cbd5e1 !important; animation: popIn 0.2s ease-out !important; position: relative !important; z-index: 2147483647 !important;">
         <!-- HEADER LATAR BIRU DENGAN JUDUL & X WARNA PUTIH DENGAN SUDUT 90 DERAJAT SOFT -->
-        <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 14px 18px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; border-radius: 4px 4px 0 0 !important; flex-shrink: 0 !important; border-bottom: 1px solid #0369a1 !important;">
+        <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 14px 18px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; border-radius: 4px 4px 0 0 !important; flex-shrink: 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;">
           <div style="font-weight: 800 !important; font-size: 13.5px !important; display: flex !important; align-items: center !important; gap: 8px !important; color: #ffffff !important; letter-spacing: 0.3px !important;">
             <span class="material-symbols-rounded" style="color: #ffffff !important; font-size: 20px !important;">picture_as_pdf</span> 
             PILIH DOKUMEN PDF UNTUK DICETAK
           </div>
-          <button type="button" onclick="document.getElementById('modalPilihanCetakPdf').remove()" title="TUTUP" style="font-size: 24px !important; font-weight: 800 !important; color: #ffffff !important; background: transparent !important; border: none !important; cursor: pointer !important; line-height: 1 !important; outline: none !important; padding: 0 4px !important; margin: 0 !important; opacity: 0.9 !important; transition: opacity 0.15s ease !important;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">&times;</button>
+          <button type="button" onclick="document.getElementById('modalPilihanCetakPdf').remove()" title="TUTUP" style="font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; border-radius: 4px !important; width: 28px !important; height: 28px !important; cursor: pointer !important; line-height: 1 !important; outline: none !important; padding: 0 !important; margin: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">&times;</button>
         </div>
         <!-- BODY CONTAINER -->
         <div style="padding: 18px 16px !important; background: #ffffff !important;">
@@ -24191,7 +24410,9 @@ function bukaModalUbahStatusAdmin(noSurat) {
   const selectEl = document.getElementById('selectStatusAdmin');
   if (selectEl) {
     let curSt = String(req.status || 'PENDING').toUpperCase();
-    if (curSt === 'REJECT_SERVICE' || curSt === 'REJECT_DM') curSt = 'REJECT';
+    if (curSt === 'REJECT_SERVICE' || curSt === 'REJECT_DM' || curSt === 'TOLAK') curSt = 'REJECT';
+    if (curSt === 'SELESAI') curSt = 'DONE';
+    if (curSt === 'APPROVE_DM' || curSt === 'SETUJU') curSt = 'APPROVE';
     selectEl.value = curSt;
   }
 
@@ -24242,9 +24463,9 @@ async function simpanUbahStatusAdmin() {
         status: newStatus,
         updated_at: new Date().toISOString()
       };
-      if (newStatus === 'APPROVE') {
+      if (newStatus === 'APPROVE' || newStatus === 'DONE') {
         payload.service_approve = true;
-      } else if (newStatus === 'PENDING') {
+      } else if (newStatus === 'PENDING' || newStatus === 'REJECT' || newStatus === 'BATAL') {
         payload.service_approve = false;
       }
       const { error } = await sb.from('permintaan_toko').update(payload).eq('no_surat', noSurat);
@@ -24259,8 +24480,8 @@ async function simpanUbahStatusAdmin() {
     const reqIdx = requests.findIndex(r => r && String(r.noSurat || '').trim().toUpperCase() === targetNo);
     if (reqIdx !== -1) {
       requests[reqIdx].status = newStatus;
-      if (newStatus === 'APPROVE') requests[reqIdx].serviceApprove = true;
-      else if (newStatus === 'PENDING') requests[reqIdx].serviceApprove = false;
+      if (newStatus === 'APPROVE' || newStatus === 'DONE') requests[reqIdx].serviceApprove = true;
+      else if (newStatus === 'PENDING' || newStatus === 'REJECT' || newStatus === 'BATAL') requests[reqIdx].serviceApprove = false;
       saveRequestsToDB(requests, requests[reqIdx], 'UPDATE');
     }
 
@@ -24616,15 +24837,25 @@ function bukaModalUploadBuktiPermintaan(noSurat) {
   currentUploadBuktiNoSurat = noSurat;
   
   const reqs = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
-  const req = reqs.find(r => r && (r.noSurat === noSurat || String(r.noSurat).trim().toUpperCase() === String(noSurat).trim().toUpperCase()));
+  const req = reqs.find(r => r && (
+    r.noSurat === noSurat ||
+    String(r.noSurat || '').trim().toUpperCase() === String(noSurat).trim().toUpperCase() ||
+    String(r.id || '').trim().toUpperCase() === String(noSurat).trim().toUpperCase()
+  ));
+
   if (!req) {
     if (typeof showNotif === 'function') showNotif('DATA PERMINTAAN TIDAK DITEMUKAN!', 'warning');
     return;
   }
 
-  const existingBukti = Array.isArray(req.bukti_permintaan || req.buktiPermintaan) ? (req.bukti_permintaan || req.buktiPermintaan) : [];
-  existingBuktiPermintaanPhotos = [...existingBukti].filter(Boolean);
-  tempBuktiPermintaanPhotos = []; // KOSONGKAN HANYA UNTUK FILE BARU
+  // Parse existing photos cleanly using parsePhotosArray (handles JSON strings, URLs, and Arrays)
+  const bukP = typeof parsePhotosArray === 'function' ? parsePhotosArray(req.bukti_permintaan || req.buktiPermintaan) : [];
+  const regP = typeof parsePhotosArray === 'function' ? parsePhotosArray(req.photos) : [];
+  const artP = typeof parsePhotosArray === 'function' ? parsePhotosArray(req.artemisPhotos) : [];
+  
+  let existingBukti = bukP.length > 0 ? bukP : [...regP, ...artP];
+  existingBuktiPermintaanPhotos = Array.from(new Set(existingBukti.filter(Boolean)));
+  tempBuktiPermintaanPhotos = [];
   uploadBuktiSaveMode = 'replace';
 
   const modal = document.getElementById('uploadBuktiPermintaanOverlay');
@@ -24667,80 +24898,90 @@ function setUploadBuktiSaveMode(mode) {
 window.setUploadBuktiSaveMode = setUploadBuktiSaveMode;
 
 function hapusFotoBuktiExisting(idx) {
-  if (confirm('Apakah Anda yakin ingin menghapus foto bukti lama ini dari database?')) {
-    existingBuktiPermintaanPhotos.splice(idx, 1);
-    renderBuktiPermintaanModalGrid();
-  }
+  showConfirm(
+    'APAKAH ANDA YAKIN INGIN MENGHAPUS FOTO BUKTI LAMA INI DARI DATABASE?',
+    function() {
+      existingBuktiPermintaanPhotos.splice(idx, 1);
+      renderBuktiPermintaanModalGrid();
+      if (typeof showNotif === 'function') showNotif('FOTO BUKTI TELAH DIHAPUS DARI LIST PERMINTAAN.', 'info');
+    },
+    null,
+    'YA, HAPUS',
+    'BATAL'
+  );
 }
 window.hapusFotoBuktiExisting = hapusFotoBuktiExisting;
 
 function renderBuktiPermintaanModalGrid() {
-  const existingSec = document.getElementById('existingBuktiSection');
   const container = document.getElementById('uploadBuktiPreviewGrid');
+  if (!container) return;
 
-  // 1. RENDER FOTO BUKTI LAMA SUPABASE JIKA ADA
-  if (existingSec) {
-    if (existingBuktiPermintaanPhotos.length > 0) {
-      existingSec.style.display = 'block';
-      existingSec.innerHTML = `
-        <div style="background: #fffbebfb; border: 1.5px solid #f59e0b; border-radius: 8px; padding: 12px 14px; color: #92400e; font-size: 12px; margin-bottom: 12px;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <span class="material-symbols-rounded" style="color: #d97706; font-size: 22px;">warning</span>
-            <span style="font-weight: 800; font-size: 13px; color: #b45309;">FOTO BUKTI SUDAH ADA DI DATABASE (SUPABASE)</span>
-          </div>
-          <div style="font-size: 11.5px; color: #78350f; margin-bottom: 10px; line-height: 1.4;">
-            Permintaan ini sudah memiliki <b>${existingBuktiPermintaanPhotos.length} foto bukti</b> tersimpan di database. Anda dapat melihat fotonya di bawah, lalu memilih apakah ingin MENGGANTI foto atau MENAMBAHKAN foto baru.
-          </div>
+  const existingFiles = Array.isArray(existingBuktiPermintaanPhotos) ? existingBuktiPermintaanPhotos.filter(Boolean) : [];
+  const tempFiles = Array.isArray(tempBuktiPermintaanPhotos) ? tempBuktiPermintaanPhotos.filter(Boolean) : [];
+  const totalFiles = existingFiles.length + tempFiles.length;
 
-          <!-- Preview Thumbnails Foto Lama -->
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; background: #ffffff; padding: 8px; border-radius: 6px; border: 1px solid #fcd34d;">
-            ${existingBuktiPermintaanPhotos.map((p, idx) => `
-              <div style="position: relative; display: inline-block;">
-                <img src="${p}" onclick="openImageViewerSingle('${p}')" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15);" title="Klik untuk perbesar foto lama">
-                <button type="button" onclick="hapusFotoBuktiExisting(${idx})" style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Hapus foto lama ini">×</button>
-              </div>
-            `).join('')}
-          </div>
+  if (totalFiles === 0) {
+    container.innerHTML = `
+      <div style="width: 100%; color: #64748b; font-size: 11.5px; font-weight: 600; padding: 10px 0; text-align: center;">
+        Belum ada foto / dokumen PDF bukti yang diunggah. Silakan klik area di atas untuk memilih file.
+      </div>
+    `;
+    return;
+  }
 
+  const htmlItems = [];
 
+  // 1. Render Existing Files from Supabase DB
+  existingFiles.forEach((p, idx) => {
+    const isPdf = typeof p === 'string' && (p.includes('application/pdf') || p.toLowerCase().includes('.pdf'));
+    const safeP = String(p).replace(/'/g, "\'");
+    if (isPdf) {
+      htmlItems.push(`
+        <div style="position: relative; display: inline-flex; align-items: center; gap: 8px; background: #fff7ed; color: #c2410c; border: 1.5px solid #ea580c; border-radius: 6px; padding: 8px 12px; font-size: 12px; font-weight: 700; margin: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">
+          <span class="material-symbols-rounded" style="font-size: 24px; color: #ea580c;">picture_as_pdf</span>
+          <span>PDF (Database)</span>
+          <button type="button" onclick="bukaViewPdfDokumen('${safeP}', 'Dokumen_Bukti_Database_${idx+1}.pdf')" style="background: #ea580c; color: #ffffff; border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Lihat PDF">
+            <span class="material-symbols-rounded" style="font-size: 14px;">visibility</span> LIHAT PDF
+          </button>
+          <button type="button" onclick="hapusFotoBuktiExisting(${idx})" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: 1px solid #ffffff; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.25); z-index: 10;" title="Hapus File PDF Lama Ini">&times;</button>
         </div>
-      `;
+      `);
     } else {
-      existingSec.style.display = 'none';
-      existingSec.innerHTML = '';
-    }
-  }
-
-  // 2. RENDER FOTO / FILE YANG BARU SAJA DIPILIH DENGAN TAMPILAN GAMBAR THUMBNAIL
-  if (container) {
-    if (tempBuktiPermintaanPhotos.length === 0) {
-      container.innerHTML = `
-        <div style="width: 100%; color: #64748b; font-size: 11.5px; font-weight: 600; padding: 4px 0;">
-          Belum ada foto/scan surat yang dicap & di-TTD dipilih. Silakan klik area di atas untuk memilih file.
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = tempBuktiPermintaanPhotos.map((p, idx) => {
-      const isPdf = typeof p === 'string' && (p.includes('application/pdf') || p.toLowerCase().endsWith('.pdf'));
-      if (isPdf) {
-        return `
-          <div style="position: relative; display: inline-flex; align-items: center; gap: 8px; background: #fff7ed; color: #c2410c; border: 1.5px solid #ffedd5; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 700; margin: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">
-            <span class="material-symbols-rounded" style="font-size: 24px; color: #ea580c;">picture_as_pdf</span>
-            <span>Dokumen PDF #${idx + 1}</span>
-            <button type="button" onclick="hapusFotoBuktiModal(${idx})" style="background: #ef4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Hapus PDF Ini">×</button>
-          </div>
-        `;
-      }
-      return `
+      htmlItems.push(`
         <div style="position: relative; display: inline-block; margin: 4px;">
-          <img src="${p}" onclick="openImageViewerSingle('${p}')" style="width: 85px; height: 85px; object-fit: cover; border-radius: 8px; border: 1.5px solid #0284c7; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer;" title="Klik untuk memperbesar foto">
-          <button type="button" onclick="hapusFotoBuktiModal(${idx})" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.25); z-index: 10;" title="Hapus Foto Ini">×</button>
+          <img src="${p}" onclick="if(typeof bukaViewGambar==='function') bukaViewGambar(['${safeP}'], 0); else openImageViewerSingle('${safeP}');" style="width: 85px; height: 85px; object-fit: cover; border-radius: 6px; border: 1.5px solid #0284c7; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer;" title="Klik untuk memperbesar foto lama (Database)">
+          <button type="button" onclick="hapusFotoBuktiExisting(${idx})" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: 1px solid #ffffff; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.25); z-index: 10;" title="Hapus Foto Lama Ini">&times;</button>
         </div>
-      `;
-    }).join('');
-  }
+      `);
+    }
+  });
+
+  // 2. Render Temp Newly Selected Files
+  tempFiles.forEach((p, idx) => {
+    const isPdf = typeof p === 'string' && (p.includes('application/pdf') || p.toLowerCase().includes('.pdf'));
+    const safeP = String(p).replace(/'/g, "\'");
+    if (isPdf) {
+      htmlItems.push(`
+        <div style="position: relative; display: inline-flex; align-items: center; gap: 8px; background: #fff7ed; color: #c2410c; border: 1.5px solid #ea580c; border-radius: 6px; padding: 8px 12px; font-size: 12px; font-weight: 700; margin: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">
+          <span class="material-symbols-rounded" style="font-size: 24px; color: #ea580c;">picture_as_pdf</span>
+          <span>PDF Baru #${idx + 1}</span>
+          <button type="button" onclick="bukaViewPdfDokumen('${safeP}', 'Dokumen_Bukti_Baru_${idx+1}.pdf')" style="background: #ea580c; color: #ffffff; border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Lihat PDF">
+            <span class="material-symbols-rounded" style="font-size: 14px;">visibility</span> LIHAT PDF
+          </button>
+          <button type="button" onclick="hapusFotoBuktiModal(${idx})" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: 1px solid #ffffff; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.25); z-index: 10;" title="Hapus PDF Ini">&times;</button>
+        </div>
+      `);
+    } else {
+      htmlItems.push(`
+        <div style="position: relative; display: inline-block; margin: 4px;">
+          <img src="${p}" onclick="if(typeof bukaViewGambar==='function') bukaViewGambar(['${safeP}'], 0); else openImageViewerSingle('${safeP}');" style="width: 85px; height: 85px; object-fit: cover; border-radius: 6px; border: 1.5px solid #0284c7; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer;" title="Klik untuk memperbesar foto">
+          <button type="button" onclick="hapusFotoBuktiModal(${idx})" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: 1px solid #ffffff; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.25); z-index: 10;" title="Hapus Foto Ini">&times;</button>
+        </div>
+      `);
+    }
+  });
+
+  container.innerHTML = htmlItems.join('');
 }
 window.renderBuktiPermintaanModalGrid = renderBuktiPermintaanModalGrid;
 
@@ -24764,21 +25005,31 @@ function handleBuktiPermintaanSelect(event) {
   const files = event.target.files;
   if (!files || files.length === 0) return;
 
-  const readPromises = Array.from(files).map(file => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(file);
-    });
-  });
+  const existingCount = Array.isArray(existingBuktiPermintaanPhotos) ? existingBuktiPermintaanPhotos.length : 0;
+  const tempCount = Array.isArray(tempBuktiPermintaanPhotos) ? tempBuktiPermintaanPhotos.length : 0;
+  const currentTotal = existingCount + tempCount;
 
-  Promise.all(readPromises).then(results => {
-    const valid = results.filter(Boolean);
-    tempBuktiPermintaanPhotos.push(...valid);
-    renderBuktiPermintaanModalGrid();
+  if (files.length > 1 || currentTotal + files.length > 1) {
+    if (typeof showNotif === 'function') {
+      showNotif('MAKSIMAL HANYA 1 FILE BUKTI (FOTO / PDF) YANG BISA DIKIRIM PER PERMINTAAN! HAPUS FILE YANG SUDAH ADA TERLEBIH DAHULU JIKA INGIN MENGGANTI.', 'warning');
+    }
     event.target.value = '';
-  });
+    return;
+  }
+
+  const file = files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (e.target.result) {
+      tempBuktiPermintaanPhotos = [e.target.result];
+      renderBuktiPermintaanModalGrid();
+    }
+    event.target.value = '';
+  };
+  reader.onerror = () => {
+    event.target.value = '';
+  };
+  reader.readAsDataURL(file);
 }
 window.handleBuktiPermintaanSelect = handleBuktiPermintaanSelect;
 
@@ -24830,6 +25081,7 @@ async function simpanBuktiPermintaanUploaded() {
     } else {
       rawPhotos = [...tempBuktiPermintaanPhotos];
     }
+    rawPhotos = rawPhotos.slice(0, 1); // Strictly cap to max 1 proof file per request
 
     const uploadedPhotoUrls = [];
 
@@ -24932,6 +25184,32 @@ function getAllowedExcelRoles() {
 }
 window.getAllowedExcelRoles = getAllowedExcelRoles;
 
+async function syncSupabaseAppSettingsToLocalCache() {
+  if (typeof supabase === 'undefined' || !supabase) return;
+  try {
+    const { data, error } = await supabase.from('app_settings').select('*');
+    if (!error && Array.isArray(data)) {
+      data.forEach(item => {
+        if (item && item.key === EXCEL_DOWNLOAD_ROLES_KEY && item.value) {
+          try {
+            const roles = JSON.parse(item.value);
+            if (Array.isArray(roles)) {
+              window._allowedExcelRolesCache = roles.map(r => String(r).toUpperCase());
+              appStorage.setItem(EXCEL_DOWNLOAD_ROLES_KEY, JSON.stringify(roles));
+              try { localStorage.setItem(EXCEL_DOWNLOAD_ROLES_KEY, JSON.stringify(roles)); } catch(e) {}
+              if (typeof loadPengaturanHakAksesExcelUI === 'function') loadPengaturanHakAksesExcelUI();
+            }
+          } catch(e) {}
+        }
+      });
+    }
+  } catch(e) {
+    console.warn('[SUPABASE APP_SETTINGS SYNC NOTICE]:', e);
+  }
+}
+window.syncSupabaseAppSettingsToLocalCache = syncSupabaseAppSettingsToLocalCache;
+
+
 function setAllowedExcelRoles(rolesArray) {
   if (!Array.isArray(rolesArray)) return;
   const clean = Array.from(new Set(rolesArray.map(r => String(r).toUpperCase())));
@@ -24990,6 +25268,66 @@ function checkUserCanDownloadExcel(user = currentUser) {
 }
 window.checkUserCanDownloadExcel = checkUserCanDownloadExcel;
 
+
+function updateExcelDownloadButtonState() {
+  const canDownload = typeof checkUserCanDownloadExcel === 'function' ? checkUserCanDownloadExcel(currentUser) : true;
+
+  // 1. Button Excel di Riwayat Page (.btnDownload[onclick*="downloadExcel"])
+  const riwayatExcelBtns = document.querySelectorAll('.btnDownload[onclick*="downloadExcel"], button[onclick*="downloadExcel()"]');
+  riwayatExcelBtns.forEach(btn => {
+    if (!canDownload) {
+      btn.style.setProperty('opacity', '0.45', 'important');
+      btn.style.setProperty('cursor', 'not-allowed', 'important');
+      btn.style.setProperty('background', '#e2e8f0', 'important');
+      btn.style.setProperty('filter', 'grayscale(1)', 'important');
+      btn.title = 'AKSES DOWNLOAD EXCEL NONAKTIF (HUBUNGI ADMIN)';
+      const icon = btn.querySelector('.material-symbols-rounded');
+      if (icon) {
+        icon.textContent = 'file_download_off';
+        icon.style.setProperty('text-decoration', 'line-through', 'important');
+      }
+    } else {
+      btn.style.removeProperty('opacity');
+      btn.style.removeProperty('cursor');
+      btn.style.removeProperty('background');
+      btn.style.removeProperty('filter');
+      btn.title = 'DOWNLOAD EXCEL (.XLSX)';
+      const icon = btn.querySelector('.material-symbols-rounded');
+      if (icon) {
+        icon.textContent = 'download';
+        icon.style.removeProperty('text-decoration');
+      }
+    }
+  });
+
+  // 2. Button Master Excel di Master Data Page (jika ada)
+  const masterExcelBtns = document.querySelectorAll('button[onclick*="downloadMasterExcel()"]');
+  masterExcelBtns.forEach(btn => {
+    if (!canDownload) {
+      btn.style.setProperty('opacity', '0.45', 'important');
+      btn.style.setProperty('cursor', 'not-allowed', 'important');
+      btn.style.setProperty('background', '#e2e8f0', 'important');
+      btn.style.setProperty('filter', 'grayscale(1)', 'important');
+      btn.title = 'AKSES DOWNLOAD EXCEL NONAKTIF (HUBUNGI ADMIN)';
+      const icon = btn.querySelector('.material-symbols-rounded');
+      if (icon) {
+        icon.style.setProperty('text-decoration', 'line-through', 'important');
+      }
+    } else {
+      btn.style.removeProperty('opacity');
+      btn.style.removeProperty('cursor');
+      btn.style.removeProperty('background');
+      btn.style.removeProperty('filter');
+      btn.title = 'DOWNLOAD MASTER EXCEL LENGKAP (.XLSX)';
+      const icon = btn.querySelector('.material-symbols-rounded');
+      if (icon) {
+        icon.style.removeProperty('text-decoration');
+      }
+    }
+  });
+}
+window.updateExcelDownloadButtonState = updateExcelDownloadButtonState;
+
 function loadPengaturanHakAksesExcelUI() {
   const allowed = getAllowedExcelRoles();
   const checkboxes = document.querySelectorAll('.chk-excel-role');
@@ -25002,6 +25340,9 @@ function loadPengaturanHakAksesExcelUI() {
       chk.checked = allowed.includes(val);
     }
   });
+  if (typeof updateExcelDownloadButtonState === 'function') {
+    updateExcelDownloadButtonState();
+  }
 }
 window.loadPengaturanHakAksesExcelUI = loadPengaturanHakAksesExcelUI;
 
@@ -25112,17 +25453,25 @@ function updateEnterpriseBreadcrumbAndSidebar(pageId) {
 
   if (activeSidebarItem) activeSidebarItem.classList.add('active');
 
-  // Update Topbar User Avatar Initials & Name
+  // Update Topbar User Avatar (Area Code) & Full Name
   if (typeof currentUser !== 'undefined' && currentUser) {
-    var name = (currentUser.nama || currentUser.username || 'USER').toString().trim();
+    var fullName = (currentUser.fullName || currentUser.nama_lengkap || currentUser.namaLengkap || currentUser.name || currentUser.nama || currentUser.username || 'USER').toString().trim();
     var topUserEl = document.getElementById('namaUserTopHeader');
     var initialsEl = document.getElementById('topUserAvatarInitials');
-    if (topUserEl) topUserEl.textContent = name.toUpperCase();
+    if (topUserEl) topUserEl.textContent = fullName.toUpperCase();
     
     if (initialsEl) {
-      var parts = name.split(' ');
-      var init = parts.length > 1 ? (parts[0][0] + parts[1][0]) : name.slice(0, 2);
-      initialsEl.textContent = init.toUpperCase();
+      var areaRaw = String(currentUser.area || currentUser.cabang || currentUser.service_area || 'ALL').trim();
+      var displayArea = areaRaw;
+      if (displayArea.includes(',')) displayArea = displayArea.split(',')[0].trim();
+      if (displayArea.includes('/')) displayArea = displayArea.split('/')[0].trim();
+      if (displayArea.includes(';')) displayArea = displayArea.split(';')[0].trim();
+      if (displayArea.includes('-')) {
+        var areaParts = displayArea.split('-');
+        displayArea = areaParts[areaParts.length - 1].trim();
+      }
+      displayArea = displayArea.toUpperCase();
+      initialsEl.textContent = displayArea;
     }
   }
 
@@ -25590,48 +25939,55 @@ async function handleUploadBuktiFileInputChange(event) {
   const files = event.target.files;
   if (!files || files.length === 0) return;
 
+  const existingCount = Array.isArray(existingBuktiPermintaanPhotos) ? existingBuktiPermintaanPhotos.length : 0;
+  const tempCount = Array.isArray(tempBuktiPermintaanPhotos) ? tempBuktiPermintaanPhotos.length : 0;
+  const currentTotal = existingCount + tempCount;
+
+  if (files.length > 1 || currentTotal + files.length > 1) {
+    if (typeof showNotif === 'function') {
+      showNotif('MAKSIMAL HANYA 1 FILE BUKTI (FOTO / PDF) YANG BISA DIKIRIM PER PERMINTAAN! HAPUS FILE YANG SUDAH ADA TERLEBIH DAHULU JIKA INGIN MENGGANTI.', 'warning');
+    }
+    event.target.value = '';
+    return;
+  }
+
   try {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      let url = null;
-      if (file.type && (file.type.startsWith('image/') || file.type.includes('pdf'))) {
-        if (typeof uploadPhotoToSupabaseStorage === 'function') {
-          try {
-            url = await uploadPhotoToSupabaseStorage(file);
-          } catch (e) {
-            console.warn('[STORAGE UPLOAD WARN]:', e);
-          }
+    const file = files[0];
+    let url = null;
+    if (file.type && (file.type.startsWith('image/') || file.type.includes('pdf'))) {
+      if (typeof uploadPhotoToSupabaseStorage === 'function') {
+        try {
+          url = await uploadPhotoToSupabaseStorage(file);
+        } catch (e) {
+          console.warn('[STORAGE UPLOAD WARN]:', e);
         }
-        if (!url && typeof compressImageToJpeg === 'function') {
-          try {
-            url = await compressImageToJpeg(file);
-          } catch (e) {
-            console.warn('[COMPRESS JPEG WARN]:', e);
-          }
+      }
+      if (!url && typeof compressImageToJpeg === 'function') {
+        try {
+          url = await compressImageToJpeg(file);
+        } catch (e) {
+          console.warn('[COMPRESS JPEG WARN]:', e);
         }
-        if (!url) {
-url = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(file);
-          });
-        }
-        if (url) {
-          if (typeof tempBuktiPermintaanPhotos !== 'undefined' && Array.isArray(tempBuktiPermintaanPhotos)) {
-            tempBuktiPermintaanPhotos.push(url);
-          }
-        }
+      }
+      if (!url) {
+        url = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(file);
+        });
+      }
+      if (url) {
+        tempBuktiPermintaanPhotos = [url];
       }
     }
     if (typeof renderBuktiPermintaanModalGrid === 'function') {
       renderBuktiPermintaanModalGrid();
     }
-  } catch (err) {
-    console.error('[HANDLE UPLOAD BUKTI FILE INPUT ERROR]:', err);
-    if (typeof showNotif === 'function') showNotif('GAGAL MEMPROSES FILE BUKTI FOTO!', 'warning');
+  } catch (e) {
+    console.error('[UPLOAD BUKTI CHANGE ERROR]:', e);
   } finally {
-    if (event.target) event.target.value = '';
+    event.target.value = '';
   }
 }
 window.handleUploadBuktiFileInputChange = handleUploadBuktiFileInputChange;
@@ -25766,3 +26122,143 @@ document.addEventListener('input', function (e) {
     }
   }
 }, true);
+/* =============================================================================
+   AUTOMATIC CLOSE POPUP DETAIL BARANG V2 & PARSIAL WHEN CLICKING OUTSIDE .popupBox
+   ============================================================================= */
+document.addEventListener('click', function(e) {
+  const detailModal = document.getElementById('popupDetailBarangV2');
+  if (detailModal && detailModal.style.display !== 'none' && detailModal.offsetParent !== null) {
+    if (window._isClosingDetailModal) return;
+    if (Date.now() - (window._lastDetailOpenTime || 0) < 250) return;
+
+    const box = detailModal.querySelector('.popupBox');
+    const toggleBtn = document.getElementById('btnToggleDetailModeV2');
+
+    if (box && !box.contains(e.target) && (!toggleBtn || !toggleBtn.contains(e.target))) {
+      // Ignore if clicking print choice modal, pdf modal, interactive row or action elements
+      if (e.target.closest && (e.target.closest('#modalPilihanCetakPdf') || e.target.closest('#pdfPrintChoiceModal') || e.target.closest('#pdfModal') || e.target.closest('.historyTable') || e.target.closest('.dashboardTable') || e.target.closest('.requestCard'))) {
+        return;
+      }
+      if (typeof tutupDetailBarangV2 === 'function') {
+        tutupDetailBarangV2();
+      }
+    }
+  }
+
+  // Also close parsial detail sub modal when clicking outside
+  const parsialSub = document.getElementById('modalDetailParsialSub');
+  if (parsialSub && parsialSub.style.display !== 'none' && parsialSub.offsetParent !== null) {
+    if (Date.now() - (window._lastParsialOpenTime || 0) < 250) return;
+    const boxParsial = parsialSub.querySelector('.popupBox, div[style*="border-radius"]');
+    if (boxParsial && !boxParsial.contains(e.target)) {
+      if (typeof tutupModalDetailParsialSub === 'function') {
+        const ns = parsialSub.getAttribute('data-nosurat');
+        tutupModalDetailParsialSub(ns);
+      }
+    }
+  }
+}, true);
+
+
+/* ==========================================================================
+   PDF DOCUMENT VIEWER & DOWNLOADER SYSTEM FOR UPLOADED PROOF / PERMINTAAN
+   ========================================================================== */
+function downloadPdfFile(pdfUrl, fileName = 'Dokumen_Bukti.pdf') {
+  if (!pdfUrl) {
+    if (typeof showNotif === 'function') showNotif('URL FILE PDF TIDAK VALID!', 'warning');
+    return;
+  }
+  try {
+    const a = document.createElement('a');
+    a.href = pdfUrl;
+    a.download = fileName || 'Dokumen_Bukti.pdf';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 150);
+  } catch (e) {
+    console.error('Download PDF Error:', e);
+    window.open(pdfUrl, '_blank');
+  }
+}
+window.downloadPdfFile = downloadPdfFile;
+
+function bukaViewPdfDokumen(pdfUrl, fileName = 'Dokumen_Bukti.pdf', otherImages = null) {
+  if (!pdfUrl) {
+    if (typeof showNotif === 'function') showNotif('FILE PDF TIDAK VALID!', 'warning');
+    return;
+  }
+
+  let modal = document.getElementById('modalPdfDokumenViewer');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modalPdfDokumenViewer';
+    modal.className = 'popupOverlay';
+    modal.onclick = function(e) { if (e.target === this) tutupPdfDokumenViewer(); };
+    document.body.appendChild(modal);
+  }
+
+  modal.style.setProperty('display', 'flex', 'important');
+  modal.style.setProperty('z-index', '2147483647', 'important');
+  modal.classList.add('show');
+
+  const safePdfUrl = String(pdfUrl).replace(/'/g, "\'");
+  const safeFileName = String(fileName).replace(/'/g, "\'");
+
+  modal.innerHTML = `
+    <div class="popupBox" style="width: 96vw !important; max-width: 1250px !important; height: 94vh !important; max-height: 94vh !important; background: #ffffff; color: #0f172a; display: flex; flex-direction: column; border-radius: 6px !important; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.55);">
+      <!-- HEADER TOOLBAR -->
+      <div style="background: linear-gradient(135deg, #ea580c, #c2410c) !important; color: #ffffff !important; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.2); border-radius: 0px !important;">
+        <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; color: #ffffff !important;">
+          <span class="material-symbols-rounded" style="font-size: 22px; color: #ffedd5;">picture_as_pdf</span>
+          <span>DOKUMEN BUKTI (PDF)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" onclick="downloadPdfFile('${safePdfUrl}', '${safeFileName}')" style="background: #10b981 !important; color: #ffffff !important; border: none; border-radius: 4px; padding: 6px 14px; font-weight: 800; font-size: 11.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" title="Download File PDF ini">
+            <span class="material-symbols-rounded" style="font-size: 16px;">download</span> DOWNLOAD PDF
+          </button>
+          <button type="button" onclick="tutupPdfDokumenViewer()" style="background: rgba(255,255,255,0.25) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.4); border-radius: 4px; width: 30px; height: 30px; font-size: 22px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-weight: 700;">&times;</button>
+        </div>
+      </div>
+      <!-- BODY VIEW IFRAME -->
+      <div style="flex: 1; width: 100%; background: #334155; overflow: hidden; position: relative;">
+        <iframe src="${pdfUrl}" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
+    </div>
+  `;
+
+  if (typeof pushPopupHistoryState === 'function') pushPopupHistoryState();
+}
+window.bukaViewPdfDokumen = bukaViewPdfDokumen;
+
+function tutupPdfDokumenViewer() {
+  const modal = document.getElementById('modalPdfDokumenViewer');
+  if (modal) {
+    modal.style.setProperty('display', 'none', 'important');
+    modal.classList.remove('show');
+  }
+}
+window.tutupPdfDokumenViewer = tutupPdfDokumenViewer;
+
+
+/* ==========================================================================
+   CHECK & PREVENT MULTIPLE PROOF FILE SELECTION SYSTEM
+   ========================================================================== */
+function pilihFileBuktiWithCheck() {
+  const existingCount = Array.isArray(existingBuktiPermintaanPhotos) ? existingBuktiPermintaanPhotos.length : 0;
+  const tempCount = Array.isArray(tempBuktiPermintaanPhotos) ? tempBuktiPermintaanPhotos.length : 0;
+  const totalInBox = existingCount + tempCount;
+
+  if (totalInBox > 0) {
+    if (typeof showNotif === 'function') {
+      showNotif('SILAKAN HAPUS BUKTI YANG SUDAH ADA DI KOTAK TERLEBIH DAHULU SEBELUM MEMILIH / MENGUNGGAH FILE BARU!', 'warning');
+    }
+    return;
+  }
+
+  const fileInput = document.getElementById('uploadBuktiFileInput');
+  if (fileInput) {
+    fileInput.click();
+  }
+}
+window.pilihFileBuktiWithCheck = pilihFileBuktiWithCheck;

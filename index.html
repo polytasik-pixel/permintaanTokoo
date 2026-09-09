@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PERMINTAAN TOKO</title>
   <!-- Favicon Toko Biru -->
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=1788791595_v10096">
-  <link rel="alternate icon" href="favicon.svg?v=1788791595_v10096">
-  <link rel="apple-touch-icon" href="favicon.svg?v=1788791595_v10096">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260909_DASHBOARD_GAP_ZERO_FIXED">
+  <link rel="alternate icon" href="favicon.svg?v=20260909_DASHBOARD_GAP_ZERO_FIXED">
+  <link rel="apple-touch-icon" href="favicon.svg?v=20260909_DASHBOARD_GAP_ZERO_FIXED">
 
   <!-- Google Fonts: Poppins & Material Symbols Rounded -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,8 +33,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
   <!-- Master Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260909_DYNAMIC_TTD_CANVAS_V69_1788898011">
-  <script src="app.js?v=20260909_DYNAMIC_TTD_CANVAS_V69_1788898011"></script>
+  <link rel="stylesheet" href="styles.css?v=20260909_TOPHEADER_AUTOFIT_FIXED">
+  <script src="app.js?v=20260909_TOPHEADER_AUTOFIT_FIXED"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -202,7 +202,6 @@
           <span class="material-symbols-rounded">menu</span>
         </button>
         <div class="topbar-brand">
-          <span class="material-symbols-rounded" style="font-size: 22px; color: #ffffff;">storefront</span>
           <span>PERMINTAAN TOKO</span>
         </div>
       </div>
@@ -237,7 +236,7 @@
         </button>
 
         <!-- User Profile Avatar Badge -->
-        <div class="topbar-user-badge" onclick="bukaAkun()" title="Profil & Pengaturan Akun" style="border-radius: 8px !important;">
+        <div class="topbar-user-badge" onclick="bukaAkun()" title="Profil & Pengaturan Akun" style="border-radius: 6px !important;">
           <div class="user-avatar" id="topUserAvatarInitials" style="border-radius: 6px !important;">BA</div>
           <span class="user-name-text" id="namaUserTopHeader">BAUT ADHI</span>
         </div>
@@ -583,7 +582,7 @@
           <div id="sectionUploadFoto" style="display: flex; flex-direction: column; height: 100%;">
             <label id="labelUploadFoto" style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px; display: block;">FOTO BARANG PENDUKUNG (OPSIONAL)</label>
             <div class="uploadBox" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px; text-align: center; background: #f8fafc; cursor: pointer; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 130px; box-sizing: border-box;">
-              <input type="file" id="foto" accept="image/png, image/jpeg, image/jpg, image/webp, image/heic, image/heif, image/*" multiple onchange="previewFoto(event)" style="display:none">
+              <input type="file" id="foto" accept="image/jpeg, image/jpg, image/png, image/*, application/pdf, .pdf" multiple onchange="previewFoto(event)" style="display:none">
               <div id="previewArea" onclick="pilihFoto()" style="width: 100%;">
                 <span class="material-symbols-rounded" style="font-size: 28px; color: #2563eb;">add_a_photo</span>
                 <div id="previewText" style="font-size: 12px; font-weight: 700; color: #334155; margin-top: 4px;">TAP / PILIH FOTO DI SINI</div>
@@ -1061,7 +1060,7 @@
             </div>
             
             <div style="text-align: center;">
-              <canvas id="canvasTTDModal" style="width: 100% !important; max-width: 100% !important; max-width: 450px !important; height: 180px !important; border: 2px dashed #cbd5e1 !important; border-radius: 8px !important; background: #ffffff !important; display: block !important; box-sizing: border-box !important; margin: 0 auto !important; touch-action: none; cursor: crosshair;"></canvas>
+              <canvas id="canvasTTDModal" style="width: 100% !important; max-width: 100% !important; max-width: 450px !important; height: 180px !important; border: 2px dashed #cbd5e1 !important; border-radius: 6px !important; background: #ffffff !important; display: block !important; box-sizing: border-box !important; margin: 0 auto !important; touch-action: none; cursor: crosshair;"></canvas>
               <input type="file" id="fotoTTDInputModal" accept="image/*" onchange="prosesFotoKeTTD(event)" style="display: none;">
               
               <div style="margin-top: 12px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
@@ -1158,7 +1157,7 @@
       <!-- Footer -->
       <div style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
         <button id="btnHapusSemuaNotifSystem" type="button" onclick="hapusSemuaNotifFirebaseDanLokal()" class="btn-danger" style="display: none; font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #ef4444; color: #ffffff; border: none; padding: 0 16px; cursor: pointer; box-shadow: 0 2px 6px rgba(239,68,68,0.25);">HAPUS SEMUA</button>
-        <button type="button" onclick="tutupNotificationModal()" class="btn-secondary" style="font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #64748b; color: #ffffff; border: none; padding: 0 18px; cursor: pointer; margin-left: auto;">TUTUP</button>
+        <button type="button" onclick="tutupNotificationModal()" class="btn-secondary" style="font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; padding: 0 18px; cursor: pointer; margin-left: auto;">TUTUP</button>
       </div>
     </div>
   </div>
@@ -1240,7 +1239,7 @@
     <span id="usageDbText"></span><span id="usageStorageText"></span><span id="usageEgressText"></span>
     <span id="usageMauText"></span><span id="usageLastUpdated"></span><span id="usageLatencyBadge"></span>
     <span id="usageStatusTitle"></span>
-    <div id="modalRiwayatParsialList"></div><div id="modalDetailParsialSub"></div><div id="modalBuatParsial"></div>
+    
     <div id="modalRejectParsial"></div><div id="modalRejectBreakdown"></div>
     <div id="topBreakdownHeaderArea"></div><button id="btnBatchSetujuiDetail"></button><button id="btnBatchTolakDetail"></button>
     <input type="checkbox" id="chkAllDetailItems"><button id="btnFotoBuktiPart"></button><button id="btnHapusFotoBuktiPart"></button>
@@ -1312,7 +1311,7 @@
         <textarea id="rejectReason" placeholder="Tuliskan alasan penolakan atau catatan secara detail..." style="width: 100%; height: 100px; padding: 12px; font-size: 12.5px; font-weight: 600; border-radius: 6px; border: 1.5px solid #cbd5e1; background: #f8fafc; color: #0f172a; box-sizing: border-box; outline: none; resize: vertical;"></textarea>
 
         <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px;">
-          <button type="button" onclick="closeReject()" style="height: 38px; padding: 0 16px; font-size: 12px; font-weight: 800; border-radius: 6px; background: #64748b; color: #ffffff; border: none; cursor: pointer;">BATAL</button>
+          <button type="button" onclick="closeReject()" style="height: 38px; padding: 0 16px; font-size: 12px; font-weight: 800; border-radius: 6px; background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; cursor: pointer;">BATAL</button>
           <button type="button" id="btnSubmitReject" onclick="prosesReject((document.getElementById('rejectRoleType') || document.getElementById('rejectRole')).value)" style="height: 38px !important; padding: 0 18px !important; font-size: 12px !important; font-weight: 800 !important; border-radius: 6px !important; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none !important; cursor: pointer !important; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;">KIRIM PENOLAKAN</button>
         </div>
       </div>
@@ -1321,9 +1320,12 @@
 
   <!-- POPUP CONFIRM OVERLAY -->
   <div id="confirmOverlay" class="popupOverlay" style="display: none; z-index: 2147483600 !important;">
-    <div id="confirmBoxCard" class="confirmBoxCard" style="z-index: 2147483600 !important; max-width: 460px !important;">
-      <div style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; padding: 12px 16px; font-weight: 800; font-size: 14px; display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 8px !important; text-align: left !important;">
-        <span class="material-symbols-rounded" style="font-size: 18px;">help_outline</span> KONFIRMASI
+    <div id="confirmBoxCard" class="confirmBoxCard" style="z-index: 2147483600 !important; max-width: 460px !important; border-radius: 6px !important; overflow: hidden !important; border: 1px solid #cbd5e1 !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;">
+      <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 12px 16px; font-weight: 800; font-size: 14px; display: flex !important; align-items: center !important; justify-content: space-between !important; text-align: left !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;">
+        <div style="display: flex; align-items: center; gap: 8px; color: #ffffff !important;">
+          <span class="material-symbols-rounded" style="font-size: 18px; color: #ffffff !important;">help_outline</span> KONFIRMASI
+        </div>
+        <button type="button" onclick="confirmNo()" title="TUTUP" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; width: 28px !important; height: 28px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 !important; transition: all 0.15s ease !important;">&times;</button>
       </div>
       <div id="confirmMessage" style="padding: 20px; font-size: 13px; color: #0f172a; text-align: left;"></div>
       <div style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px;">
@@ -1335,15 +1337,20 @@
 
 
   <!-- POPUP DETAIL PERMINTAAN BARANG V2 -->
-  <div id="popupDetailBarangV2" class="popupOverlay" style="display: none; z-index: 2147483600 !important; padding: 0 !important; margin: 0 !important; box-sizing: border-box !important;">
-    <div class="popupBox" style="width: 100vw !important; max-width: 100vw !important; min-width: 100vw !important; height: 100vh !important; max-height: 100vh !important; min-height: 100vh !important; display: flex; flex-direction: column; overflow: hidden; background: #f8fafc; border-radius: 0 !important; margin: 0 !important;">
-      <div class="modalHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 10px 16px !important; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0 !important; border-bottom: 1px solid rgba(255,255,255,0.2) !important; height: 46px !important; min-height: 46px !important;">
-        <span id="popupTitleV2" style="font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px; color: #ffffff !important;">
-          <span class="material-symbols-rounded" style="color: #ffffff !important;">description</span> DETAIL PERMINTAAN BARANG
+  <div id="modalRiwayatParsialList"></div><div id="modalDetailParsialSub"></div><div id="modalBuatParsial"></div>
+  <div id="popupDetailBarangV2" class="popupOverlay" onclick="if (event.target === this) tutupDetailBarangV2();" style="display: none; box-sizing: border-box !important;">
+    <div class="popupBox" style="width: 100% !important; max-width: 100% !important; min-width: 100% !important; height: 100% !important; max-height: 100% !important; min-height: 100% !important; display: flex; flex-direction: column; overflow: hidden; background: #f8fafc; margin: 0 !important;">
+      <div class="modalHeader" style="background: #e2e8f0 !important; color: #0f172a !important; padding: 10px 16px !important; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0 !important; border-bottom: 2px solid #cbd5e1 !important; height: 46px !important; min-height: 46px !important;">
+        <span id="popupTitleV2" style="font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px; color: #0f172a !important;">
+          <span class="material-symbols-rounded" style="color: #0f172a !important;">description</span> DETAIL PERMINTAAN BARANG
         </span>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <button type="button" id="btnRefreshDetailV2" onclick="refreshDetailModalManual()" style="display: none !important; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #ffffff; padding: 4px 8px; border-radius: 6px; cursor: pointer;" title="Refresh Data"><span class="material-symbols-rounded" style="font-size: 18px;">refresh</span></button>
-          <button type="button" onclick="tutupDetailBarangV2()" style="color: #ffffff !important; background: transparent; border: none; font-size: 26px; cursor: pointer; line-height: 1; font-weight: 700;" style="background: rgba(255,255,255,0.2) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; width: 28px !important; height: 28px !important; font-size: 20px !important; line-height: 1 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">&times;</button>
+        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0 !important; position: relative !important; z-index: 100 !important;">
+          <button type="button" id="btnToggleDetailModeV2" onclick="toggleDetailPopupMode()" class="btnModeToggle" style="background: #cbd5e1 !important; border: 1px solid #94a3b8 !important; color: #0f172a !important; padding: 0 10px !important; height: 28px !important; width: auto !important; min-width: 88px !important; border-radius: 6px !important; cursor: pointer !important; font-size: 11px !important; font-weight: 800 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 5px !important; transition: all 0.15s ease !important; flex-shrink: 0 !important; margin-right: 4px !important;" title="Tukar Mode Tampilan Popup (MODE A: Fullscreen / MODE B: Auto-Fit Layar Dalam Konten Utama)">
+            <span class="material-symbols-rounded" id="iconToggleDetailMode" style="font-size: 16px !important; color: #0f172a !important;">fullscreen</span>
+            <span id="textToggleDetailMode" style="font-weight: 900 !important; letter-spacing: 0.5px !important; color: #0f172a !important;">MODE A</span>
+          </button>
+          <button type="button" id="btnRefreshDetailV2" onclick="refreshDetailModalManual()" style="display: none !important; background: #cbd5e1 !important; border: 1px solid #94a3b8 !important; color: #0f172a !important; padding: 4px 8px; border-radius: 6px; cursor: pointer;" title="Refresh Data"><span class="material-symbols-rounded" style="font-size: 18px; color: #0f172a !important;">refresh</span></button>
+          <button type="button" onclick="tutupDetailBarangV2()" title="TUTUP" style="background: #cbd5e1 !important; color: #0f172a !important; border: 1px solid #94a3b8 !important; border-radius: 6px !important; width: 28px !important; min-width: 28px !important; height: 28px !important; font-size: 20px !important; line-height: 1 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-weight: 800 !important; flex-shrink: 0 !important;">&times;</button>
         </div>
       </div>
       <div id="popupBodyV2" class="modalBody" style="flex: 1; overflow: hidden; padding: 0 !important; position: relative; display: flex; flex-direction: column;"></div>
@@ -1363,13 +1370,12 @@
       <div class="modalBody" style="padding: 16px;">
         <p id="adminStatusNoSurat" style="font-weight: 700; margin: 0 0 8px 0; font-size: 13px;"></p>
         <p id="adminStatusInfoBox" style="font-size: 12px; color: #64748b; margin: 0 0 12px 0;"></p>
-        <select id="selectStatusAdmin" style="width: 100%; height: 36px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 10px; font-size: 13px;">
+        <select id="selectStatusAdmin" style="width: 100%; height: 38px; border-radius: 6px; border: 1.5px solid #cbd5e1; padding: 0 10px; font-size: 13px; font-weight: 800; color: #0f172a; outline: none; background: #ffffff; cursor: pointer;">
           <option value="PENDING">PENDING</option>
-          <option value="APPROVE">APPROVE DM</option>
-          <option value="SETUJU">SETUJU HO</option>
-          <option value="PROSES">PROSES GUDANG</option>
-          <option value="DONE">DONE (SELESAI)</option>
-          <option value="TOLAK">TOLAK</option>
+          <option value="APPROVE">APPROVE</option>
+          <option value="REJECT">REJECT</option>
+          <option value="BATAL">BATAL</option>
+          <option value="DONE">DONE</option>
         </select>
       </div>
       <div class="modalFooter">
@@ -1447,7 +1453,7 @@
       </div>
 
       <div class="modalFooter" style="padding: 12px 16px !important; background: #f8fafc !important; border-top: 1px solid #e2e8f0 !important; display: flex !important; justify-content: flex-end !important; gap: 10px !important; flex-shrink: 0 !important; border-radius: 0 0 6px 6px !important;">
-        <button type="button" onclick="closeArtemisModal()" style="height: 38px !important; padding: 0 18px !important; font-size: 12px !important; font-weight: 800 !important; border-radius: 4px !important; background: #64748b !important; color: #ffffff !important; border: none !important; cursor: pointer !important;">BATAL</button>
+        <button type="button" onclick="closeArtemisModal()" style="height: 38px !important; padding: 0 18px !important; font-size: 12px !important; font-weight: 800 !important; border-radius: 4px !important; background: #e2e8f0 !important; color: #334155 !important; border: 1px solid #cbd5e1 !important; cursor: pointer !important;">BATAL</button>
         <button type="button" onclick="prosesSimpanDoneDenganBuktiArtemis()" style="height: 38px !important; padding: 0 20px !important; font-size: 12px !important; font-weight: 800 !important; border-radius: 4px !important; background: linear-gradient(135deg, #16a34a, #15803d) !important; color: #ffffff !important; border: none !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25) !important;">
           <span class="material-symbols-rounded" style="font-size: 18px !important;">check_circle</span> SELESAIKAN (DONE)
         </button>
@@ -1618,13 +1624,13 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
     <div class="userManagementBoxPopup" onclick="event.stopPropagation()" style="position: relative !important; width: 1400px !important; max-width: 98vw !important; height: calc(100vh - 10mm) !important; height: calc(100dvh - 10mm) !important; max-height: calc(100vh - 10mm) !important; max-height: calc(100dvh - 10mm) !important; overflow: hidden !important; background: #ffffff !important; color: #0f172a !important; border-radius: 4px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.3), 0 10px 15px -5px rgba(0, 0, 0, 0.15) !important; margin: auto !important; box-sizing: border-box !important; padding: 0 !important; display: flex !important; flex-direction: column !important;">
       
       <!-- HEADER FULL KE KANAN & KIRI (x=0 to 100%) -->
-      <div class="userManagementHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 14px 20px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-radius: 4px 4px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important;">
+      <div class="userManagementHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 14px 20px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-radius: 4px 4px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important;">
         <div style="display: flex !important; align-items: center !important; gap: 8px !important;">
           <span class="material-symbols-rounded" style="font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important;">manage_accounts</span>
           <h3 style="color: #ffffff !important; font-weight: 800 !important; font-size: 16px !important; margin: 0 !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">MANAJEMEN AKUN USER &amp; HAK AKSES</h3>
         </div>
-        <!-- TOMBOL X PUTEH (#ffffff) -->
-        <button type="button" class="btnTutupUserModal" onclick="tutupPopupUserManagement()" style="background: rgba(255, 255, 255, 0.2) !important; border: none !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; line-height: 1 !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 !important; transition: all 0.15s ease !important;" title="TUTUP">&times;</button>
+        <!-- TOMBOL X -->
+        <button type="button" class="btnTutupUserModal" onclick="tutupPopupUserManagement()" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; line-height: 1 !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 !important; transition: all 0.15s ease !important;" title="TUTUP">&times;</button>
       </div>
 
       <!-- BODY MODAL CONTAINER (DENGAN PADDING INTERNAL 16px) -->
@@ -1686,18 +1692,18 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
         <div class="userManagementTableWrap" style="flex: 1 !important; width: 100% !important; min-height: 200px !important; overflow-x: auto !important; overflow-y: auto !important; border-radius: 4px !important; border: 1px solid #cbd5e1 !important; box-sizing: border-box !important; background: #ffffff !important;">
           <table class="historyTable userModalTable" style="width: 100% !important; min-width: 100% !important; border-collapse: separate !important; border-spacing: 0 !important; margin: 0 !important; background: #ffffff !important;">
             <thead>
-              <tr style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important;">
-                <th style="width: 38px !important; text-align: center !important; position: sticky !important; top: 0 !important; z-index: 10 !important; background: #0284c7 !important; color: #ffffff !important; font-weight: 800 !important; border-bottom: 2px solid #0369a1 !important;">
-                  <input type="checkbox" id="selectAllUsersModal" onchange="toggleSelectAllUsers(this)" style="cursor: pointer !important; width: 16px !important; height: 16px !important; accent-color: #0284c7 !important;" title="PILIH SEMUA">
+              <tr style="background: #e2e8f0 !important; color: #0f172a !important;">
+                <th style="width: 38px !important; text-align: center !important; position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">
+                  <input type="checkbox" id="selectAllUsersModal" onchange="toggleSelectAllUsers(this)" style="cursor: pointer !important; width: 16px !important; height: 16px !important; accent-color: #0f172a !important;" title="PILIH SEMUA">
                 </th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #0284c7 !important; color: #ffffff !important; font-weight: 800 !important; border-bottom: 2px solid #0369a1 !important;">USERNAME</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #0284c7 !important; color: #ffffff !important; font-weight: 800 !important; border-bottom: 2px solid #0369a1 !important;">PASSWORD</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #0284c7 !important; color: #ffffff !important; font-weight: 800 !important; border-bottom: 2px solid #0369a1 !important;">NAMA LENGKAP</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #0284c7 !important; color: #ffffff !important; font-weight: 800 !important; border-bottom: 2px solid #0369a1 !important;">KODE TOKO</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #0284c7 !important; color: #ffffff !important; font-weight: 800 !important; border-bottom: 2px solid #0369a1 !important;">NO. HP</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #0284c7 !important; color: #ffffff !important; font-weight: 800 !important; border-bottom: 2px solid #0369a1 !important;">KATEGORI</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #0284c7 !important; color: #ffffff !important; font-weight: 800 !important; border-bottom: 2px solid #0369a1 !important;">AREA</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #0284c7 !important; color: #ffffff !important; font-weight: 800 !important; border-bottom: 2px solid #0369a1 !important; text-align: center !important; min-width: 90px !important;">AKSI</th>
+                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">USERNAME</th>
+                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">PASSWORD</th>
+                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">NAMA LENGKAP</th>
+                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">KODE TOKO</th>
+                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">NO. HP</th>
+                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">KATEGORI</th>
+                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">AREA</th>
+                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important; text-align: center !important; min-width: 90px !important;">AKSI</th>
               </tr>
             </thead>
             <tbody id="userTableBodyModal" style="background: #ffffff !important;">
@@ -1715,12 +1721,12 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
     <div class="popupBox" style="position: relative !important; width: min(920px, calc(100vw - 10mm)) !important; max-width: calc(100vw - 10mm) !important; height: auto !important; min-height: auto !important; max-height: calc(100vh - 10mm) !important; max-height: calc(100dvh - 10mm) !important; overflow: hidden !important; background: #ffffff !important; color: #0f172a !important; border-radius: 6px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.3) !important; margin: auto !important; box-sizing: border-box !important; padding: 0 !important; display: flex !important; flex-direction: column !important;">
       
       <!-- HEADER FULL KE KANAN (FLUSH 100%) -->
-      <div class="popupHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 16px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-radius: 4px 4px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important;">
+      <div class="popupHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 12px 16px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-radius: 4px 4px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important;">
         <div style="display: flex !important; align-items: center !important; gap: 8px !important;">
           <span class="material-symbols-rounded" style="font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important;">store</span>
           <h4 style="color: #ffffff !important; font-weight: 800 !important; font-size: 15px !important; margin: 0 !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">KELOLA / TAMBAH TOKO BARU</h4>
         </div>
-        <button type="button" class="popupClose" onclick="tutupModalTambahToko()" style="background: rgba(255, 255, 255, 0.2) !important; border: none !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; line-height: 1 !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 !important; transition: all 0.15s ease !important;" title="TUTUP">&times;</button>
+        <button type="button" class="popupClose" onclick="tutupModalTambahToko()" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; line-height: 1 !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 !important; transition: all 0.15s ease !important;" title="TUTUP">&times;</button>
       </div>
 
       <!-- POPUP BODY (INDIKATOR SCROLL BERADA DI BAWAH HEADER) -->
@@ -1758,8 +1764,8 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
         <!-- TABLE CONTAINER WITH FULL-WIDTH HEADER AND SCROLLBAR BELOW HEADER -->
         <div style="flex: 0 1 auto !important; height: auto !important; min-height: auto !important; max-height: auto !important; border: 1px solid #cbd5e1 !important; border-radius: 4px !important; background: #ffffff !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;">
           
-          <!-- FIXED FULL-WIDTH BLUE HEADER (FLUSH 100%) -->
-          <div style="width: 100% !important; flex-shrink: 0 !important; background: #0284c7 !important; color: #ffffff !important; border-bottom: 1px solid #0369a1 !important; box-sizing: border-box !important;">
+          <!-- FIXED FULL-WIDTH HEADER (FLUSH 100%) -->
+          <div style="width: 100% !important; flex-shrink: 0 !important; background: #e2e8f0 !important; color: #0f172a !important; border-bottom: 2px solid #cbd5e1 !important; box-sizing: border-box !important;">
             <table style="width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; border-spacing: 0 !important; font-size: 12px !important; margin: 0 !important;">
               <colgroup>
                 <col style="width: 42% !important;">
@@ -1768,11 +1774,11 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
                 <col style="width: 20% !important;">
               </colgroup>
               <thead>
-                <tr style="background: #0284c7 !important; color: #ffffff !important;">
-                  <th style="padding: 9px 12px !important; text-align: left !important; font-weight: 700 !important; font-size: 12px !important; white-space: nowrap !important; color: #ffffff !important; border: none !important;">NAMA TOKO</th>
-                  <th style="padding: 9px 12px !important; text-align: center !important; font-weight: 700 !important; font-size: 12px !important; white-space: nowrap !important; color: #ffffff !important; border: none !important;">AREA</th>
-                  <th style="padding: 9px 12px !important; text-align: center !important; font-weight: 700 !important; font-size: 12px !important; white-space: nowrap !important; color: #ffffff !important; border: none !important;">KODE TOKO</th>
-                  <th style="padding: 9px 12px !important; text-align: center !important; font-weight: 700 !important; font-size: 12px !important; white-space: nowrap !important; color: #ffffff !important; border: none !important;">AKSI</th>
+                <tr style="background: #e2e8f0 !important; color: #0f172a !important;">
+                  <th style="padding: 9px 12px !important; text-align: left !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important;">NAMA TOKO</th>
+                  <th style="padding: 9px 12px !important; text-align: center !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important;">AREA</th>
+                  <th style="padding: 9px 12px !important; text-align: center !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important;">KODE TOKO</th>
+                  <th style="padding: 9px 12px !important; text-align: center !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important;">AKSI</th>
                 </tr>
               </thead>
             </table>
@@ -1806,14 +1812,14 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
         </div>
 
 <div id="excelTemplateOverlay" class="popupOverlay modalBackdrop" onclick="if(event.target === this) triggerModalBlink(this);" style="display: none; position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.8) !important; backdrop-filter: blur(4px) !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 12px !important; box-sizing: border-box !important;">
-    <div class="modalBox excelTemplateBox" onclick="event.stopPropagation()" style="width: 100% !important; max-width: 420px !important; background: #ffffff !important; color: #0f172a !important; border-radius: 8px !important; overflow: hidden !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important; border: 1px solid #e2e8f0 !important; box-sizing: border-box !important; margin: 0 auto !important; animation: popIn 0.2s ease-out !important; position: relative !important; z-index: 2147483647 !important;">
+    <div class="modalBox excelTemplateBox" onclick="event.stopPropagation()" style="width: 100% !important; max-width: 420px !important; background: #ffffff !important; color: #0f172a !important; border-radius: 6px !important; overflow: hidden !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important; border: 1px solid #e2e8f0 !important; box-sizing: border-box !important; margin: 0 auto !important; animation: popIn 0.2s ease-out !important; position: relative !important; z-index: 2147483647 !important;">
       <!-- HEADER POPUP -->
-      <div class="excelTemplateHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 16px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-bottom: 1px solid rgba(255,255,255,0.2) !important; box-sizing: border-box !important;">
+      <div class="excelTemplateHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 12px 16px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; box-sizing: border-box !important;">
         <span style="display: flex !important; align-items: center !important; gap: 8px !important; font-weight: 800 !important; font-size: 14px !important; letter-spacing: 0.3px !important; color: #ffffff !important;">
           <span class="material-symbols-rounded" style="font-size: 20px !important; font-weight: 800 !important; color: #ffffff !important;">download_for_offline</span>
           <span style="color: #ffffff !important; font-weight: 800 !important;">DOWNLOAD TEMPLATE EXCEL</span>
         </span>
-        <button type="button" onclick="closeExcelTemplateModal()" title="TUTUP" style="font-size: 26px !important; font-weight: 900 !important; color: #ffffff !important; background: transparent !important; border: none !important; cursor: pointer !important; line-height: 1 !important; outline: none !important; padding: 0 4px !important; margin: 0 !important; opacity: 0.9;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">&times;</button>
+        <button type="button" onclick="closeExcelTemplateModal()" title="TUTUP" style="font-size: 22px !important; font-weight: 900 !important; color: #ffffff !important; background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; border-radius: 4px !important; width: 28px !important; height: 28px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; line-height: 1 !important; outline: none !important; padding: 0 !important; margin: 0 !important;">&times;</button>
       </div>
 
       <!-- BODY POPUP -->
@@ -1863,12 +1869,12 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
     <div class="rejectModalContent" style="position: relative !important; width: 680px !important; max-width: 96vw !important; height: auto !important; max-height: calc(100vh - 20mm) !important; max-height: calc(100dvh - 20mm) !important; overflow: hidden !important; background: #ffffff !important; color: #0f172a !important; border-radius: 4px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4) !important; margin: auto !important; box-sizing: border-box !important; padding: 0 !important; display: flex !important; flex-direction: column !important;">
       
       <!-- HEADER FULL KE KANAN (FLUSH 100%) -->
-      <div class="rejectHeaderPopup" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 16px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-radius: 4px 4px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important;">
+      <div class="rejectHeaderPopup" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 12px 16px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-radius: 4px 4px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important;">
         <div style="display: flex !important; align-items: center !important; gap: 8px !important;">
           <span class="material-symbols-rounded" style="font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important;">terminal</span>
           <h4 style="color: #ffffff !important; font-weight: 800 !important; font-size: 15px !important; margin: 0 !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">KODE DDL MASTER SETUP SQL SUPABASE</h4>
         </div>
-        <button type="button" class="btnHeaderCloseX" onclick="tutupModalViewMasterSqlSupabase()" style="background: rgba(255, 255, 255, 0.2) !important; border: none !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; line-height: 1 !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 !important; transition: all 0.15s ease !important;" title="TUTUP">&times;</button>
+        <button type="button" class="btnHeaderCloseX" onclick="tutupModalViewMasterSqlSupabase()" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; line-height: 1 !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 !important; transition: all 0.15s ease !important;" title="TUTUP">&times;</button>
       </div>
 
       <!-- BODY MODAL VIEW SQL (INDIKATOR SCROLL BERADA DI BAWAH HEADER) -->
@@ -1892,9 +1898,9 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
 
 <div id="pdfModal" class="popupOverlay" onclick="if(event.target === this) tutupPdfModal();" style="display:none; padding-top: 1mm !important; padding-bottom: 1mm !important; padding-left: 3mm !important; padding-right: 3mm !important; justify-content: center !important; align-items: center !important; box-sizing: border-box !important; touch-action: pan-y !important; -webkit-overflow-scrolling: touch !important;">
     <div class="popupBox" style="position: relative !important; width: 780px !important; max-width: calc(100vw - 2mm) !important; height: calc(100vh - 2mm) !important; height: calc(100dvh - 2mm) !important; max-height: calc(100vh - 2mm) !important; max-height: calc(100dvh - 2mm) !important; margin: 1mm auto !important; border-radius: 0px !important; display: flex !important; flex-direction: column !important; touch-action: pan-y !important; -webkit-overflow-scrolling: touch !important; -webkit-clip-path: none !important; clip-path: none !important;">
-      <div class="popupHeader" style="background: var(--primary) !important; background-color: var(--primary) !important; background-image: none !important; color: #ffffff !important; position: relative !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 10px 18px !important; min-height: 50px !important; flex-shrink: 0 !important; border-radius: 0px !important; width: 100% !important; box-sizing: border-box !important;">
-        <button type="button" class="btnPrintHeader" onclick="cetakDokumenPdf()" title="CETAK PDF / PRINT" style="display: inline-flex !important; align-items: center !important; gap: 8px !important; padding: 8px 18px !important; height: 38px !important; background: #ffffff !important; color: var(--primary) !important; border: 2px solid #ffffff !important; border-radius: 0px !important; font-weight: 800 !important; font-size: 14px !important; cursor: pointer !important;"><span class="material-symbols-rounded" style="font-size: 24px !important; font-weight: 900 !important;">print</span> PRINT</button>
-        <button type="button" class="popupClose" onclick="tutupPdfModal()" style="position: absolute !important; right: 14px !important; top: 8px !important; font-size: 28px !important; font-weight: 900 !important; color: #ffffff !important; background: transparent !important; border: none !important; border-radius: 0 !important; width: auto !important; height: auto !important; padding: 0 4px !important; cursor: pointer !important; z-index: 10 !important; text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;" title="TUTUP PDF">&times;</button>
+      <div class="popupHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; background-image: none !important; color: #ffffff !important; position: relative !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 10px 18px !important; min-height: 50px !important; flex-shrink: 0 !important; border-radius: 0px !important; width: 100% !important; box-sizing: border-box !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;">
+        <button type="button" class="btnPrintHeader" onclick="cetakDokumenPdf()" title="CETAK PDF / PRINT" style="display: inline-flex !important; align-items: center !important; gap: 8px !important; padding: 8px 18px !important; height: 38px !important; background: #ffffff !important; color: #0284c7 !important; border: 2px solid #ffffff !important; border-radius: 4px !important; font-weight: 800 !important; font-size: 14px !important; cursor: pointer !important;"><span class="material-symbols-rounded" style="font-size: 24px !important; font-weight: 900 !important; color: #0284c7 !important;">print</span> PRINT</button>
+        <button type="button" class="popupClose" onclick="tutupPdfModal()" style="position: absolute !important; right: 14px !important; top: 10px !important; font-size: 22px !important; font-weight: 900 !important; color: #ffffff !important; background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; border-radius: 4px !important; width: 30px !important; height: 30px !important; cursor: pointer !important; z-index: 10 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important;" title="TUTUP PDF">&times;</button>
       </div>
       <div class="popupContent" id="pdfDocumentContent" style="flex: 1; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; touch-action: pan-y !important; background: #f8fafc; padding: 1mm 10px !important;">
         <!-- Injected dynamically -->
@@ -1954,13 +1960,13 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
 <div id="popupSecurityPinHapusLokal" class="popupOverlay" style="display: none; z-index: 2000000000 !important; padding-left: 3mm !important; padding-right: 3mm !important; box-sizing: border-box !important;" onclick="if(event.target === this) { event.preventDefault(); event.stopPropagation(); triggerModalBlink(this); }">
     <div class="popupBox" style="background: var(--bg-card) !important; border-radius: 6px !important; box-shadow: 0 25px 60px rgba(0,0,0,0.5) !important; border: 1px solid var(--border-color) !important; overflow: hidden !important; animation: spinnerPop 0.25s cubic-bezier(0.16, 1, 0.3, 1); margin: auto !important;">
       
-      <!-- HEADER (SESUAI DENGAN TEMA AKTIF) -->
-      <div style="background: var(--primary); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; color: #ffffff; border-radius: 6px 6px 0 0; position: relative !important; box-sizing: border-box !important;">
-        <div style="display: flex; align-items: center; gap: 8px; font-weight: 900 !important; font-size: 14px !important; letter-spacing: 0.8px !important;">
-          <span class="material-symbols-rounded" style="font-size: 20px; font-weight: 900 !important;">lock_reset</span>
-          <span style="font-weight: 900 !important;">VERIFIKASI KEAMANAN</span>
+      <!-- HEADER (SAMA DENGAN UPLOAD PERMINTAAN -> BACKGROUND BIRU & TEKS/X PUTIH) -->
+      <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; color: #ffffff !important; border-radius: 6px 6px 0 0; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; position: relative !important; box-sizing: border-box !important;">
+        <div style="display: flex; align-items: center; gap: 8px; font-weight: 900 !important; font-size: 14px !important; letter-spacing: 0.8px !important; color: #ffffff !important;">
+          <span class="material-symbols-rounded" style="font-size: 20px; font-weight: 900 !important; color: #ffffff !important;">lock_reset</span>
+          <span style="font-weight: 900 !important; color: #ffffff !important;">VERIFIKASI KEAMANAN</span>
         </div>
-        <button type="button" onclick="tutupModalPinHapusLokal()" class="btnHeaderCloseX" style="background: none !important; border: none !important; color: #ffffff !important; font-size: 26px !important; font-weight: 900 !important; cursor: pointer !important; line-height: 1 !important; padding: 0 4px !important; margin-left: auto !important; position: relative !important; top: auto !important; right: auto !important;" title="BATAL" style="background: rgba(255,255,255,0.2) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; width: 28px !important; height: 28px !important; font-size: 20px !important; line-height: 1 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">&times;</button>
+        <button type="button" onclick="tutupModalPinHapusLokal()" class="btnHeaderCloseX" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; color: #ffffff !important; font-size: 20px !important; font-weight: 900 !important; cursor: pointer !important; line-height: 1 !important; width: 28px !important; height: 28px !important; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; margin-left: auto !important;" title="BATAL">&times;</button>
       </div>
 
       <!-- BODY -->
@@ -2163,11 +2169,11 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
   <!-- POPUP SCANNER KAMERA BARCODE / QR -->
   <div id="scannerModal" class="popupOverlay" style="display: none !important; position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.65) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 10mm 12px !important; box-sizing: border-box !important;">
     <div class="popupBox" style="position: relative !important; width: min(480px, 95vw) !important; max-width: 95vw !important; background: #ffffff !important; color: #0f172a !important; border-radius: 6px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.3) !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; margin: auto !important; box-sizing: border-box !important;">
-      <div class="modalHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 16px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; border-radius: 6px 6px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; width: 100% !important; box-sizing: border-box !important;">
+      <div class="modalHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 12px 16px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; border-radius: 6px 6px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; width: 100% !important; box-sizing: border-box !important;">
         <span style="font-weight: 800 !important; font-size: 14px !important; display: flex !important; align-items: center !important; gap: 8px !important; color: #ffffff !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">
           <span class="material-symbols-rounded" style="font-size: 20px !important; color: #ffffff !important;">qr_code_scanner</span> SCAN BARCODE / QR NO SERI
         </span>
-        <button type="button" onclick="tutupScanner()" style="background: rgba(255, 255, 255, 0.2) !important; border: none !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; transition: all 0.15s ease !important;" title="TUTUP">&times;</button>
+        <button type="button" onclick="tutupScanner()" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; transition: all 0.15s ease !important;" title="TUTUP">&times;</button>
       </div>
       
       <div class="modalBody" style="padding: 16px !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 10px !important; background: #ffffff !important; color: #0f172a !important;">
@@ -2178,28 +2184,28 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
       </div>
 
       <div class="modalFooter" style="padding: 12px 16px !important; background: #f8fafc !important; border-top: 1px solid #e2e8f0 !important; display: flex !important; justify-content: flex-end !important; border-radius: 0 0 6px 6px !important;">
-        <button type="button" onclick="tutupScanner()" style="height: 38px !important; padding: 0 20px !important; font-size: 12px !important; font-weight: 800 !important; border-radius: 4px !important; background: #64748b !important; color: #ffffff !important; border: none !important; cursor: pointer !important;">BATAL / TUTUP</button>
+        <button type="button" onclick="tutupScanner()" style="height: 38px !important; padding: 0 20px !important; font-size: 12px !important; font-weight: 800 !important; border-radius: 4px !important; background: #e2e8f0 !important; color: #334155 !important; border: 1px solid #cbd5e1 !important; cursor: pointer !important;">BATAL / TUTUP</button>
       </div>
     </div>
   </div>
 
 <div id="uploadBuktiPermintaanOverlay" class="popupOverlay" style="display: none !important; position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.65) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 10mm 12px !important; box-sizing: border-box !important;">
     <div class="artemisBoxPopup" style="position: relative !important; width: min(580px, 95vw) !important; max-width: 95vw !important; background: #ffffff !important; color: #0f172a !important; border-radius: 6px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.3) !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; margin: auto !important; box-sizing: border-box !important;">
-      <div class="artemisHeaderPopup" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 16px !important; border-radius: 6px 6px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; display: flex !important; align-items: center !important; justify-content: space-between !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important;">
+      <div class="artemisHeaderPopup" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 12px 16px !important; border-radius: 6px 6px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; display: flex !important; align-items: center !important; justify-content: space-between !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important;">
         <div style="display: flex !important; align-items: center !important; gap: 8px !important;">
           <span class="material-symbols-rounded" style="font-size: 20px !important; font-weight: 900 !important; color: #ffffff !important;">cloud_upload</span>
           <span id="uploadBuktiTitle" style="font-size: 14px !important; font-weight: 900 !important; color: #ffffff !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">UPLOAD BUKTI PERMINTAAN</span>
         </div>
-        <button type="button" class="btnHeaderCloseX" onclick="tutupModalUploadBuktiPermintaan()" style="background: rgba(255, 255, 255, 0.2) !important; border: none !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; transition: all 0.15s ease !important; margin-left: auto !important;" title="TUTUP">&times;</button>
+        <button type="button" class="btnHeaderCloseX" onclick="tutupModalUploadBuktiPermintaan()" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; transition: all 0.15s ease !important; margin-left: auto !important;" title="TUTUP">&times;</button>
       </div>
       <div class="artemisBodyPopup" style="padding: 16px !important; background: #ffffff !important; color: #0f172a !important; display: flex !important; flex-direction: column !important; gap: 12px !important; box-sizing: border-box !important; width: 100% !important;">
         <input type="hidden" id="uploadBuktiNoSurat">
         <p id="uploadBuktiSubTitle" style="font-size: 11.5px !important; font-weight: 700 !important; color: #0284c7 !important; margin: 0 0 4px 0 !important; line-height: 1.4 !important; text-transform: uppercase !important;">UNGGAH FOTO / DOKUMEN BUKTI PERMINTAAN:</p>
         
-        <input type="file" id="uploadBuktiFileInput" accept="image/*, application/pdf" multiple style="display: none;" onchange="handleBuktiPermintaanSelect(event)">
+        <input type="file" id="uploadBuktiFileInput" accept="image/jpeg, image/jpg, image/png, image/*, application/pdf, .pdf" style="display: none;" onchange="handleBuktiPermintaanSelect(event)">
 
-        <div id="uploadBuktiPasteBox" tabindex="0" onclick="document.getElementById('uploadBuktiFileInput').click();" title="PASTE DI SINI / KLIK UNTUK UPLOAD" style="margin-bottom: 4px !important; padding: 6px 12px !important; border: 2px dashed #0284c7 !important; border-radius: 6px !important; background: #f0f9ff !important; text-align: center !important; cursor: pointer !important; transition: all 0.2s ease !important; outline: none !important; box-sizing: border-box !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; gap: 10px !important;">
-          <button type="button" onclick="event.stopPropagation(); document.getElementById('uploadBuktiFileInput').click()" class="btn-primary" style="height: 30px !important; padding: 0 14px !important; font-size: 11px !important; font-weight: 800 !important; display: inline-flex !important; align-items: center !important; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none !important; border-radius: 4px !important; cursor: pointer !important; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2) !important; white-space: nowrap !important;">
+        <div id="uploadBuktiPasteBox" tabindex="0" onclick="pilihFileBuktiWithCheck();" title="PASTE DI SINI / KLIK UNTUK UPLOAD" style="margin-bottom: 4px !important; padding: 6px 12px !important; border: 2px dashed #0284c7 !important; border-radius: 6px !important; background: #f0f9ff !important; text-align: center !important; cursor: pointer !important; transition: all 0.2s ease !important; outline: none !important; box-sizing: border-box !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; gap: 10px !important;">
+          <button type="button" onclick="event.stopPropagation(); pilihFileBuktiWithCheck();" class="btn-primary" style="height: 30px !important; padding: 0 14px !important; font-size: 11px !important; font-weight: 800 !important; display: inline-flex !important; align-items: center !important; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none !important; border-radius: 4px !important; cursor: pointer !important; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2) !important; white-space: nowrap !important;">
             PILIH FOTO BUKTI
           </button>
           <span style="font-size: 11px !important; color: #475569 !important; font-weight: 600 !important; text-align: left !important;">(Klik untuk memilih bukti, atau tempel screenshot dengan <strong>Ctrl+V</strong>)</span>
@@ -2210,7 +2216,7 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
         </div>
 
         <div class="confirmButton" style="display: flex !important; gap: 10px !important; margin-top: 4px !important;">
-          <button type="button" class="btnBatal" onclick="tutupModalUploadBuktiPermintaan()" style="flex: 1 !important; height: 38px !important; padding: 0 16px !important; border-radius: 4px !important; font-weight: 800 !important; font-size: 12px !important; cursor: pointer !important; background: #64748b !important; color: #ffffff !important; border: none !important; text-transform: uppercase !important;">BATAL</button>
+          <button type="button" class="btnBatal" onclick="tutupModalUploadBuktiPermintaan()" style="flex: 1 !important; height: 38px !important; padding: 0 16px !important; border-radius: 4px !important; font-weight: 800 !important; font-size: 12px !important; cursor: pointer !important; background: #e2e8f0 !important; color: #334155 !important; border: 1px solid #cbd5e1 !important; text-transform: uppercase !important;">BATAL</button>
           <button type="button" class="btnOkNotif" onclick="simpanBuktiPermintaanUploaded()" style="flex: 1 !important; height: 38px !important; padding: 0 16px !important; border-radius: 4px !important; font-weight: 800 !important; font-size: 12px !important; cursor: pointer !important; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none !important; text-transform: uppercase !important; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;">SIMPAN BUKTI</button>
         </div>
       </div>
