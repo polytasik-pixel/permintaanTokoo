@@ -2729,6 +2729,45 @@ function getFormattedDateDDMMYYYY(dObj = new Date()) {
   return `${day}/${month}/${year}`;
 }
 
+function parseDateToTimestamp(val) {
+  if (!val && val !== 0) return 0;
+  if (typeof val === 'number') return val;
+
+  const str = String(val).trim();
+  if (!str) return 0;
+
+  // 1. Check DD/MM/YYYY or DD-MM-YYYY format (e.g. 10/09/2026 or 10/09/2026 14:30)
+  const ddmmyyyyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+  if (ddmmyyyyMatch) {
+    const day = parseInt(ddmmyyyyMatch[1], 10);
+    const month = parseInt(ddmmyyyyMatch[2], 10) - 1; // 0-indexed month in JS
+    const year = parseInt(ddmmyyyyMatch[3], 10);
+    const hours = ddmmyyyyMatch[4] ? parseInt(ddmmyyyyMatch[4], 10) : 0;
+    const minutes = ddmmyyyyMatch[5] ? parseInt(ddmmyyyyMatch[5], 10) : 0;
+    const seconds = ddmmyyyyMatch[6] ? parseInt(ddmmyyyyMatch[6], 10) : 0;
+    return new Date(year, month, day, hours, minutes, seconds).getTime();
+  }
+
+  // 2. Check YYYY-MM-DD or YYYY/MM/DD format (e.g. 2026-09-10 or 2026-09-10 14:30:00)
+  const yyyymmddMatch = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})(?:[T\s]+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+  if (yyyymmddMatch) {
+    const year = parseInt(yyyymmddMatch[1], 10);
+    const month = parseInt(yyyymmddMatch[2], 10) - 1;
+    const day = parseInt(yyyymmddMatch[3], 10);
+    const hours = yyyymmddMatch[4] ? parseInt(yyyymmddMatch[4], 10) : 0;
+    const minutes = yyyymmddMatch[5] ? parseInt(yyyymmddMatch[5], 10) : 0;
+    const seconds = yyyymmddMatch[6] ? parseInt(yyyymmddMatch[6], 10) : 0;
+    return new Date(year, month, day, hours, minutes, seconds).getTime();
+  }
+
+  // 3. Fallback for ISO string or standard date parse
+  const parsed = Date.parse(str);
+  if (!isNaN(parsed)) return parsed;
+
+  return 0;
+}
+window.parseDateToTimestamp = parseDateToTimestamp;
+
 
 function formatDateTimeWIB(input) {
   if (!input) return '-';
@@ -8535,12 +8574,15 @@ function loadDashboard() {
     const col = window._dashboardSortCol;
     const dir = window._dashboardSortDir === 'desc' ? -1 : 1;
     filteredData.sort((a, b) => {
+      if (col === 'tanggal') {
+        const timeA = typeof parseDateToTimestamp === 'function' ? parseDateToTimestamp(a.tanggal || a.createdAt || a.created_at) : 0;
+        const timeB = typeof parseDateToTimestamp === 'function' ? parseDateToTimestamp(b.tanggal || b.createdAt || b.created_at) : 0;
+        if (timeA < timeB) return -1 * dir;
+        if (timeA > timeB) return 1 * dir;
+        return 0;
+      }
       let valA = a[col] || '';
       let valB = b[col] || '';
-      if (col === 'tanggal') {
-        valA = a.tanggal || a.createdAt || a.created_at || '';
-        valB = b.tanggal || b.createdAt || b.created_at || '';
-      }
       if (typeof valA === 'string') valA = valA.toLowerCase();
       if (typeof valB === 'string') valB = valB.toLowerCase();
       if (valA < valB) return -1 * dir;
@@ -9887,7 +9929,7 @@ function hapusRow(btn) {
   }
 }
 
-function kompresiFoto(file, maxDimension = 1280, quality = 0.85) {
+function kompresiFoto(file, maxDimension = 1600, quality = 0.90) {
   return new Promise((resolve) => {
     if (!file) {
       resolve('');
@@ -10097,10 +10139,10 @@ async function uploadPhotoToSupabaseStorage(fileOrBlob) {
     return fileOrBlob;
   }
 
-  // 1. KOMPRESI GAMBAR HD HIGH QUALITY (Max 1280px, Quality 0.85 JPEG -> ~120-250 KB)
+  // 1. KOMPRESI GAMBAR HD HIGH QUALITY (Max 1600px, Quality 0.90 JPEG -> ~300-500 KB)
   let compressedDataUrl = '';
   try {
-    compressedDataUrl = await kompresiFoto(fileOrBlob, 1280, 0.85);
+    compressedDataUrl = await kompresiFoto(fileOrBlob, 1600, 0.90);
   } catch(e) {
     console.warn('[KOMPRESI FOTO NOTICE]:', e);
     if (typeof fileOrBlob === 'string' && fileOrBlob.startsWith('data:image/')) {
@@ -10806,12 +10848,15 @@ function filterRiwayat() {
     const col = window._riwayatSortCol;
     const dir = window._riwayatSortDir === 'desc' ? -1 : 1;
     data.sort((a, b) => {
+      if (col === 'tanggal') {
+        const timeA = typeof parseDateToTimestamp === 'function' ? parseDateToTimestamp(a.tanggal || a.createdAt || a.created_at) : 0;
+        const timeB = typeof parseDateToTimestamp === 'function' ? parseDateToTimestamp(b.tanggal || b.createdAt || b.created_at) : 0;
+        if (timeA < timeB) return -1 * dir;
+        if (timeA > timeB) return 1 * dir;
+        return 0;
+      }
       let valA = a[col] || '';
       let valB = b[col] || '';
-      if (col === 'tanggal') {
-        valA = a.tanggal || a.createdAt || a.created_at || '';
-        valB = b.tanggal || b.createdAt || b.created_at || '';
-      }
       if (typeof valA === 'string') valA = valA.toLowerCase();
       if (typeof valB === 'string') valB = valB.toLowerCase();
       if (valA < valB) return -1 * dir;

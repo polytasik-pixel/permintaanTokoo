@@ -33,8 +33,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
   <!-- Master Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260910_MARK_ALL_READ_UNDERLINE_TITLE">
-  <script src="app.js?v=20260910_MARK_ALL_READ_UNDERLINE_TITLE"></script>
+  <link rel="stylesheet" href="styles.css?v=20260910_COMPRESS_1600PX_DONE_JPG_ONLY">
+  <script src="app.js?v=20260910_COMPRESS_1600PX_DONE_JPG_ONLY"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -1465,7 +1465,7 @@
         <p id="artemisSubTitle" style="font-size: 11.5px !important; color: #0284c7 !important; margin: 0 !important; font-weight: 700 !important; text-transform: uppercase !important; line-height: 1.4 !important;"></p>
         <input type="hidden" id="artemisNoSurat">
         <input type="hidden" id="artemisPasteBox">
-        <input type="file" id="artemisFileInput" accept="image/*,application/pdf" multiple style="display: none;" onchange="handleArtemisFileInputChange(event)">
+        <input type="file" id="artemisFileInput" accept="image/jpeg, .jpg, .jpeg" multiple style="display: none;" onchange="handleArtemisFileInputChange(event)">
         
         <!-- Textarea Keterangan -->
         <div style="display: flex !important; flex-direction: column !important; gap: 4px !important;">
@@ -1478,7 +1478,7 @@
           <button type="button" onclick="event.stopPropagation(); document.getElementById('artemisFileInput').click()" class="btn-primary" style="height: 30px !important; padding: 0 14px !important; font-size: 11px !important; font-weight: 800 !important; display: inline-flex !important; align-items: center !important; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none !important; border-radius: 4px !important; cursor: pointer !important; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2) !important; white-space: nowrap !important;">
             PILIH FOTO BUKTI
           </button>
-          <span style="font-size: 11px !important; color: #475569 !important; font-weight: 600 !important; text-align: left !important;">(Klik untuk memilih foto dari perangkat Anda, atau tempel screenshot dengan <strong>Ctrl+V</strong>)</span>
+          <span style="font-size: 11px !important; color: #475569 !important; font-weight: 600 !important; text-align: left !important;">(Khusus format JPG / JPEG. Klik untuk memilih foto, atau tempel screenshot dengan <strong>Ctrl+V</strong>)</span>
         </div>
 
         <!-- KOLOM HASIL FOTO YANG DIPILIH -->
