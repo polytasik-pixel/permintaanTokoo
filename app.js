@@ -8232,6 +8232,7 @@ function pindahHalaman(pageId, pushHistory = true) {
   if (pageId === 'inputPage') {
     if (typeof loadForm === 'function') loadForm();
   } else if (pageId === 'dashboardPage') {
+    if (typeof ensureSearchDashboardEmpty === 'function') ensureSearchDashboardEmpty();
     if (typeof loadDashboard === 'function') loadDashboard();
   } else if (pageId === 'riwayatPage') {
     if (typeof filterRiwayat === 'function') filterRiwayat();
@@ -8287,9 +8288,19 @@ function getAccessibleRequests() {
   return requests.filter(r => isAreaMatch(currentUser.area, r.area));
 }
 
+function ensureSearchDashboardEmpty() {
+  const input = document.getElementById('searchDashboard');
+  if (input) {
+    input.value = '';
+    try { input.setAttribute('value', ''); } catch(e) {}
+  }
+}
+window.ensureSearchDashboardEmpty = ensureSearchDashboardEmpty;
+
 function filterDashboardRecent(status) {
   dashboardFilterStatus = status;
   window._dashboardCurrentPage = 1;
+  ensureSearchDashboardEmpty();
   loadDashboard();
 }
 
@@ -14982,7 +14993,28 @@ await new Promise(resolve => setTimeout(resolve, 200));
   setTimeout(restoreMainTitle, 2000);
 }
 
+function isCurrentTokoUser() {
+  if (!currentUser) return false;
+  const category = String(currentUser.category || '').trim().toUpperCase();
+  const role = String(currentUser.role || '').trim().toUpperCase();
+  const username = String(currentUser.username || '').trim().toUpperCase();
+  if (category === 'ADMIN' || role === 'ADMIN' || username === 'ADMIN') return false;
+  if (category === 'SERVICE' || role === 'SERVICE') return false;
+  if (category === 'DM' || role === 'DM') return false;
+  if (category === 'GBJ' || role === 'GBJ') return false;
+  return category === 'TOKO' || role === 'TOKO' || category === 'USER' || username.startsWith('TK') || username.includes('TOKO');
+}
+window.isCurrentTokoUser = isCurrentTokoUser;
+
 function bukaTTD() {
+  if (isCurrentTokoUser()) {
+    if (typeof showNotif === 'function') {
+      showNotif('Permintaan Toko wajib menggunakan Tanda Tangan Basah & Cap Stempel fisik pada dokumen!', 'warning');
+    } else {
+      alert('Permintaan Toko wajib menggunakan Tanda Tangan Basah & Cap Stempel fisik pada dokumen!');
+    }
+    return;
+  }
   if (typeof bukaAkun === 'function') bukaAkun();
   setTimeout(() => {
     const section = document.getElementById('sectionEmbeddedTtd');
@@ -15554,6 +15586,14 @@ function cropAndCenterCanvasSignature(srcCanvas) {
 window.cropAndCenterCanvasSignature = cropAndCenterCanvasSignature;
 
 async function simpanTTD() {
+  if (isCurrentTokoUser()) {
+    if (typeof showNotif === 'function') {
+      showNotif('Permintaan Toko wajib menggunakan Tanda Tangan Basah & Cap Stempel fisik pada dokumen!', 'warning');
+    } else {
+      alert('Permintaan Toko wajib menggunakan Tanda Tangan Basah & Cap Stempel fisik pada dokumen!');
+    }
+    return;
+  }
   showConfirm('SIMPAN TANDA TANGAN DIGITAL INI?', async function() {
     var _asyncTask = async function() {
       try {
@@ -20617,6 +20657,11 @@ function setupGlobalKeyboardNavigation() {
 
 // INITIALIZE APP STARTUP (AUTO LOGIN & PRE-FILL REMEMBERED CREDENTIALS ON REFRESH)
 function initAppStartup() {
+  if (typeof ensureSearchDashboardEmpty === 'function') {
+    ensureSearchDashboardEmpty();
+    setTimeout(ensureSearchDashboardEmpty, 100);
+    setTimeout(ensureSearchDashboardEmpty, 500);
+  }
   if (typeof setupGlobalKeyboardNavigation === 'function') {
     setupGlobalKeyboardNavigation();
   }
