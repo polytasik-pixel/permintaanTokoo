@@ -3581,11 +3581,9 @@ async function initSupabaseRealtimeEngine() {
         { event: 'force_logout_all' },
         (event) => {
           if (currentUser) {
-            const myUname = String(currentUser.username || '').trim().toUpperCase();
-            const myCat = String(currentUser.category || currentUser.role || currentUser.kategori || '').trim().toUpperCase();
-            const isMyUserAdmin = (myUname === 'ADMIN' || myCat === 'ADMIN');
+            const isMyUserAdmin = typeof checkIsAdminUser === 'function' ? checkIsAdminUser(currentUser) : false;
             if (!isMyUserAdmin) {
-              console.warn('⚠️ [FORCE LOGOUT ALL BROADCAST DETECTED]: Logging out this device...');
+              console.warn('⚠️ [FORCE LOGOUT ALL BROADCAST DETECTED]: Logging out non-admin device...');
               if (typeof forceLogoutThisDevice === 'function') {
                 forceLogoutThisDevice(event.payload.reason || 'AKUN DI LOGOUT OLEH ADMIN, SILAHKAN LOGIN KEMBALI');
               }
@@ -7434,7 +7432,15 @@ function forceLogoutThisDevice(customMsg = 'AKUN ANDA TELAH DI-LOGOUT. SILAHKAN 
   currentUser = null;
   appStorage.removeItem(SESSION_KEY);
   appStorage.removeItem('MY_SESSION_TOKEN');
-  try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
+  try {
+    const rawLocal = localStorage.getItem(SESSION_KEY);
+    if (rawLocal) {
+      const parsedLocal = JSON.parse(rawLocal);
+      if (!parsedLocal || !parsedLocal.username || (currentUser && parsedLocal.username.trim().toUpperCase() === currentUser.username.trim().toUpperCase())) {
+        localStorage.removeItem(SESSION_KEY);
+      }
+    }
+  } catch(e) {}
   try { localStorage.removeItem('MY_SESSION_TOKEN'); } catch(e) {}
 
   if (typeof hideLoading === 'function') hideLoading();
@@ -8111,11 +8117,12 @@ function triggerConfirmBoxFlash() {
 }
 window.triggerConfirmBoxFlash = triggerConfirmBoxFlash;
 
-function checkIsAdminUser() {
-  if (!currentUser) return false;
-  const category = (currentUser.category || currentUser.kategori || currentUser.role || '').toString().trim().toUpperCase();
-  const username = (currentUser.username || '').toString().trim().toUpperCase();
-  return category === 'ADMIN' || username === 'ADMIN';
+function checkIsAdminUser(userObj = null) {
+  const user = userObj || (typeof currentUser !== 'undefined' ? currentUser : null);
+  if (!user) return false;
+  const category = (user.category || user.kategori || user.role || '').toString().trim().toUpperCase();
+  const username = (user.username || '').toString().trim().toUpperCase();
+  return category === 'ADMIN' || category.includes('ADMIN') || username === 'ADMIN' || username.startsWith('ADMIN');
 }
 
 function updateAdminNavVisibility() {
@@ -17355,8 +17362,7 @@ async function logoutSemuaPerangkatUserByAdmin() {
           if (!u || !u.username) continue;
           
           const uNameUpper = String(u.username).trim().toUpperCase();
-          const uCatUpper = String(u.category || u.role || u.kategori || '').trim().toUpperCase();
-          const isUserAdmin = (uCatUpper === 'ADMIN' || uNameUpper === 'ADMIN');
+          const isUserAdmin = checkIsAdminUser(u);
 
           // JANGAN LOGOUT SELURUH AKUN ADMIN (SEMUA AKUN ADMIN TETAP AKTIF LOGGED IN)
           if (isUserAdmin) {
