@@ -33,8 +33,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
   <!-- Master Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260910_PREVENT_SELF_CHAT_SOUND_FIXED">
-  <script src="app.js?v=20260910_PREVENT_SELF_CHAT_SOUND_FIXED"></script>
+  <link rel="stylesheet" href="styles.css?v=20260910_MARK_ALL_READ_UNDERLINE_TITLE">
+  <script src="app.js?v=20260910_MARK_ALL_READ_UNDERLINE_TITLE"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -1152,13 +1152,20 @@
     <div class="popupNotifCard" onclick="event.stopPropagation()" style="position: relative; width: 580px; max-width: 95vw; max-height: calc(100vh - 20mm); max-height: calc(100dvh - 20mm); background: #ffffff !important; color: #0f172a !important; border-radius: 5px; border: 1px solid #cbd5e1 !important; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column;">
       
       <!-- Popup Header: Title Background Blue (#0284c7), Text & X Button White (#ffffff) -->
-      <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-radius: 5px 5px 0 0; flex-shrink: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.15);">
-        <span id="popupNotifTitle" style="font-weight: 900; font-size: 15px; color: #ffffff !important; display: flex; align-items: center; gap: 8px; letter-spacing: 0.5px; text-transform: uppercase;">
-          <span class="material-symbols-rounded" style="font-size: 24px; color: #facc15 !important; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));">notifications</span> NOTIFIKASI REAL-TIME
-        </span>
-        <button type="button" onclick="tutupNotificationModal()" title="Tutup Popup (Esc / Back)" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; cursor: pointer !important; width: 32px !important; height: 32px !important; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
-          <span class="material-symbols-rounded" style="font-size: 20px; font-weight: 900; color: #ffffff !important;">close</span>
-        </button>
+      <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 18px; display: flex; flex-direction: column; gap: 4px; border-radius: 5px 5px 0 0; flex-shrink: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <span id="popupNotifTitle" style="font-weight: 900; font-size: 15px; color: #ffffff !important; display: flex; align-items: center; gap: 8px; letter-spacing: 0.5px; text-transform: uppercase;">
+            <span class="material-symbols-rounded" style="font-size: 24px; color: #facc15 !important; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));">notifications</span> NOTIFIKASI REAL-TIME
+          </span>
+          <button type="button" onclick="tutupNotificationModal()" title="Tutup Popup (Esc / Back)" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; cursor: pointer !important; width: 32px !important; height: 32px !important; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+            <span class="material-symbols-rounded" style="font-size: 20px; font-weight: 900; color: #ffffff !important;">close</span>
+          </button>
+        </div>
+        <div style="display: flex; align-items: center; margin-top: 2px;">
+          <a id="btnMarkAllNotifRead" href="javascript:void(0);" onclick="markAllNotifAsRead()" style="color: #ffffff !important; font-size: 12px; font-weight: 700; text-decoration: underline !important; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; opacity: 0.95; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.95'">
+            <span class="material-symbols-rounded" style="font-size: 15px; text-decoration: none !important;">done_all</span> Tandai sudah dibaca
+          </a>
+        </div>
       </div>
 
       <!-- Scrollable List Body -->
@@ -1166,9 +1173,6 @@
       
       <!-- Footer -->
       <div style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 8px;">
-        <button id="btnMarkAllNotifRead" type="button" onclick="markAllNotifAsRead()" class="btn-primary" style="font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #0284c7; color: #ffffff; border: none; padding: 0 14px; cursor: pointer; box-shadow: 0 2px 6px rgba(2,132,199,0.3); display: inline-flex; align-items: center; gap: 6px;">
-          <span class="material-symbols-rounded" style="font-size: 17px;">done_all</span> TANDAI SUDAH DIBACA
-        </button>
         <button id="btnHapusSemuaNotifSystem" type="button" onclick="hapusSemuaNotifFirebaseDanLokal()" class="btn-danger" style="display: none; font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #ef4444; color: #ffffff; border: none; padding: 0 16px; cursor: pointer; box-shadow: 0 2px 6px rgba(239,68,68,0.25);">HAPUS SEMUA</button>
         <button type="button" onclick="tutupNotificationModal()" class="btn-secondary" style="font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; padding: 0 18px; cursor: pointer; margin-left: auto;">TUTUP</button>
       </div>
