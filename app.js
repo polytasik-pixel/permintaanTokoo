@@ -188,12 +188,20 @@ window.pullFirebaseMasterLookup = pullFirebaseMasterLookup;
 
 function getReqPhotosList(req) {
   if (!req) return [];
-  let p = req.photos || req.foto || [];
+  // HANYA AMBIL FOTO HASIL UPLOAD DARI PAGE INPUT PERMINTAAN TOKO
+  let p = req.inputPhotos || req.fotoInput || req.photos || req.foto || [];
   if (typeof p === 'string') {
     try { p = JSON.parse(p); } catch(e) { if (p.startsWith('http') || p.startsWith('data:')) p = [p]; else p = []; }
   }
   if (!Array.isArray(p)) p = [];
-  return p.filter(x => !!x && typeof x === 'string' && x.trim().length > 0);
+
+  // FILTER & SISIKAN BILA ADA FOTO PROSES BUKTI ARTEMIS / BUKTI PARSIAL (MURNI HANYA FOTO PAGE INPUT)
+  const artemisList = (typeof parsePhotosArray === 'function') ? parsePhotosArray(req.artemisPhotos || req.foto_bukti_artemis) : [];
+  const buktiList = (typeof parsePhotosArray === 'function') ? parsePhotosArray(req.buktiPermintaan || req.bukti_permintaan) : [];
+  const artemisSet = new Set(artemisList);
+  const buktiSet = new Set(buktiList);
+
+  return p.filter(x => !!x && typeof x === 'string' && x.trim().length > 0 && !artemisSet.has(x) && !buktiSet.has(x));
 }
 window.getReqPhotosList = getReqPhotosList;
 
@@ -3038,6 +3046,7 @@ function startFirebaseRealtimeChatListener() {
           return;
         }
 
+        if (!window._mySentChatIds) window._mySentChatIds = new Set();
         const remoteChats = [];
         let hasNewIncomingChat = false;
 
@@ -3046,8 +3055,28 @@ function startFirebaseRealtimeChatListener() {
           if (data && data.id) {
             remoteChats.push(data);
             if (_prevChatSnapshotIds !== null && !_prevChatSnapshotIds.has(data.id)) {
-              const currentUsr = currentUser ? (currentUser.username || currentUser.id || '') : '';
-              if (data.senderUsername !== currentUsr && data.senderId !== currentUsr) {
+              const myUsername = currentUser ? String(currentUser.username || '').trim().toUpperCase() : '';
+              const myId = currentUser ? String(currentUser.id || '').trim().toUpperCase() : '';
+              const myName = currentUser ? String(currentUser.fullName || '').trim().toUpperCase() : '';
+              const isServiceRole = typeof isServiceTSMUser === 'function' ? isServiceTSMUser() : false;
+              
+              const chatSenderUser = String(data.senderUsername || data.user || '').trim().toUpperCase();
+              const chatSenderId = String(data.senderId || '').trim().toUpperCase();
+              const chatSenderName = String(data.senderName || '').trim().toUpperCase();
+              const chatPengirim = String(data.pengirim || '').trim().toUpperCase();
+              const chatDocId = String(data.id || '').trim();
+
+              // HANYA BUNYI JIKA PESAN MURNI DARI PENGGUNA LAIN (BUKAN DIKIRIM OLEH KITA SENDIRI)
+              const isSentByMe = 
+                (window._mySentChatIds && (window._mySentChatIds.has(data.id) || window._mySentChatIds.has(chatDocId))) ||
+                (myUsername && (chatSenderUser === myUsername || String(data.user || '').trim().toUpperCase() === myUsername)) ||
+                (myId && chatSenderId === myId) ||
+                (myName && myName.length > 0 && chatSenderName.includes(myName)) ||
+                (chatSenderName && chatSenderName.length > 0 && myName.includes(chatSenderName)) ||
+                (isServiceRole && (chatPengirim === 'SERVICE' || chatPengirim === 'ADMIN')) ||
+                (!isServiceRole && chatPengirim === 'USER' && (chatSenderUser === myUsername || String(data.user || '').trim().toUpperCase() === myUsername));
+
+              if (!isSentByMe) {
                 hasNewIncomingChat = true;
               }
             }
@@ -9001,7 +9030,7 @@ function playNotificationSound(type = 'info') {
   try {
     const lowerType = String(type || '').toLowerCase();
 
-    // HANYA BUNYI JIKA: LONCENG NOTIFIKASI ATAU PESAN CHAT
+    // HANYA BUNYI JIKA: LONCENG NOTIFIKASI ATAU PESAN CHAT MASUK
     const isAllowedSound = 
       lowerType.includes('chat') || 
       lowerType.includes('pesan') || 
@@ -9014,23 +9043,23 @@ function playNotificationSound(type = 'info') {
     }
 
     const selectedTone = getSelectedSoundTone();
-    let playedWebAudio = false;
 
+    let targetTone = selectedTone;
     if (lowerType.includes('error') || lowerType.includes('salah') || lowerType.includes('gagal') || lowerType.includes('danger')) {
-      playedWebAudio = playSoundToneByName('error');
+      targetTone = 'error';
     } else if (lowerType.includes('warning') || lowerType.includes('peringatan')) {
-      playedWebAudio = playSoundToneByName('warning');
-    } else {
-      playedWebAudio = playSoundToneByName(selectedTone);
+      targetTone = 'warning';
     }
 
-    // FALLBACK HTML5 AUDIO ELEMENT JIKA WEB AUDIO ENGINE SUSPENDED
-    if (!playedWebAudio && FALLBACK_CRYSTAL_CHIME_B64) {
-      try {
-        const audioEl = new Audio(FALLBACK_CRYSTAL_CHIME_B64);
-        audioEl.volume = 0.5;
-        audioEl.play().catch(() => {});
-      } catch (e) {}
+    // Eksekusi nada pilihan pengguna
+    playSoundToneByName(targetTone);
+
+    // JIKA ENGINE SUSPENDED, RESUME DAN MAINKAN LAGI NADA PILIHAN USER TERSEBUT
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        playSoundToneByName(targetTone);
+      }).catch(() => {});
     }
   } catch(e) {}
 }
@@ -10380,6 +10409,7 @@ async function prosesSimpanKeDB(toko, jenis, catatan, items) {
       requests[idx].catatan = catatan;
       requests[idx].items = items;
       requests[idx].photos = [...currentPhotos];
+      requests[idx].inputPhotos = [...currentPhotos];
       
       // 1. SIMPAN LOKAL SECARA INSTAN (0 ms)
       saveRequestsToDB(requests);
@@ -10544,6 +10574,7 @@ async function prosesSimpanKeDB(toko, jenis, catatan, items) {
       catatan,
       items,
       photos: [...currentPhotos],
+      inputPhotos: [...currentPhotos],
       artemisPhotos: [],
       buktiPermintaan: [],
       status: 'PENDING',
@@ -11677,8 +11708,6 @@ function prosesSimpanDoneDenganBuktiArtemis() {
               requests[mainIdx].status = 'DONE';
               if (!Array.isArray(requests[mainIdx].artemisPhotos)) requests[mainIdx].artemisPhotos = [];
               requests[mainIdx].artemisPhotos = [...requests[mainIdx].artemisPhotos, ...newPhotos];
-              if (!Array.isArray(requests[mainIdx].photos)) requests[mainIdx].photos = [];
-              requests[mainIdx].photos = [...requests[mainIdx].photos, ...newPhotos];
             }
 
             saveRequestsToDB(requests);
@@ -11749,11 +11778,6 @@ function prosesSimpanDoneDenganBuktiArtemis() {
       if (idx !== -1) {
         requests[idx].status = 'DONE';
         requests[idx].artemisPhotos = Array.isArray(tempArtemisPhotos) ? [...tempArtemisPhotos] : [];
-
-        if (!Array.isArray(requests[idx].photos)) requests[idx].photos = [];
-        if (Array.isArray(tempArtemisPhotos) && tempArtemisPhotos.length > 0) {
-          requests[idx].photos = [...requests[idx].photos, ...tempArtemisPhotos];
-        }
 
         // STATUS PART: JIKA DIISI TEKS MAKA GUNAKAN TEKS TERSEBUT, JIKA KOSONG MAKA DEFAULT = "DIPENUHI"
         const elKetArtemis = document.getElementById('inputKetPartArtemis');
@@ -17198,6 +17222,13 @@ function kirimPesanChat() {
   }
 
   const newChatId = `CHAT-${Date.now()}-${Math.floor(Math.random()*10000)}`;
+
+  if (!window._mySentChatIds) window._mySentChatIds = new Set();
+  window._mySentChatIds.add(newChatId);
+  if (typeof _prevChatSnapshotIds !== 'undefined' && _prevChatSnapshotIds) {
+    _prevChatSnapshotIds.add(newChatId);
+  }
+
   const newChatEntry = {
     id: newChatId,
     room: roomTarget,
