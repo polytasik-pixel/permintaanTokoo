@@ -8291,11 +8291,26 @@ function getAccessibleRequests() {
 function ensureSearchDashboardEmpty() {
   const input = document.getElementById('searchDashboard');
   if (input) {
-    input.value = '';
-    try { input.setAttribute('value', ''); } catch(e) {}
+    if (document.activeElement !== input) {
+      input.value = '';
+      try { input.setAttribute('value', ''); } catch(e) {}
+    }
   }
 }
 window.ensureSearchDashboardEmpty = ensureSearchDashboardEmpty;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('pageshow', function() {
+    if (typeof ensureSearchDashboardEmpty === 'function') ensureSearchDashboardEmpty();
+  });
+  window.addEventListener('load', function() {
+    if (typeof ensureSearchDashboardEmpty === 'function') {
+      [0, 50, 150, 300, 600, 1200, 2000].forEach(ms => {
+        setTimeout(ensureSearchDashboardEmpty, ms);
+      });
+    }
+  });
+}
 
 function filterDashboardRecent(status) {
   dashboardFilterStatus = status;
@@ -20658,9 +20673,9 @@ function setupGlobalKeyboardNavigation() {
 // INITIALIZE APP STARTUP (AUTO LOGIN & PRE-FILL REMEMBERED CREDENTIALS ON REFRESH)
 function initAppStartup() {
   if (typeof ensureSearchDashboardEmpty === 'function') {
-    ensureSearchDashboardEmpty();
-    setTimeout(ensureSearchDashboardEmpty, 100);
-    setTimeout(ensureSearchDashboardEmpty, 500);
+    [0, 50, 150, 300, 600, 1200, 2000].forEach(ms => {
+      setTimeout(ensureSearchDashboardEmpty, ms);
+    });
   }
   if (typeof setupGlobalKeyboardNavigation === 'function') {
     setupGlobalKeyboardNavigation();
