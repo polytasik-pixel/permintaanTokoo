@@ -33,8 +33,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
   <!-- Master Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260910_CLEAN_DONE_INDUK_CONFIRM_TEXT">
-  <script src="app.js?v=20260910_CLEAN_DONE_INDUK_CONFIRM_TEXT"></script>
+  <link rel="stylesheet" href="styles.css?v=20260910_MARIMBA_DEFAULT_SOUND_AKUN_SETTINGS">
+  <script src="app.js?v=20260910_MARIMBA_DEFAULT_SOUND_AKUN_SETTINGS"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -1093,21 +1093,44 @@
             </div>
           </div>
 
+          <!-- EMBEDDED PENGATURAN NADA SUARA NOTIFIKASI SECTION -->
+          <div id="sectionEmbeddedNotifSound" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px !important; padding: 20px; margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-rounded" style="color: #0284c7; font-size: 20px;">music_note</span> NADA SUARA NOTIFIKASI APPS
+              </label>
+              <span id="akunSelectedSoundBadge" style="font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 12px; background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;">MARIMBA HALUS (DEFAULT)</span>
+            </div>
+            <p style="font-size: 12px; color: #64748b; margin: 0 0 14px 0; font-weight: 600; line-height: 1.4;">
+              Atur dan pilih variasi suara notifikasi saat ada pesan masuk atau notifikasi lonceng terbaru.
+            </p>
+            <div>
+              <button type="button" onclick="bukaModalPilihNadaNotif()" style="height: 38px; padding: 0 16px; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; font-size: 12.5px; font-weight: 800; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25);">
+                <span class="material-symbols-rounded" style="font-size: 18px;">tune</span> UBAH / TES NADA SUARA NOTIFIKASI
+              </button>
+            </div>
+          </div>
+
           <!-- KUMPULAN TOMBOL AKSI PROFIL (GRID TOMBOL BERWARNA & SEIMBANG) -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; width: 100%;">
             <!-- TOMBOL SIMPAN -->
             <button type="button" onclick="simpanAkun()" class="btn" style="height: 42px; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);">
               <span class="material-symbols-rounded" style="font-size: 20px;">save</span> SIMPAN PROFIL
             </button>
-
-            <!-- TOMBOL HAPUS LOKAL / CACHE -->
-            <button type="button" onclick="hapusPenyimpananLokalAkun()" class="btn" style="height: 42px; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;">
-              <span class="material-symbols-rounded" style="font-size: 20px; color: #ffffff !important;">cleaning_services</span> BERSIHKAN CACHE
+            
+            <!-- TOMBOL LOGOUT SEMUA PERANGKAT -->
+            <button type="button" onclick="logoutSemuaPerangkat()" class="btn" style="height: 42px; background: linear-gradient(135deg, #ef4444, #dc2626) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);">
+              <span class="material-symbols-rounded" style="font-size: 20px;">phonelink_off</span> LOGOUT PERANGKAT
             </button>
 
-            <!-- TOMBOL LOGOUT -->
-            <button type="button" onclick="logout()" class="btn" style="height: 42px; background: linear-gradient(135deg, #ef4444, #dc2626) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35) !important;">
-              <span class="material-symbols-rounded" style="font-size: 20px; color: #ffffff !important;">logout</span> KELUAR APLIKASI
+            <!-- TOMBOL PURGE CACHE GLOBAL (HANYA UNTUK SUPERADMIN) -->
+            <button id="btnGlobalClearCacheAdmin" type="button" onclick="pushGlobalClearCacheAdmin()" class="btn" style="display: none; height: 42px; background: linear-gradient(135deg, #f59e0b, #d97706) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);">
+              <span class="material-symbols-rounded" style="font-size: 20px;">cleaning_services</span> BERSIH CACHE GLOBAL
+            </button>
+
+            <!-- TOMBOL BATAL / KEMBALI -->
+            <button type="button" onclick="tutupAkun()" class="btn" style="height: 42px; background: #e2e8f0 !important; color: #334155 !important; font-weight: 700; font-size: 13px; border-radius: 8px; border: 1px solid #cbd5e1 !important;">
+              <span class="material-symbols-rounded" style="font-size: 20px;">arrow_back</span> KEMBALI
             </button>
           </div>
 
@@ -1154,6 +1177,37 @@
         <button id="btnHapusSemuaNotifSystem" type="button" onclick="hapusSemuaNotifFirebaseDanLokal()" class="btn-danger" style="display: none; font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #ef4444; color: #ffffff; border: none; padding: 0 16px; cursor: pointer; box-shadow: 0 2px 6px rgba(239,68,68,0.25);">HAPUS SEMUA</button>
         <button type="button" onclick="tutupNotificationModal()" class="btn-secondary" style="font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; padding: 0 18px; cursor: pointer; margin-left: auto;">TUTUP</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL PILIHAN NADA NOTIFIKASI -->
+  <div id="modalPilihNadaNotif" class="popupOverlay" onclick="if(event.target === this) tutupModalPilihNadaNotif()" style="display: none !important; position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.75) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 10mm 12px !important; box-sizing: border-box !important;">
+    <div class="popupBox" style="position: relative !important; width: min(520px, 95vw) !important; max-width: 95vw !important; background: #ffffff !important; color: #0f172a !important; border-radius: 6px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35) !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; margin: auto !important; box-sizing: border-box !important;">
+      
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 14px 18px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; border-radius: 6px 6px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; width: 100% !important; box-sizing: border-box !important;">
+        <span style="font-weight: 800 !important; font-size: 14.5px !important; display: flex !important; align-items: center !important; gap: 8px !important; color: #ffffff !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">
+          <span class="material-symbols-rounded" style="font-size: 22px !important; color: #facc15 !important;">music_note</span> PILIHAN NADA NOTIFIKASI
+        </span>
+        <button type="button" onclick="tutupModalPilihNadaNotif()" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important; cursor: pointer !important; width: 30px !important; height: 30px !important; border-radius: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; transition: all 0.15s ease !important;" title="TUTUP">&times;</button>
+      </div>
+      
+      <!-- Body -->
+      <div style="padding: 16px !important; background: #ffffff !important; color: #0f172a !important; display: flex !important; flex-direction: column !important; gap: 12px !important; max-height: 440px !important; overflow-y: auto !important; box-sizing: border-box !important;">
+        <div style="font-size: 11.5px !important; font-weight: 700 !important; color: #0284c7 !important; text-transform: uppercase !important; letter-spacing: 0.3px !important; line-height: 1.4 !important; background: #f0f9ff !important; padding: 10px 12px !important; border-radius: 6px !important; border: 1px solid #bae6fd !important;">
+          🔔 PILIH VARIATIF NADA SUARA NOTIFIKASI YANG ANDA SUKAI DIBERITAHUKAN UNTUK PESAN & NOTIFIKASI APPS:
+        </div>
+
+        <div id="listPilihanNadaNotifBody" style="display: flex !important; flex-direction: column !important; gap: 10px !important; margin-top: 4px !important;">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="padding: 12px 16px !important; background: #f8fafc !important; border-top: 1px solid #e2e8f0 !important; display: flex !important; justify-content: flex-end !important; border-radius: 0 0 6px 6px !important;">
+        <button type="button" onclick="tutupModalPilihNadaNotif()" style="height: 38px !important; padding: 0 22px !important; font-size: 12px !important; font-weight: 800 !important; border-radius: 4px !important; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none !important; cursor: pointer !important; box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25) !important;">SELESAI / TUTUP</button>
+      </div>
+
     </div>
   </div>
   <!-- POPUP BANTUAN MODAL -->

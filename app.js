@@ -7256,6 +7256,26 @@ async function prosesLogin() {
       }
 
       catatLogLogin(user.username, user.fullName, user.area, 'BERHASIL');
+
+      // INSTANT SUPERADMIN SINGLE-SESSION INVALIDATION ENGINE
+      try {
+        const rtdb = typeof getDbRealtime === 'function' ? getDbRealtime() : null;
+        if (rtdb && user && user.username) {
+          const uKey = String(user.username).trim().replace(/[\/\.#$\[\]]/g, '_').toUpperCase();
+          const uCat = String(user.category || user.role || '').toUpperCase();
+          const uName = String(user.username || '').toUpperCase();
+          const isSA = (uName === 'ADMIN' || uName === 'SUPERADMIN');
+          if (isSA) {
+            rtdb.ref(`user_sessions/${uKey}`).set({
+              session_token: newMyToken,
+              active_tokens: [newMyToken],
+              max_allowed: 1,
+              role: uCat || 'ADMIN',
+              updated_at: new Date().toISOString()
+            }).catch(() => {});
+          }
+        }
+      } catch(eSess) {}
       
       // SINKRONISASI KE DATABASE CLOUD HANYA KETIKA KLIK TOMBOL LOGIN BERHASIL
       try {
@@ -7331,7 +7351,7 @@ async function logout() {
 }
 
 // =======================================================================
-// SYSTEM LOGOUT SEMUA PERANGKAT (GLOBAL SESSION INVALIDATION ENGINE)
+// SYSTEM LOGOUT PERANGKAT (PER-ACCOUNT REALTIME SESSION ENFORCEMENT ENGINE)
 // =======================================================================
 let _sessionTokenRealtimeRef = null;
 
@@ -7341,19 +7361,24 @@ async function startSessionTokenRealtimeListener(isFreshLogin = false) {
   const catUpper = String(currentUser.category || currentUser.role || currentUser.kategori || '').toUpperCase();
   const unameUpper = String(currentUser.username || '').toUpperCase();
 
-  const isAdmin = (catUpper === 'ADMIN' || unameUpper === 'ADMIN');
+  // ISOLASI PERSISI KHUSUS AKUN SUPERADMIN DENGAN USERNAME EXACT 'ADMIN' / 'SUPERADMIN'
+  const isSuperAdmin = (
+    unameUpper === 'ADMIN' || 
+    unameUpper === 'SUPERADMIN'
+  );
+
   const isMultiDeviceRole = (
     catUpper.includes('SERVICE') || 
     catUpper.includes('GBJ') || 
     catUpper.includes('DM')
-  );
+  ) && !isSuperAdmin;
 
-  // ATURAN BATASAN LOGIN PERANGKAT (DEVICE LIMITS PER AKUN):
-  // 1. SERVICE, GBJ, & DM: Maksimal 3 Perangkat (3 Logins simultan)
-  // 2. ADMIN, TOKO, SALES, & LAINNYA: Maksimal 1 Perangkat (1 Login - Perangkat baru akan menggantikan perangkat lama untuk AKUN YANG SAMA)
-  const maxAllowedLogins = isMultiDeviceRole ? 3 : 1;
+  // ATURAN BATASAN LOGIN PERANGKAT (PER-AKUN USERNAME):
+  // 1. SERVICE, GBJ, & DM (Non-SuperAdmin): Maksimal 3 Perangkat (3 Logins simultan untuk akun tsb)
+  // 2. SUPERADMIN & AKUN LAINNYA: STRICT 1 Perangkat (Single Active Session untuk username tsb)
+  const maxAllowedLogins = isSuperAdmin ? 1 : (isMultiDeviceRole ? 3 : 1);
 
-  // KUNCI SESI TERISOLASI 100% BERDASARKAN NAMA USERNAME MASING-MASING
+  // KUNCI SESI TERISOLASI 100% BERDASARKAN USERNAME MASING-MASING USER
   const usernameKey = String(currentUser.username || '').trim().replace(/[\/\.#$\[\]]/g, '_').toUpperCase();
   const rtdb = typeof getDbRealtime === 'function' ? getDbRealtime() : null;
   if (!rtdb) return;
@@ -7363,19 +7388,17 @@ async function startSessionTokenRealtimeListener(isFreshLogin = false) {
     _sessionTokenRealtimeRef = null;
   }
 
-  let myLocalToken = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('MY_SESSION_TOKEN')) || window._mySessionToken || appStorage.getItem('MY_SESSION_TOKEN');
+  // Token tab terisolasi menggunakan sessionStorage / window._mySessionToken
+  let myLocalToken = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('MY_SESSION_TOKEN')) || window._mySessionToken;
+  if (!myLocalToken) {
+    myLocalToken = appStorage.getItem('MY_SESSION_TOKEN');
+  }
   if (!myLocalToken) {
     myLocalToken = 'ST_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-    window._mySessionToken = myLocalToken;
-    if (typeof sessionStorage !== 'undefined') {
-      try { sessionStorage.setItem('MY_SESSION_TOKEN', myLocalToken); } catch(e) {}
-    }
-    appStorage.setItem('MY_SESSION_TOKEN', myLocalToken);
-  } else {
-    window._mySessionToken = myLocalToken;
-    if (typeof sessionStorage !== 'undefined') {
-      try { sessionStorage.setItem('MY_SESSION_TOKEN', myLocalToken); } catch(e) {}
-    }
+  }
+  window._mySessionToken = myLocalToken;
+  if (typeof sessionStorage !== 'undefined') {
+    try { sessionStorage.setItem('MY_SESSION_TOKEN', myLocalToken); } catch(e) {}
   }
 
   try {
@@ -7390,19 +7413,23 @@ async function startSessionTokenRealtimeListener(isFreshLogin = false) {
     }
 
     if (isFreshLogin || !activeTokens.includes(myLocalToken)) {
-      if (!activeTokens.includes(myLocalToken)) {
-        activeTokens.push(myLocalToken);
-      }
-
-      // Potong token terlama jika jumlah perangkat melebihi maxAllowedLogins
-      while (activeTokens.length > maxAllowedLogins) {
-        activeTokens.shift();
+      if (maxAllowedLogins === 1 || isSuperAdmin) {
+        // PERANGKAT BARU LOGIN UNTUK USERNAME INI: GANTIKAN SESI LAMA KHUSUS UNTUK USERNAME '${usernameKey}'
+        activeTokens = [myLocalToken];
+      } else {
+        if (!activeTokens.includes(myLocalToken)) {
+          activeTokens.push(myLocalToken);
+        }
+        while (activeTokens.length > maxAllowedLogins) {
+          activeTokens.shift();
+        }
       }
 
       await rtdb.ref(`user_sessions/${usernameKey}`).set({
         session_token: myLocalToken,
         active_tokens: activeTokens,
         max_allowed: maxAllowedLogins,
+        username: usernameKey,
         role: catUpper,
         updated_at: new Date().toISOString()
       });
@@ -7420,13 +7447,18 @@ async function startSessionTokenRealtimeListener(isFreshLogin = false) {
     console.warn('[SESSION TOKEN DB WRITE NOTICE]:', e);
   }
 
-  // Listener Realtime memantau pergantian token di DB (Kick jika token dihapus/ditimpa)
+  // Listener Realtime HANYA memantau node username '${usernameKey}' milik akun ini
   _sessionTokenRealtimeRef = rtdb.ref(`user_sessions/${usernameKey}`).on('value', snap => {
     if (!currentUser) return;
+    
+    // Verifikasi 100% username tab ini masih cocok dengan node DB yang dikirim
+    const currentActiveUname = String(currentUser.username || '').trim().replace(/[\/\.#$\[\]]/g, '_').toUpperCase();
+    if (currentActiveUname !== usernameKey) return;
+
     const dbVal = snap.val();
     if (!dbVal) return;
 
-    const curActiveToken = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('MY_SESSION_TOKEN')) || window._mySessionToken || appStorage.getItem('MY_SESSION_TOKEN');
+    const curActiveToken = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('MY_SESSION_TOKEN')) || window._mySessionToken;
     if (!curActiveToken) return;
 
     let activeTokens = [];
@@ -7444,10 +7476,10 @@ async function startSessionTokenRealtimeListener(isFreshLogin = false) {
       const isKickByAdmin = (actionType === 'ADMIN_FORCE_LOGOUT' || dbVal.logout_by !== undefined || dbVal.by_admin === true);
 
       if (!isKickByAdmin && activeTokens.length > 0) {
-        if (isAdmin) {
-          logoutReason = 'AKUN ADMIN TERDETEKSI LOGIN DI PERANGKAT LAIN. SESI DI PERANGKAT INI TELAH DI-LOGOUT.';
+        if (isSuperAdmin) {
+          logoutReason = 'AKUN SUPERADMIN TERDETEKSI LOGIN DI PERANGKAT LAIN. SESI DI PERANGKAT INI TELAH DI-LOGOUT.';
         } else {
-          logoutReason = 'AKUN TERDETEKSI LOGIN DI PERANGKAT LAIN. SESI DI PERANGKAT INI TELAH DI-LOGOUT.';
+          logoutReason = `AKUN '${currentUser.username}' TERDETEKSI LOGIN DI PERANGKAT LAIN. SESI DI PERANGKAT INI TELAH DI-LOGOUT.`;
         }
       }
       console.warn('⚠️ [LOGOUT NOTICE]:', logoutReason);
@@ -8646,20 +8678,188 @@ if (typeof window !== 'undefined') {
   });
 }
 
+const NOTIF_SOUND_TONE_KEY = 'APP_NOTIF_SOUND_TONE_V1';
+
+function getSelectedSoundTone() {
+  try {
+    return (typeof localStorage !== 'undefined' && localStorage.getItem(NOTIF_SOUND_TONE_KEY)) || 'marimba';
+  } catch(e) {
+    return 'marimba';
+  }
+}
+
+function setSelectedSoundTone(tone) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(NOTIF_SOUND_TONE_KEY, tone);
+    }
+  } catch(e) {}
+}
+window.getSelectedSoundTone = getSelectedSoundTone;
+window.setSelectedSoundTone = setSelectedSoundTone;
+
+function updateAkunSelectedSoundBadge() {
+  const badge = document.getElementById('akunSelectedSoundBadge');
+  if (!badge) return;
+
+  const currentTone = getSelectedSoundTone();
+  const presets = typeof LIST_NADA_NOTIF_PRESETS !== 'undefined' ? LIST_NADA_NOTIF_PRESETS : [];
+  const found = presets.find(p => p.key === currentTone);
+
+  const toneName = found ? found.name : 'Marimba Halus (Bawaan)';
+  badge.textContent = `${toneName.toUpperCase()} (AKTIF)`;
+}
+window.updateAkunSelectedSoundBadge = updateAkunSelectedSoundBadge;
+
 function isSoundEnabled() {
   return true;
 }
 
 function toggleAppSound() {
-  if (typeof showNotif === 'function') showNotif('🔔 SUARA NOTIFIKASI AKTIF', 'info');
+  bukaModalPilihNadaNotif();
 }
 window.toggleAppSound = toggleAppSound;
+
+function playSoundToneByName(toneName = 'marimba') {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return false;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    const now = ctx.currentTime;
+    const lower = String(toneName || '').toLowerCase();
+
+    if (lower === 'bell' || lower === 'lonceng') {
+      // 2. Lonceng Klasik (Warm Bell G5 784Hz -> C6 1046Hz)
+      [783.99, 1046.50].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + (idx * 0.12));
+        gain.gain.setValueAtTime(0, now + (idx * 0.12));
+        gain.gain.linearRampToValueAtTime(0.2, now + (idx * 0.12) + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (idx * 0.12) + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + (idx * 0.12));
+        osc.stop(now + (idx * 0.12) + 0.5);
+      });
+      return true;
+    } 
+    else if (lower === 'crystal') {
+      // Crystal Chime (C6 1046.50Hz -> G6 1567.98Hz)
+      [
+        { f: 1046.50, t: 0, d: 0.25, v: 0.14 },
+        { f: 1567.98, t: 0.07, d: 0.35, v: 0.16 }
+      ].forEach(n => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(n.f, now + n.t);
+        gain.gain.setValueAtTime(0, now + n.t);
+        gain.gain.linearRampToValueAtTime(n.v, now + n.t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + n.t + n.d);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + n.t);
+        osc.stop(now + n.t + n.d);
+      });
+      return true;
+    }
+    else if (lower === 'pop' || lower === 'bubble') {
+      // 4. Bubble Digital (Soft Pop pitch sweep 440Hz -> 880Hz)
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.15);
+      return true;
+    }
+    else if (lower === 'cyber' || lower === 'pulse') {
+      // 5. Cyber Pulse (D6 1174Hz -> F#6 1480Hz)
+      [1174.66, 1479.98].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + (idx * 0.06));
+        gain.gain.setValueAtTime(0, now + (idx * 0.06));
+        gain.gain.linearRampToValueAtTime(0.18, now + (idx * 0.06) + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (idx * 0.06) + 0.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + (idx * 0.06));
+        osc.stop(now + (idx * 0.06) + 0.2);
+      });
+      return true;
+    }
+    else if (lower === 'error' || lower === 'danger' || lower === 'gagal') {
+      [370, 311].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + (idx * 0.08));
+        gain.gain.setValueAtTime(0, now + (idx * 0.08));
+        gain.gain.linearRampToValueAtTime(0.18, now + (idx * 0.08) + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.08) + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + (idx * 0.08));
+        osc.stop(now + (idx * 0.08) + 0.35);
+      });
+      return true;
+    }
+    else if (lower === 'warning' || lower === 'peringatan') {
+      [739.99, 880].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + (idx * 0.1));
+        gain.gain.setValueAtTime(0, now + (idx * 0.1));
+        gain.gain.linearRampToValueAtTime(0.15, now + (idx * 0.1) + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.1) + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + (idx * 0.1));
+        osc.stop(now + (idx * 0.1) + 0.3);
+      });
+      return true;
+    }
+    else {
+      // 1. Marimba Halus (DEFAULT E5 659Hz -> G5 784Hz -> C6 1046Hz)
+      [659.25, 783.99, 1046.50].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + (idx * 0.08));
+        gain.gain.setValueAtTime(0, now + (idx * 0.08));
+        gain.gain.linearRampToValueAtTime(0.25, now + (idx * 0.08) + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (idx * 0.08) + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + (idx * 0.08));
+        osc.stop(now + (idx * 0.08) + 0.3);
+      });
+      return true;
+    }
+  } catch(e) {
+    return false;
+  }
+}
+window.playSoundToneByName = playSoundToneByName;
 
 function playNotificationSound(type = 'info') {
   try {
     const lowerType = String(type || '').toLowerCase();
 
-    // HANYA BUNYI JIKA: LONCENG NOTIFIKASI ATAU PESAN CHAT (BUNYI POPUP CARD DIHILANGKAN)
+    // HANYA BUNYI JIKA: LONCENG NOTIFIKASI ATAU PESAN CHAT
     const isAllowedSound = 
       lowerType.includes('chat') || 
       lowerType.includes('pesan') || 
@@ -8668,86 +8868,146 @@ function playNotificationSound(type = 'info') {
       lowerType.includes('notif_realtime');
 
     if (!isAllowedSound) {
-      return; // SUARA DIHILANGKAN UNTUK SEMUA POPUP NOTIFIKASI & DIALOG
+      return;
     }
 
-    const ctx = getAudioContext();
+    const selectedTone = getSelectedSoundTone();
     let playedWebAudio = false;
 
-    if (ctx) {
-      if (ctx.state === 'suspended') {
-        ctx.resume().catch(() => {});
-      }
-
-      if (ctx.state === 'running') {
-        const now = ctx.currentTime;
-        if (lowerType.includes('error') || lowerType.includes('salah') || lowerType.includes('gagal') || lowerType.includes('danger')) {
-          [370, 311].forEach((freq, idx) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, now + (idx * 0.08));
-            gain.gain.setValueAtTime(0, now + (idx * 0.08));
-            gain.gain.linearRampToValueAtTime(0.18, now + (idx * 0.08) + 0.02);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.08) + 0.35);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(now + (idx * 0.08));
-            osc.stop(now + (idx * 0.08) + 0.35);
-          });
-          playedWebAudio = true;
-        } else if (lowerType.includes('warning') || lowerType.includes('peringatan')) {
-          [739.99, 880].forEach((freq, idx) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, now + (idx * 0.1));
-            gain.gain.setValueAtTime(0, now + (idx * 0.1));
-            gain.gain.linearRampToValueAtTime(0.15, now + (idx * 0.1) + 0.015);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.1) + 0.3);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(now + (idx * 0.1));
-            osc.stop(now + (idx * 0.1) + 0.3);
-          });
-          playedWebAudio = true;
-        } else {
-          const notes = [
-            { f: 1046.50, t: 0, d: 0.25, v: 0.12 },
-            { f: 1567.98, t: 0.07, d: 0.3, v: 0.15 }
-          ];
-          notes.forEach(n => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(n.f, now + n.t);
-            gain.gain.setValueAtTime(0, now + n.t);
-            gain.gain.linearRampToValueAtTime(n.v, now + n.t + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + n.t + n.d);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(now + n.t);
-            osc.stop(now + n.t + n.d);
-          });
-          playedWebAudio = true;
-        }
-      }
+    if (lowerType.includes('error') || lowerType.includes('salah') || lowerType.includes('gagal') || lowerType.includes('danger')) {
+      playedWebAudio = playSoundToneByName('error');
+    } else if (lowerType.includes('warning') || lowerType.includes('peringatan')) {
+      playedWebAudio = playSoundToneByName('warning');
+    } else {
+      playedWebAudio = playSoundToneByName(selectedTone);
     }
 
-    // FALLBACK HTML5 AUDIO ELEMENT JIKA WEB AUDIO ENGINE SUSPENDED/BLOCKED BROWSER LOKAL
+    // FALLBACK HTML5 AUDIO ELEMENT JIKA WEB AUDIO ENGINE SUSPENDED
     if (!playedWebAudio && FALLBACK_CRYSTAL_CHIME_B64) {
       try {
         const audioEl = new Audio(FALLBACK_CRYSTAL_CHIME_B64);
         audioEl.volume = 0.5;
-        audioEl.play().catch(e => {
-          console.info('ℹ️ [AUDIO NOTICE]: Autoplay audio lokal memerlukan 1x klik/interaksi layar.', e);
-        });
+        audioEl.play().catch(() => {});
       } catch (e) {}
     }
   } catch(e) {
     console.warn('[SOUND NOTIF NOTICE]:', e);
   }
 }
+
+// UI HANDLER UNTUK PILIHAN NADA NOTIFIKASI
+const LIST_NADA_NOTIF_PRESETS = [
+  {
+    key: 'marimba',
+    name: 'Marimba Halus (Bawaan)',
+    icon: 'music_note',
+    badge: 'DEFAULT',
+    desc: 'Alunan lembut 3 nada marimba kayu yang manis (E5 ➔ G5 ➔ C6).'
+  },
+  {
+    key: 'crystal',
+    name: 'Crystal Chime (Kristal Ganda)',
+    icon: 'diamond',
+    badge: 'ELEGANT',
+    desc: 'Gema lonceng kristal ganda tinggi (C6 ➔ G6) yang jernih & elegan.'
+  },
+  {
+    key: 'bell',
+    name: 'Lonceng Klasik (Warm Bell)',
+    icon: 'notifications',
+    badge: 'CLASSIC',
+    desc: 'Dentang 2 nada lonceng hangat bergema khas (G5 ➔ C6).'
+  },
+  {
+    key: 'pop',
+    name: 'Bubble Digital (Soft Pop)',
+    icon: 'bubble_chart',
+    badge: 'MODERN',
+    desc: 'Suara pop gelembung digital modern yang ringan & cepat.'
+  },
+  {
+    key: 'cyber',
+    name: 'Cyber Pulse (Radar Tech)',
+    icon: 'graphic_eq',
+    badge: 'TECH',
+    desc: 'Pulsasi nada sintesis ganda presisi tinggi bergaya futuristik.'
+  }
+];
+
+function renderListPilihanNadaNotif() {
+  const container = document.getElementById('listPilihanNadaNotifBody');
+  if (!container) return;
+
+  const currentTone = getSelectedSoundTone();
+  let html = '';
+
+  LIST_NADA_NOTIF_PRESETS.forEach(preset => {
+    const isSelected = (preset.key === currentTone);
+
+    const bgCard = isSelected ? '#f0f9ff' : '#ffffff';
+    const borderCard = isSelected ? '2px solid #0284c7' : '1px solid #cbd5e1';
+    const activeBadge = isSelected
+      ? `<span style="background:#0284c7; color:#ffffff; font-size:10px; font-weight:800; padding:2px 8px; border-radius:4px; margin-left:6px;">AKTIF</span>`
+      : '';
+
+    html += `
+      <div style="background:${bgCard} !important; border:${borderCard} !important; border-radius:6px !important; padding:12px 14px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; gap:12px !important; box-shadow:0 2px 6px rgba(0,0,0,0.03) !important; transition:all 0.15s ease !important;">
+        <div style="display:flex !important; align-items:flex-start !important; gap:10px !important; flex:1 !important;">
+          <span class="material-symbols-rounded" style="font-size:24px !important; color:${isSelected ? '#0284c7' : '#64748b'} !important; margin-top:2px !important;">${preset.icon}</span>
+          <div>
+            <div style="font-size:13px !important; font-weight:800 !important; color:#0f172a !important; display:flex !important; align-items:center !important; gap:4px !important;">
+              ${preset.name} ${activeBadge}
+            </div>
+            <div style="font-size:11px !important; color:#64748b !important; font-weight:600 !important; margin-top:2px !important; line-height:1.35 !important;">
+              ${preset.desc}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex !important; align-items:center !important; gap:6px !important; flex-shrink:0 !important;">
+          <button type="button" onclick="playSoundToneByName('${preset.key}')" title="TES SUARA" style="height:32px !important; padding:0 10px !important; font-size:11px !important; font-weight:800 !important; border-radius:4px !important; background:#e0f2fe !important; color:#0284c7 !important; border:1px solid #bae6fd !important; cursor:pointer !important; display:inline-flex !important; align-items:center !important; gap:4px !important;">
+            <span class="material-symbols-rounded" style="font-size:16px !important;">volume_up</span> TES
+          </button>
+          <button type="button" onclick="pilihNadaNotif('${preset.key}')" style="height:32px !important; padding:0 12px !important; font-size:11px !important; font-weight:800 !important; border-radius:4px !important; background:${isSelected ? '#16a34a' : 'linear-gradient(135deg, #0284c7, #0369a1)'} !important; color:#ffffff !important; border:none !important; cursor:pointer !important; box-shadow:0 2px 6px rgba(0,0,0,0.15) !important; display:inline-flex !important; align-items:center !important; gap:4px !important;">
+            ${isSelected ? '<span class="material-symbols-rounded" style="font-size:16px !important;">check</span> TERPILIH' : 'PILIH'}
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+window.renderListPilihanNadaNotif = renderListPilihanNadaNotif;
+
+function bukaModalPilihNadaNotif() {
+  const modal = document.getElementById('modalPilihNadaNotif');
+  if (modal) {
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.classList.add('show');
+    renderListPilihanNadaNotif();
+  }
+}
+window.bukaModalPilihNadaNotif = bukaModalPilihNadaNotif;
+
+function tutupModalPilihNadaNotif() {
+  const modal = document.getElementById('modalPilihNadaNotif');
+  if (modal) {
+    modal.style.setProperty('display', 'none', 'important');
+    modal.classList.remove('show');
+  }
+}
+window.tutupModalPilihNadaNotif = tutupModalPilihNadaNotif;
+
+function pilihNadaNotif(toneKey) {
+  setSelectedSoundTone(toneKey);
+  playSoundToneByName(toneKey);
+  renderListPilihanNadaNotif();
+  updateAkunSelectedSoundBadge();
+  if (typeof showNotif === 'function') {
+    showNotif('🎵 NADA NOTIFIKASI BERHASIL DIPILIH!', 'success');
+  }
+}
+window.pilihNadaNotif = pilihNadaNotif;
 window.playNotificationSound = playNotificationSound;
 
 let pendingAlarmInterval = null;
@@ -18889,6 +19149,7 @@ function prosesBukaAkun() {
       inputGemini.value = getGeminiApiKey();
     }
     if (typeof updateAiKeyBadgeStatus === 'function') updateAiKeyBadgeStatus();
+    if (typeof updateAkunSelectedSoundBadge === 'function') updateAkunSelectedSoundBadge();
   }, 100);
 
   if (elHeadingName) elHeadingName.textContent = name.toUpperCase();
