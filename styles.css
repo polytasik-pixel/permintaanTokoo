@@ -23,7 +23,7 @@
 }
 
 :root {
-  --topbar-bg: linear-gradient(135deg, #0284c7, #0369a1);
+  --topbar-bg: linear-gradient(135deg, #0077b6, #005f96);
   --topbar-height: 54px;
   --sidebar-width: 242px;
   
@@ -163,6 +163,7 @@ html, body {
 .topbar-search {
   position: relative;
   width: 100%;
+  max-width: calc(135px + 41mm) !important;
   display: flex;
   align-items: center;
 }
@@ -170,37 +171,91 @@ html, body {
 .topbar-search input {
   width: 100%;
   height: 34px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 17px;
-  padding: 0 36px 0 14px;
-  color: var(--text-white);
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 4px !important;
+  padding: 0 36px 0 12px;
+  color: #0f172a !important;
   font-family: var(--font-sans);
-  font-size: 12.5px;
+  font-size: 13px;
+  font-weight: 500;
   outline: none;
   transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .topbar-search input::placeholder {
-  color: rgba(255, 255, 255, 0.75);
+  color: #64748b !important;
+  font-weight: 400;
 }
 
 .topbar-search input:focus {
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--text-main);
-  border-color: #ffffff;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2) !important;
 }
 
 .topbar-search input:focus::placeholder {
-  color: var(--text-muted);
+  color: #94a3b8 !important;
 }
 
 .topbar-search .material-symbols-rounded {
   position: absolute;
-  right: 12px;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 18px;
+  right: 10px;
+  color: #64748b !important;
+  font-size: 19px;
   pointer-events: none;
+}
+
+.menu-search-dropdown {
+  position: absolute;
+  top: 38px;
+  left: 0;
+  right: 0;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  max-height: none !important;
+  overflow: visible !important;
+  z-index: 99999;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 4px !important;
+  color: #0f172a !important;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.menu-search-item:hover {
+  background: #f1f5f9 !important;
+  color: #0284c7 !important;
+}
+
+.menu-search-item .material-symbols-rounded {
+  position: static !important;
+  font-size: 18px;
+  color: #0284c7 !important;
+}
+
+.menu-search-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .topbar-right {
@@ -232,7 +287,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07) !important;
   padding: 4px 10px 4px 5px;
   border-radius: 6px !important;
   cursor: pointer;
@@ -240,7 +295,7 @@ html, body {
 }
 
 .topbar-user-badge:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.16) !important;
 }
 
 .user-avatar {
@@ -292,7 +347,8 @@ html, body {
 }
 
 .sidebar-group-header {
-  background: #0284c7 !important;
+  background: linear-gradient(135deg, #0077b6, #005f96) !important;
+  background-color: #0077b6 !important;
   color: #ffffff !important;
   padding: 2mm !important;
   font-weight: 700 !important;
@@ -1360,6 +1416,7 @@ button:hover, .btn:hover, .btn-secondary:hover, .btnCari:hover, .btnSimpan:hover
   display: flex !important;
   flex-direction: column !important;
   gap: 14px !important;
+  padding-top: 0mm !important;
 }
 
 #riwayatPage .searchToolbar {
@@ -1408,24 +1465,21 @@ button:hover, .btn:hover, .btn-secondary:hover, .btnCari:hover, .btnSimpan:hover
 }
 
 #riwayatPage table.historyTable th {
-  padding: 6px 10px !important;
-  height: auto !important;
-  line-height: 1.3 !important;
+  padding: 10px 12px !important;
+  height: 42px !important;
+  line-height: 1.4 !important;
+  background: #e2e8f0 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
 }
 #riwayatPage table.historyTable td {
   padding: 4px 10px !important;
   height: auto !important;
   line-height: 1.3 !important;
-}
-
-#riwayatPage table.historyTable th {
-  background: #f8fafc !important;
-  border-bottom: 2px solid #e2e8f0 !important;
-  color: #475569 !important;
-  font-weight: 700 !important;
-  font-size: 11.5px !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
 }
 
 #riwayatPage table.historyTable td {
@@ -1434,8 +1488,10 @@ button:hover, .btn:hover, .btn-secondary:hover, .btnCari:hover, .btnSimpan:hover
   color: #0f172a !important;
 }
 
-#riwayatPage table.historyTable tr:hover {
-  background: #f8fafc !important;
+#riwayatPage table.historyTable tbody tr:hover,
+#riwayatPage table.historyTable tbody tr:hover td {
+  background-color: #e0f2fe !important;
+  background: #e0f2fe !important;
 }
 
 
@@ -1806,35 +1862,80 @@ button:hover, .btn:hover, .btn-secondary:hover, .btnCari:hover, .btnSimpan:hover
   vertical-align: middle !important;
 }
 
-/* Action Buttons inside Riwayat Table */
+/* Action Buttons inside Riwayat Table & All Table Action Columns (UNIFORM 30px x 30px) */
 #riwayatPage .historyTable .btnIcon,
 #riwayatPage .historyTable button,
-.historyTable .btnIcon {
-  height: 28px !important;
-  min-height: 28px !important;
-  padding: 0 8px !important;
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
-  border-radius: 5px !important;
+.historyTable .btnIcon,
+.historyTable button,
+.dashboardTable .btnIcon,
+.dashboardTable button,
+.detailTableV2 .btnIcon,
+.detailTableV2 button,
+.btnIcon,
+.btnIconOnly,
+td.th-aksi-col .btnIcon,
+td.th-aksi-col button,
+button[onclick*="tampilkanPilihanCetakPdf"],
+button[onclick*="doneService"],
+button[onclick*="batalApproveService"],
+button[onclick*="batalApproveDM"],
+button[onclick*="editPermintaan"],
+button[onclick*="bukaModalUbahStatusAdmin"],
+button[onclick*="lihatFotoByNoSurat"],
+button[onclick*="downloadSingleDetailExcel"],
+button[onclick*="hapusData"],
+button[onclick*="bukaModalForwardService"] {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  width: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 4px !important;
+  gap: 0 !important;
   box-shadow: none !important;
   line-height: 1 !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
   border: none !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
 }
 
-/* Icon size inside Riwayat Table buttons */
+/* Icon size inside Table Action buttons (18px) */
 #riwayatPage .historyTable .btnIcon .material-symbols-rounded,
 #riwayatPage .historyTable button .material-symbols-rounded,
-.historyTable .btnIcon .material-symbols-rounded {
-  font-size: 16px !important;
-  width: 16px !important;
-  height: 16px !important;
-  line-height: 16px !important;
+.historyTable .btnIcon .material-symbols-rounded,
+.historyTable button .material-symbols-rounded,
+.dashboardTable .btnIcon .material-symbols-rounded,
+.dashboardTable button .material-symbols-rounded,
+.detailTableV2 .btnIcon .material-symbols-rounded,
+.detailTableV2 button .material-symbols-rounded,
+.btnIcon .material-symbols-rounded,
+.btnIconOnly .material-symbols-rounded,
+td.th-aksi-col .btnIcon .material-symbols-rounded,
+td.th-aksi-col button .material-symbols-rounded,
+button[onclick*="tampilkanPilihanCetakPdf"] .material-symbols-rounded,
+button[onclick*="doneService"] .material-symbols-rounded,
+button[onclick*="batalApproveService"] .material-symbols-rounded,
+button[onclick*="batalApproveDM"] .material-symbols-rounded,
+button[onclick*="editPermintaan"] .material-symbols-rounded,
+button[onclick*="bukaModalUbahStatusAdmin"] .material-symbols-rounded,
+button[onclick*="lihatFotoByNoSurat"] .material-symbols-rounded,
+button[onclick*="downloadSingleDetailExcel"] .material-symbols-rounded,
+button[onclick*="hapusData"] .material-symbols-rounded,
+button[onclick*="bukaModalForwardService"] .material-symbols-rounded {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  line-height: 18px !important;
+  margin: 0 !important;
 }
 
 /* Specific Action Button Color Presets in Riwayat */
@@ -1930,16 +2031,16 @@ table.historyTable tr {
 
 #riwayatPage table.historyTable th,
 table.historyTable th {
-  padding: 6px 10px !important;
-  font-size: 11.5px !important;
+  padding: 12px 14px !important;
+  font-size: 12.5px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
-  background: #f8fafc !important;
-  border-bottom: 2px solid #e2e8f0 !important;
-  color: #475569 !important;
-  height: auto !important;
-  line-height: 1.3 !important;
+  background: #e2e8f0 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  color: #000000 !important;
+  height: 42px !important;
+  line-height: 1.4 !important;
 }
 
 #riwayatPage table.historyTable td,
@@ -2067,24 +2168,26 @@ table.historyTable td {
   flex: 0 0 auto !important;
 }
 
-/* TABEL STATUS COLUMN AUTO-FIT TIGHTLY */
+/* TABEL STATUS COLUMN FIXED WIDTH */
 #riwayatPage table.historyTable th:nth-child(3),
 #riwayatPage table.historyTable td:nth-child(3),
 .historyTable th.th-status-col,
 .historyTable td.td-status-col {
-  width: 1% !important;
+  width: 110px !important;
+  min-width: 110px !important;
   white-space: nowrap !important;
   text-align: center !important;
   padding-left: 8px !important;
   padding-right: 8px !important;
 }
 
-/* TABEL AREA COLUMN AUTO-FIT TIGHTLY DIRECTLY RIGHT OF AKSI */
+/* TABEL AREA COLUMN FIXED WIDTH */
 #riwayatPage table.historyTable th:nth-child(2),
 #riwayatPage table.historyTable td:nth-child(2),
 .historyTable th.th-area-col,
 .historyTable td.td-area-col {
-  width: 1% !important;
+  width: 75px !important;
+  min-width: 75px !important;
   white-space: nowrap !important;
   text-align: center !important;
   padding-left: 8px !important;
@@ -2402,8 +2505,12 @@ button[onclick*="bukaModalPdfModels"]:hover {
   vertical-align: middle !important;
 }
 
-.dashboardTable tr:hover {
-  background: #f8fafc !important;
+.dashboardTable tbody tr:hover,
+.dashboardTable tbody tr:hover td,
+#dashboardPage table.dashboardTable tbody tr:hover,
+#dashboardPage table.dashboardTable tbody tr:hover td {
+  background-color: #e0f2fe !important;
+  background: #e0f2fe !important;
   cursor: pointer !important;
 }
 
@@ -2894,9 +3001,9 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 #riwayatPage,
 #dashboardPage,
 .page-container {
-  padding: 6px 8px !important;
+  padding: 14px 18px !important;
   margin: 0 !important;
-  gap: 8px !important;
+  gap: 14px !important;
 }
 
 /* 2. CARDS & SECTIONS INSIDE INPUT & AKUN/PROFIL PAGES */
@@ -2907,9 +3014,9 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 .card,
 .card-body,
 .formCard {
-  padding: 8px 10px !important;
-  margin-bottom: 8px !important;
-  gap: 8px !important;
+  padding: 14px 18px !important;
+  margin-bottom: 14px !important;
+  gap: 14px !important;
 }
 
 #inputPage .card-header,
@@ -3004,9 +3111,9 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 #riwayatPage,
 #dashboardPage,
 .page-container {
-  padding: 2mm !important;
+  padding: 14px 18px !important;
   margin: 0 !important;
-  gap: 2mm !important;
+  gap: 14px !important;
   box-sizing: border-box !important;
 }
 
@@ -3017,8 +3124,8 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 .card,
 .card-body,
 .formCard {
-  padding: 2mm !important;
-  margin-bottom: 2mm !important;
+  padding: 14px 18px !important;
+  margin-bottom: 14px !important;
 }
 
 
@@ -3029,7 +3136,8 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 
 /* SIDEBAR ACCORDION HEADER WITH 2MM PADDING */
 .sidebar-group-header {
-  background: #0284c7 !important;
+  background: linear-gradient(135deg, #0077b6, #005f96) !important;
+  background-color: #0077b6 !important;
   color: #ffffff !important;
   padding: 2mm 3mm !important;
   font-weight: 700 !important;
@@ -3051,7 +3159,7 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
   width: calc(100% - var(--sidebar-width, 242px)) !important;
   max-width: calc(100% - var(--sidebar-width, 242px)) !important;
   min-height: calc(100vh - var(--topbar-height, 54px)) !important;
-  padding: 8px 12px !important;
+  padding: 14px 18px !important;
   box-sizing: border-box !important;
   background: var(--bg-main, #f8fafc) !important;
   overflow-x: hidden !important;
@@ -3072,7 +3180,7 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
   box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 10px !important;
+  gap: 14px !important;
 }
 
 /* CARDS INSIDE PAGES: STRETCH 100% FULL WIDTH WITH COMPACT PADDING */
@@ -3085,8 +3193,8 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 .formCard {
   width: 100% !important;
   max-width: 100% !important;
-  padding: 10px 14px !important;
-  margin-bottom: 10px !important;
+  padding: 14px 18px !important;
+  margin-bottom: 14px !important;
   border-radius: 8px !important;
   box-sizing: border-box !important;
 }
@@ -3311,19 +3419,52 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 }
 
 
-/* COMPLETELY HIDE ALL LOADING OVERLAYS (MOHON TUNGGU...) */
-#loadingOverlay,
-#loadingProsesOverlay,
-#miniCenterLoading,
-.loadingOverlay,
-.loadingProsesOverlay,
-.modal-overlay.active[id*="loading"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  z-index: -9999 !important;
+/* ACTIVE LOADING OVERLAYS (NO BOX BACKGROUND, SIMPLE ANIMATED DOTS) */
+#miniCenterLoading {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(15, 23, 42, 0.5) !important;
 }
+
+#miniCenterLoading.show,
+#miniCenterLoading[style*="display: flex"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 2147483600 !important;
+}
+
+#miniCenterLoading .miniSpinnerBox {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#miniCenterLoadingText {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px !important;
+}
+
+@keyframes dotPulse {
+  0%, 20% { opacity: 0.25; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+  80%, 100% { opacity: 0.25; transform: translateY(0); }
+}
+
+.animatedDots span {
+  display: inline-block !important;
+  animation: dotPulse 1.2s infinite ease-in-out both !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.animatedDots .dot1 { animation-delay: 0s !important; }
+.animatedDots .dot2 { animation-delay: 0.2s !important; }
+.animatedDots .dot3 { animation-delay: 0.4s !important; }
 
 
 /* IMAGE VIEWER POPUP OVERLAY (HIGHEST PRIORITY Z-INDEX: 2147483647) */
@@ -3430,7 +3571,7 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 }
 
 
-/* UNIVERSAL OCEAN BLUE HEADERS OVERRIDE (MATCHING USER REFERENCE IMAGE) */
+/* UNIVERSAL DEEP OCEAN BLUE HEADERS OVERRIDE (#0077b6) */
 .app-topbar,
 .modalHeader,
 .modalKeyHeader,
@@ -3445,7 +3586,8 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 .popupBox > .modalHeader,
 .popupNotifCard.notif-info #popupNotifHeader,
 .confirmBoxCard .modalHeader {
-  background: #0284c7 !important;
+  background: linear-gradient(135deg, #0077b6, #005f96) !important;
+  background-color: #0077b6 !important;
   color: #ffffff !important;
 }
 
@@ -3745,7 +3887,8 @@ html, body {
   max-width: 100vw !important;
   min-width: 100vw !important;
   height: var(--topbar-height, 54px) !important;
-  background: #0284c7 !important;
+  background: linear-gradient(135deg, #0077b6, #005f96) !important;
+  background-color: #0077b6 !important;
   color: #ffffff !important;
   display: flex !important;
   align-items: center !important;
@@ -3860,15 +4003,15 @@ body:not(.sidebar-open) .app-main {
 
 .dashboardTable th,
 .historyTable th {
-  height: 38px !important;
-  max-height: 38px !important;
-  padding: 8px 12px !important;
+  height: 42px !important;
+  max-height: 42px !important;
+  padding: 12px 14px !important;
   box-sizing: border-box !important;
   vertical-align: middle !important;
-  font-size: 11.5px !important;
+  font-size: 12.5px !important;
   font-weight: 700 !important;
-  background: #f8fafc !important;
-  color: #475569 !important;
+  background: #e2e8f0 !important;
+  color: #000000 !important;
   border-bottom: 2px solid #cbd5e1 !important;
 }
 
@@ -3916,8 +4059,11 @@ body:not(.sidebar-open) .app-main {
 }
 
 .dashboardTable tbody tr:not(.empty-grid-row):hover,
-.historyTable tbody tr:not(.empty-grid-row):hover {
-  background-color: #e2e8f0 !important;
+.dashboardTable tbody tr:not(.empty-grid-row):hover td,
+.historyTable tbody tr:not(.empty-grid-row):hover,
+.historyTable tbody tr:not(.empty-grid-row):hover td {
+  background-color: #e0f2fe !important;
+  background: #e0f2fe !important;
 }
 
 /* COMPLETELY HIDE BORDERS & LINES ON EMPTY PLACEHOLDER ROWS */
@@ -4725,8 +4871,10 @@ div.popupOverlay > div.popupBox {
   color: var(--text-main) !important;
 }
 
-#popupTambahToko #daftarTokoTableBody tr:hover {
-  background: var(--table-hover) !important;
+#popupTambahToko #daftarTokoTableBody tr:hover,
+#popupTambahToko #daftarTokoTableBody tr:hover td {
+  background-color: #e0f2fe !important;
+  background: #e0f2fe !important;
 }
 
 
@@ -5613,11 +5761,22 @@ body.dark-mode {
   color: #1e293b !important;
 }
 
+#popupTambahToko table tbody tr:hover,
+#popupTambahToko table tbody tr:hover td,
+#tabelDaftarTokoModal tr:hover,
 #tabelDaftarTokoModal tr:hover td,
+#tabelDaftarTokoModal tbody tr:hover,
+#tabelDaftarTokoModal tbody tr:hover td,
+#daftarTokoTableBody tr:hover,
 #daftarTokoTableBody tr:hover td,
-#tokoDaftarTableBody tr:hover td {
-  background: #e2eff8 !important;
-  background-color: #e2eff8 !important;
+#tokoDaftarTableBody tr:hover,
+#tokoDaftarTableBody tr:hover td,
+#userTableBodyModal tr:hover,
+#userTableBodyModal tr:hover td,
+#popupUserManagementModal table tbody tr:hover,
+#popupUserManagementModal table tbody tr:hover td {
+  background: #e0f2fe !important;
+  background-color: #e0f2fe !important;
 }
 
 
@@ -5668,9 +5827,20 @@ body.dark-mode {
 }
 
 #userTableBodyModal td,
-#userTableBody td {
+#userTableBody td,
+.userModalTable tbody td {
   color: #0f172a !important;
   font-size: 12px !important;
+  text-align: left !important;
+}
+
+#userTableBodyModal td:first-child,
+#userTableBody td:first-child,
+.userModalTable tbody td:first-child,
+#userTableBodyModal td:last-child,
+#userTableBody td:last-child,
+.userModalTable tbody td:last-child {
+  text-align: center !important;
 }
 
 #userTableBodyModal td span,
@@ -6667,8 +6837,8 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 }
 
 #uploadBuktiPermintaanOverlay .artemisHeaderPopup {
-  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-  background-color: #0284c7 !important;
+  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+  background-color: #1d4ed8 !important;
   color: #ffffff !important;
   border-radius: 6px 6px 0 0 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -7045,6 +7215,26 @@ button[onclick*="bukaModalRiwayatParsialList"] {
 #popupDetailBarangV2 table tbody tr:nth-child(even) td {
   background-color: #f8fafc !important;
   background: #f8fafc !important;
+}
+
+#popupDetailBarangV2 table tbody tr:hover,
+#popupDetailBarangV2 table tbody tr:hover td,
+#popupDetailBarang table tbody tr:hover,
+#popupDetailBarang table tbody tr:hover td,
+.detailTableV2 tbody tr:hover,
+.detailTableV2 tbody tr:hover td,
+#modalBuatParsial table tbody tr:hover,
+#modalBuatParsial table tbody tr:hover td,
+#modalDetailParsialSub table tbody tr:hover,
+#modalDetailParsialSub table tbody tr:hover td,
+#modalRiwayatParsialList table tbody tr:hover,
+#modalRiwayatParsialList table tbody tr:hover td,
+#popupDetailParsial table tbody tr:hover,
+#popupDetailParsial table tbody tr:hover td,
+.parsialTable tbody tr:hover,
+.parsialTable tbody tr:hover td {
+  background-color: #e0f2fe !important;
+  background: #e0f2fe !important;
 }
 
 /* =============================================================================
@@ -8138,7 +8328,7 @@ body:not(.sidebar-open) #pdfModal.mode-b {
   border-radius: 6px !important;
   background: #ffffff !important;
   color: #0284c7 !important;
-  font-weight: 800 !important;
+  font-weight: 400 !important;
   font-size: 11px !important;
   letter-spacing: 0.5px !important;
   display: inline-flex !important;
@@ -8153,7 +8343,8 @@ body:not(.sidebar-open) #pdfModal.mode-b {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   padding: 4px 10px 4px 5px !important;
   border-radius: 6px !important;
   cursor: pointer !important;
@@ -8163,15 +8354,20 @@ body:not(.sidebar-open) #pdfModal.mode-b {
   flex-shrink: 0 !important;
 }
 
+.topbar-user-badge:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
 .user-avatar,
 #topUserAvatarInitials {
   border-radius: 4px !important;
+  font-weight: 400 !important;
 }
 
 .user-name-text,
 #namaUserTopHeader {
   font-size: 12px !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
   color: #ffffff !important;
   max-width: none !important;
   width: auto !important;
@@ -8181,24 +8377,14 @@ body:not(.sidebar-open) #pdfModal.mode-b {
   flex-shrink: 0 !important;
 }
 
+#liveDateText,
+#liveTimeText {
+  font-weight: 400 !important;
+}
+
 /* =============================================================================
-   UNIVERSAL POPUP/MODAL HEADER & TABLE HEADER OVERRIDE: CRISP SLATE GREY (#e2e8f0) & DARK BOLD TEXT
+   UNIVERSAL TABLE HEADER OVERRIDE: CRISP SLATE GREY (#e2e8f0) & BOLD DARK TEXT (#0f172a)
    ============================================================================= */
-.popupHeader,
-.popupHeaderV2,
-.artemisHeaderPopup,
-.modalHeader,
-.modalKeyHeader,
-.userManagementHeader,
-.chatHeader,
-.notifHeader,
-.excelTemplateHeader,
-#popupDetailBarangV2 .popupHeader,
-#popupDetailBarangV2 .modalHeader,
-#artemisOverlay .modalHeader,
-#modalBuatParsial .modalHeader,
-#modalDetailParsialSub .modalHeader,
-#modalRiwayatParsialList .modalHeader,
 th,
 thead,
 thead tr,
@@ -8215,31 +8401,461 @@ table th,
 #tabelDaftarTokoModal th,
 #tabelDaftarTokoModal thead th,
 #popupTambahToko table thead th,
-#popupDetailBarangV2 table.detailTableV2 th {
+#popupDetailBarangV2 table.detailTableV2 th,
+#popupUserManagementModal table th {
   background: #e2e8f0 !important;
   background-color: #e2e8f0 !important;
   background-image: none !important;
   color: #0f172a !important;
   font-weight: 800 !important;
+  padding: 10px 12px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  line-height: 1.4 !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.5px !important;
   border-bottom: 2px solid #cbd5e1 !important;
 }
 
-.popupHeader *,
-.popupHeaderV2 *,
-.artemisHeaderPopup *,
-.modalHeader *,
-.modalKeyHeader *,
-.userManagementHeader *,
-.chatHeader *,
-.notifHeader *,
-.excelTemplateHeader *,
 th *,
 thead th *,
 .historyTable th *,
 .dashboardTable th *,
-.detailTable th * {
+.detailTable th *,
+.detailTableV2 th *,
+.userModalTable th *,
+#tabelDaftarTokoModal th * {
   color: #0f172a !important;
   font-weight: 800 !important;
+}
+
+/* ==========================================================================
+   MASTER PADDING & SPACING SYNCHRONIZATION WITH POPUP DETAIL PERMINTAAN
+   MAX-WIDTH & CENTERED ALIGNMENT (MATCHING POPUP DETAIL REMAINING SIDE SPACING)
+   ========================================================================== */
+html body .app-main,
+html body #appMain,
+html body .main-content {
+  padding: 16px 20px !important;
+  box-sizing: border-box !important;
+}
+
+html body #dashboardPage,
+html body #riwayatPage,
+html body #inputPage,
+html body #masterDbPage,
+html body #userManagementPage,
+html body #akunPage,
+html body .page-container,
+html body .app-page {
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 16px !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html body #detailDashboard,
+html body #masterDbPage .box,
+html body #userManagementPage .box,
+html body #inputPage .card,
+html body #akunPage .card,
+html body #riwayatPage .card,
+html body .card,
+html body .box,
+html body .formCard {
+  padding: 16px 20px !important;
+  margin-bottom: 16px !important;
+  border-radius: 6px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* ==========================================================================
+   PDF PRINT DOCUMENT TABLE HEADER: BLUE BACKGROUND (#0284c7) WITH BOLD WHITE TEXT
+   ========================================================================== */
+.pdf-paper table thead tr,
+.pdf-paper table thead th,
+.pdf-paper table th,
+#pdfDocumentContent table thead tr,
+#pdfDocumentContent table thead th,
+#pdfDocumentContent table th {
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.pdf-paper table thead th *,
+.pdf-paper table th *,
+#pdfDocumentContent table thead th *,
+#pdfDocumentContent table th * {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+/* ==========================================================================
+   UNIFORM 30PX x 30PX SQUARE SIZING FOR ALL TABLE ACTION BUTTONS (RIWAYAT PAGE)
+   ========================================================================== */
+html body #riwayatPage table.historyTable td button,
+html body #riwayatPage table.historyTable td .btnIcon,
+html body #riwayatPage table.historyTable td .btnIconOnly,
+html body table.historyTable td button,
+html body table.historyTable td .btnIcon,
+html body table.historyTable td .btnIconOnly,
+html body td.th-aksi-col button,
+html body td.th-aksi-col .btnIcon {
+  width: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  padding: 0 !important;
+  margin: 1px 2px !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+}
+
+html body #riwayatPage table.historyTable td button .material-symbols-rounded,
+html body #riwayatPage table.historyTable td .btnIcon .material-symbols-rounded,
+html body #riwayatPage table.historyTable td .btnIconOnly .material-symbols-rounded,
+html body table.historyTable td button .material-symbols-rounded,
+html body table.historyTable td .btnIcon .material-symbols-rounded,
+html body table.historyTable td .btnIconOnly .material-symbols-rounded,
+html body td.th-aksi-col button .material-symbols-rounded,
+html body td.th-aksi-col .btnIcon .material-symbols-rounded {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  line-height: 18px !important;
+  margin: 0 !important;
+}
+
+/* =============================================================================
+   ULTIMATE TOPBAR DEEP OCEAN BLUE OVERRIDE (#0077b6)
+   ============================================================================= */
+html body header.app-topbar,
+html body .app-topbar,
+html body #appTopbar {
+  background: linear-gradient(135deg, #0077b6, #005f96) !important;
+  background-color: #0077b6 !important;
+  color: #ffffff !important;
+}
+
+/* =============================================================================
+   INTERACTIVE TABLE COLUMN SORTING SYSTEM STYLES
+   ============================================================================= */
+th.sortable-th {
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+th.sortable-th * {
+  pointer-events: none !important;
+}
+
+th.sortable-th:hover {
+  background-color: #e2e8f0 !important;
+  background: #e2e8f0 !important;
+}
+
+th.sortable-th .th-sort-wrapper {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+th.sortable-th .sort-icon {
+  font-size: 15px !important;
+  opacity: 0.6 !important;
+  color: #334155 !important;
+  flex-shrink: 0 !important;
+  transform: none !important;
+  transition: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+th.sortable-th.active-sort .sort-icon {
+  opacity: 1 !important;
+  color: #0284c7 !important;
+  font-weight: 800 !important;
+  transform: none !important;
+}
+
+/* =============================================================================
+   UNIVERSAL LIGHT SLATE TABLE HEADER SYSTEM (#e2e8f0)
+   Matching User Reference Image: Crisp Light Slate Grey Background, Dark Bold Text (#0f172a)
+   Zero Color Shift On Hover across all Dashboard & App Tables
+   ============================================================================= */
+html body th,
+html body th:hover,
+html body thead,
+html body thead:hover,
+html body thead th,
+html body thead th:hover,
+html body thead tr,
+html body thead tr:hover,
+html body thead tr:hover th,
+html body thead tr th:hover,
+html body .dark-mode th,
+html body .dark-mode th:hover,
+html body .dark-mode thead th,
+html body .dark-mode thead th:hover,
+html body .dark-mode thead tr:hover th,
+html body #dashboardPage table th,
+html body #dashboardPage table th:hover,
+html body #dashboardPage table thead tr:hover th,
+html body #riwayatPage table th,
+html body #riwayatPage table th:hover,
+html body #riwayatPage table thead tr:hover th,
+html body table.dashboardTable th,
+html body table.dashboardTable th:hover,
+html body table.historyTable th,
+html body table.historyTable th:hover,
+html body .tableCardV2 table th,
+html body .tableCardV2 table th:hover,
+html body #popupDetailBarangV2 th,
+html body #popupDetailBarangV2 th:hover,
+html body #popupDetailBarangV2 thead th,
+html body #popupDetailBarangV2 thead th:hover,
+html body #popupDetailBarangV2 thead tr:hover th,
+html body .detailTableV2 th,
+html body .detailTableV2 th:hover,
+html body .detailTableV2 thead tr:hover th,
+html body .userModalTable th,
+html body .userModalTable th:hover,
+html body table th,
+html body table th:hover {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.3px !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+}
+
+html body th *,
+html body thead th *,
+html body th span,
+html body th label,
+html body th div {
+  color: #0f172a !important;
+}
+
+th.sortable-th .sort-icon {
+  color: #334155 !important;
+}
+
+th.sortable-th.active-sort .sort-icon {
+  color: #0284c7 !important;
+  font-weight: 900 !important;
+}
+
+/* KEEP ORIGINAL BLUE HEADER BAR & WHITE TEXT FOR POPUP TAMBAH TOKO & USER MANAGEMENT MODAL HEADERS */
+#popupTambahToko .popupHeader,
+#popupUserManagementModal .userManagementHeader,
+.userManagementHeader {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+#popupTambahToko .popupHeader *,
+#popupUserManagementModal .userManagementHeader *,
+.userManagementHeader * {
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   MASTER DATABASE PAGE TABLE AUTOFIT & WRAP TEXT (FIT SCREEN VIEWPORT)
+   ========================================================================== */
+#masterDbPage .tableWrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#masterDbPage table,
+#masterDbPage .historyTable {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: auto !important;
+  border-collapse: collapse !important;
+}
+
+#masterDbPage .historyTable th,
+#masterDbPage .historyTable td {
+  height: auto !important;
+  max-height: none !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  padding: 8px 10px !important;
+  vertical-align: middle !important;
+  font-size: 12px !important;
+  box-sizing: border-box !important;
+}
+
+#masterDbPage .historyTable th {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  text-align: left !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+
+#masterDbPage .historyTable td div,
+#masterDbPage .historyTable td span,
+#masterDbPage .historyTable td small,
+#masterDbPage .historyTable td strong {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Specific column column fitting */
+#masterDbPage .historyTable th:nth-child(1),
+#masterDbPage .historyTable td:nth-child(1) {
+  width: 36px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+#masterDbPage .historyTable th:nth-child(2),
+#masterDbPage .historyTable td:nth-child(2) {
+  white-space: nowrap !important;
+  font-size: 11.5px !important;
+}
+
+#masterDbPage .historyTable th:nth-child(3),
+#masterDbPage .historyTable td:nth-child(3) {
+  white-space: nowrap !important;
+}
+
+#masterDbPage .historyTable th:nth-child(5),
+#masterDbPage .historyTable td:nth-child(5) {
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+
+#masterDbPage .historyTable th:nth-child(6),
+#masterDbPage .historyTable td:nth-child(6) {
+  white-space: nowrap !important;
+}
+
+#masterDbPage .historyTable th:nth-child(8),
+#masterDbPage .historyTable td:nth-child(8) {
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+
+#masterDbPage .historyTable th:nth-child(10),
+#masterDbPage .historyTable td:nth-child(10) {
+  width: 75px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+/* =============================================================================
+   CLEAN RIGID TABLE HEADER LOCK (ZERO WOBBLE, ZERO SHAKE, NATURAL WIDTH)
+   ============================================================================= */
+#riwayatPage table.historyTable {
+  width: 100% !important;
+  max-width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: auto !important;
+}
+
+html body #riwayatPage table.historyTable th,
+html body #riwayatPage table.historyTable th:hover,
+html body #riwayatPage table.historyTable thead tr:hover th,
+html body table.historyTable th,
+html body table.historyTable th:hover,
+th.sortable-th,
+th.sortable-th:hover {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1.4 !important;
+  padding: 8px 10px !important;
+  margin: 0 !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+  letter-spacing: 0.3px !important;
+  text-transform: uppercase !important;
+  vertical-align: middle !important;
+  height: 40px !important;
+  max-height: 40px !important;
+  box-sizing: border-box !important;
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+}
+
+#riwayatPage .historyTable .th-sort-wrapper,
+th.sortable-th .th-sort-wrapper {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+#riwayatPage .historyTable .sort-icon,
+th.sortable-th .sort-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  line-height: 1 !important;
+  display: inline-block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  transform: none !important;
+  transition: none !important;
+  opacity: 0.6 !important;
+  color: #334155 !important;
+  box-shadow: none !important;
+}
+
+#riwayatPage .historyTable th.sortable-th.active-sort .sort-icon,
+th.sortable-th.active-sort .sort-icon {
+  opacity: 1 !important;
+  color: #0284c7 !important;
+  font-weight: 800 !important;
+  transform: none !important;
 }
 
 

@@ -1202,6 +1202,35 @@ const NOTIFICATIONS_DB_KEY = 'STORE_NOTIFICATIONS_DB_V7_CLEAN';
 const FEATURE_PHOTOS_KEY = 'STORE_FEATURE_PHOTOS_V7_CLEAN';
 const FIREBASE_USER_CONFIG_KEY = 'STORE_FIREBASE_USER_CONFIG_V7_CLEAN';
 
+const SYSTEM_DEFAULT_TTD_MAP = {
+  "USR-1786519280585-433":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_SKB_1787708703707.png",
+  "SKB":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_SKB_1787708703707.png",
+  "DIMAS ARBIANSYAH":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_SKB_1787708703707.png",
+  "SERVICE_SKB":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_SKB_1787708703707.png",
+  "SERVICE":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_SKB_1787708703707.png",
+  "HODS":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_SKB_1787708703707.png",
+  "USR-1786520232536-457":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_BDU_1787124369187.png",
+  "BDU":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_BDU_1787124369187.png",
+  "M.AWALUDDIN.R":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_BDU_1787124369187.png",
+  "SERVICE_BDU":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_BDU_1787124369187.png",
+  "USR-1786518085185-694":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_GBJ_1787380373632.png",
+  "GBJ":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_GBJ_1787380373632.png",
+  "GUDANG BARANG JADI":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_GBJ_1787647951530.png",
+  "USR-1787124294394-416":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
+  "TSM":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
+  "BAUT ADHI WISMANTORO":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
+  "SERVICE_TSM":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
+  "USR-1786503880831-701":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_DM_1787285490848.png",
+  "DM":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_DM_1787285490848.png",
+  "FERRY EDIYANTO":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_DM_1787285490848.png",
+  "ABAUT ADHI WISMANTORO":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787647878493.png",
+  "USR-1787286310183-498":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_BDG_1788489428978.png",
+  "BDG":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_BDG_1788489428978.png",
+  "ISBIANTA":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_BDG_1788489428978.png",
+  "SERVICE_BDG":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_BDG_1788489428978.png",
+  "GUDANG BARANG JADI (GBJ BDG)":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_GBJ_1787380373632.png"
+};
+
 // NORMAL DESIGN MODE ONLY
 const DESIGN_MODES = [
   { id: 'normal', btnName: 'DESAIN: NORMAL', name: 'DESAIN NORMAL' }
@@ -4007,6 +4036,33 @@ function handleRealtimePermintaanToko(payload) {
       return;
     }
 
+    if (rawNoSurat === '__SYSTEM_GEMINI_KEY__') {
+      try {
+        if (payload.new && payload.new.catatan) {
+          let keyVal = '';
+          try {
+            const parsed = JSON.parse(payload.new.catatan);
+            if (parsed.geminiApiKey !== undefined) keyVal = String(parsed.geminiApiKey).trim();
+            else if (parsed.key !== undefined) keyVal = String(parsed.key).trim();
+          } catch(e) {
+            keyVal = String(payload.new.catatan).trim();
+          }
+          if (keyVal) {
+            if (typeof syncGeminiApiKeyToLocalCache === 'function') syncGeminiApiKeyToLocalCache(keyVal);
+          } else {
+            localStorage.removeItem('gemini_api_key');
+            localStorage.removeItem('GEMINI_API_KEY');
+            appStorage.removeItem('gemini_api_key');
+            appStorage.removeItem('GEMINI_API_KEY');
+            if (typeof updateAiKeyBadgeStatus === 'function') updateAiKeyBadgeStatus();
+          }
+        }
+      } catch(e) {
+        console.warn('[REALTIME GEMINI KEY ERROR]:', e);
+      }
+      return;
+    }
+
     if (rawNoSurat === '__SYSTEM_REMINDER_SETTINGS__') {
       try {
         if (payload.new && payload.new.catatan) {
@@ -4350,24 +4406,20 @@ function handleRealtimeStoreChange(payload) {
 async function refreshOpenPopupsUI() {
   try {
     if (typeof syncSupabaseBreakdownParsialToLocalCache === 'function') {
-await syncSupabaseBreakdownParsialToLocalCache().catch(() => {});
+      await syncSupabaseBreakdownParsialToLocalCache().catch(() => {});
     }
     const popDetailV2 = document.getElementById('popupDetailBarangV2');
     const popDetail = document.getElementById('popupDetail');
-    const isV2Open = popDetailV2 && (popDetailV2.classList.contains('show') || (popDetailV2.style.display && popDetailV2.style.display !== 'none') || popDetailV2.dataset.active === "true");
-    const isOldOpen = popDetail && (popDetail.classList.contains('show') || (popDetail.style.display && popDetail.style.display !== 'none') || popDetail.dataset.active === "true");
+    const isV2Open = popDetailV2 && popDetailV2.classList.contains('show') && popDetailV2.style.display !== 'none' && popDetailV2.dataset.active === "true";
+    const isOldOpen = popDetail && popDetail.classList.contains('show') && popDetail.style.display !== 'none' && popDetail.dataset.active === "true";
     
-    let activeNoSurat = null;
-    if (isV2Open && popDetailV2.dataset.noSurat) {
-      activeNoSurat = popDetailV2.dataset.noSurat;
-    } else if (isOldOpen && popDetail.dataset.noSurat) {
-      activeNoSurat = popDetail.dataset.noSurat;
-    } else if (window._currentDetailNoSurat) {
-      activeNoSurat = window._currentDetailNoSurat;
-    }
+    // HANYA REFRESH JIKA POPUP BENAR-BENAR SEDANG DIBUKA OLEH USER ON-SCREEN
+    if (!isV2Open && !isOldOpen) return;
 
-    if (activeNoSurat && typeof bukaDetailDariDashboard === 'function') {
-      bukaDetailDariDashboard(activeNoSurat);
+    let activeNoSurat = (isV2Open && popDetailV2.dataset.noSurat) ? popDetailV2.dataset.noSurat : ((isOldOpen && popDetail.dataset.noSurat) ? popDetail.dataset.noSurat : null);
+
+    if (activeNoSurat && typeof lihatDetail === 'function') {
+      lihatDetail(activeNoSurat, false);
     }
   } catch(e) {}
 }
@@ -4881,7 +4933,7 @@ async function syncMasterBarangToLocalCache() {
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem(KODE_UNIT_MAP_KEY, cleanStr);
         }
-        console.log(`⚡ [FIREBASE MASTER BARANG SYNC SUCCESS]: ${Object.keys(merged).length} Master Kode Barang berhasil dipulihkan dari FIREBASE!`);
+        // console.log(`⚡ [FIREBASE MASTER BARANG SYNC SUCCESS]: ${Object.keys(merged).length} Master Kode Barang berhasil dipulihkan dari FIREBASE!`);
         return merged;
       }
     } catch(err) {
@@ -5118,8 +5170,6 @@ async function pushCentralCloudDB(target = null) {
             const { error } = await safeSupabaseUpsertPermintaan(supaPayloads);
             if (error) {
               console.warn('[SUPABASE PUSH REQUESTS NOTICE]:', error.message);
-            } else {
-              console.log('⚡ [SUPABASE PUSH SUCCESS]: Requests synced to Supabase!');
             }
             if (typeof broadcastRealtimeDataChange === 'function') {
               supaPayloads.forEach(p => {
@@ -7069,6 +7119,7 @@ async function prosesLogin() {
     return;
   }
 
+  showLoading('LOADING...');
   try {
     // 1. CEK DULU DI PENYIMPANAN LOKAL (0 ms INSTANT)
     let users = getUsersFromDB();
@@ -7164,15 +7215,12 @@ async function prosesLogin() {
       catatLogLogin(user.username, user.fullName, user.area, 'BERHASIL');
       
       // SINKRONISASI KE DATABASE CLOUD HANYA KETIKA KLIK TOMBOL LOGIN BERHASIL
-      showLoading('MEMUAT DATA...');
       try {
         if (typeof syncAllDataToCache === 'function') {
           await syncAllDataToCache();
         }
       } catch (e) {
         console.warn('[LOGIN SYNC NOTICE]:', e);
-      } finally {
-        hideLoading();
       }
 
       await bukaMainApp(true);
@@ -7890,7 +7938,7 @@ function aturTampilanLonceng(pageId) {
   }
 
   if (notifBtn) {
-    if (isDashboard) {
+    if (isLoggedIn) {
       notifBtn.style.setProperty('display', 'flex', 'important');
       notifBtn.style.setProperty('pointer-events', 'auto', 'important');
     } else {
@@ -7899,16 +7947,18 @@ function aturTampilanLonceng(pageId) {
   }
   
   if (helpBtn) {
-    if (isDashboard) {
+    if (isLoggedIn) {
       helpBtn.style.setProperty('display', 'flex', 'important');
       helpBtn.style.setProperty('pointer-events', 'auto', 'important');
+      helpBtn.style.setProperty('opacity', '1', 'important');
+      helpBtn.style.setProperty('visibility', 'visible', 'important');
     } else {
       helpBtn.style.setProperty('display', 'none', 'important');
     }
   }
 
   if (dotEl) {
-    if (isDashboard) {
+    if (isLoggedIn) {
       dotEl.style.setProperty('display', 'inline-block', 'important');
     } else {
       dotEl.style.setProperty('display', 'none', 'important');
@@ -8318,6 +8368,8 @@ function loadDashboard() {
     dashTableTitleEl.textContent = 'DATA PERMINTAAN';
   }
 
+  window._lastDashboardData = data;
+
   const lastDataContainer = document.getElementById('lastData');
   if (!lastDataContainer) return;
   lastDataContainer.innerHTML = '';
@@ -8325,9 +8377,27 @@ function loadDashboard() {
   const searchInput = document.getElementById('searchDashboard');
   const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-  let filteredData = (dashboardFilterStatus === 'ALL' || dashboardFilterStatus === 'TOTAL') ? data : data.filter(r => r.status === dashboardFilterStatus);
+  let filteredData = (dashboardFilterStatus === 'ALL' || dashboardFilterStatus === 'TOTAL') ? [...data] : data.filter(r => r.status === dashboardFilterStatus);
   if (search) {
     filteredData = filteredData.filter(r => matchesRequestSearchFilter(r, search));
+  }
+
+  if (window._dashboardSortCol) {
+    const col = window._dashboardSortCol;
+    const dir = window._dashboardSortDir === 'desc' ? -1 : 1;
+    filteredData.sort((a, b) => {
+      let valA = a[col] || '';
+      let valB = b[col] || '';
+      if (col === 'tanggal') {
+        valA = a.tanggal || a.createdAt || a.created_at || '';
+        valB = b.tanggal || b.createdAt || b.created_at || '';
+      }
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA < valB) return -1 * dir;
+      if (valA > valB) return 1 * dir;
+      return 0;
+    });
   }
   const totalCount = filteredData.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / 12));
@@ -8372,7 +8442,77 @@ function loadDashboard() {
   if (elTotalCount) elTotalCount.textContent = totalCount;
   if (btnPrev) btnPrev.disabled = (window._dashboardCurrentPage <= 1);
   if (btnNext) btnNext.disabled = (window._dashboardCurrentPage >= totalPages);
+  updateDashboardSortIcons();
 }
+
+// =============================================================================
+// GLOBAL INTERACTIVE TABLE SORTING SYSTEM (DASHBOARD & RIWAYAT)
+// =============================================================================
+window._dashboardSortCol = null;
+window._dashboardSortDir = 'asc';
+window._riwayatSortCol = null;
+window._riwayatSortDir = 'asc';
+
+function getSortIconText(tableType, colKey) {
+  let activeCol = null;
+  let activeDir = 'asc';
+  if (tableType === 'dashboard') {
+    activeCol = window._dashboardSortCol;
+    activeDir = window._dashboardSortDir;
+  } else if (tableType === 'riwayat') {
+    activeCol = window._riwayatSortCol;
+    activeDir = window._riwayatSortDir;
+  }
+  if (activeCol === colKey) {
+    return activeDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+  }
+  return 'unfold_more';
+}
+window.getSortIconText = getSortIconText;
+
+function sortTableDashboard(colKey) {
+  if (window._dashboardSortCol === colKey) {
+    window._dashboardSortDir = window._dashboardSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    window._dashboardSortCol = colKey;
+    window._dashboardSortDir = 'asc';
+  }
+  if (typeof loadDashboard === 'function') {
+    loadDashboard();
+  }
+}
+window.sortTableDashboard = sortTableDashboard;
+
+function updateDashboardSortIcons() {
+  const cols = ['tanggal', 'noSurat', 'toko', 'status'];
+  cols.forEach(c => {
+    const iconEl = document.getElementById('sortIconDash_' + c);
+    const thEl = document.getElementById('thDash_' + c);
+    if (iconEl) {
+      if (window._dashboardSortCol === c) {
+        iconEl.textContent = window._dashboardSortDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+        if (thEl) thEl.classList.add('active-sort');
+      } else {
+        iconEl.textContent = 'unfold_more';
+        if (thEl) thEl.classList.remove('active-sort');
+      }
+    }
+  });
+}
+window.updateDashboardSortIcons = updateDashboardSortIcons;
+
+function sortTableRiwayat(colKey) {
+  if (window._riwayatSortCol === colKey) {
+    window._riwayatSortDir = window._riwayatSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    window._riwayatSortCol = colKey;
+    window._riwayatSortDir = 'asc';
+  }
+  if (typeof filterRiwayat === 'function') {
+    filterRiwayat();
+  }
+}
+window.sortTableRiwayat = sortTableRiwayat;
 
 let _isClosingDetailModal = false;
 
@@ -8654,12 +8794,16 @@ function updateModelInputToggleUI() {
   const btn = document.getElementById('btnToggleModelInput');
   const lbl = document.getElementById('lblModelInput');
   if (lbl) {
-    lbl.textContent = currentModelInputPreference === 'MODEL_A' ? 'MODEL A' : 'MODEL B';
+    lbl.style.setProperty('display', 'none', 'important');
   }
   if (btn) {
-    btn.style.setProperty('background', '#f1f5f9', 'important');
-    btn.style.setProperty('color', '#475569', 'important');
-    btn.style.setProperty('border', '1px solid #cbd5e1', 'important');
+    const isModelA = (currentModelInputPreference === 'MODEL_A');
+    btn.title = isModelA
+      ? 'UBAH MODEL FORMULIR (MODEL A - KLIK UNTUK TUKAR KE MODEL B)'
+      : 'UBAH MODEL FORMULIR (MODEL B - KLIK UNTUK TUKAR KE MODEL A)';
+    btn.style.setProperty('background', '#cbd5e1', 'important');
+    btn.style.setProperty('color', '#0f172a', 'important');
+    btn.style.setProperty('border', '1px solid #94a3b8', 'important');
   }
 }
 window.updateModelInputToggleUI = updateModelInputToggleUI;
@@ -9412,9 +9556,9 @@ function updateFotoUploadLimitDisplay() {
 
   if (pText && photoCount === 0) {
     if (itemCount === 0) {
-      pText.innerHTML = '<span class="material-symbols-rounded uploadIcon">info</span> INPUT DATA BARANG TERLEBIH DAHULU UNTUK MEMBUKA UPLOAD FOTO';
+      pText.innerHTML = 'INPUT DATA BARANG TERLEBIH DAHULU UNTUK MEMBUKA UPLOAD FOTO';
     } else {
-      pText.innerHTML = `<span class="material-symbols-rounded uploadIcon">add_a_photo</span> TAP / PILIH FOTO DI SINI (Opsional)`;
+      pText.innerHTML = 'TAP / PILIH FOTO DI SINI (OPSIONAL)';
     }
   }
 }
@@ -9441,9 +9585,9 @@ async function previewFoto(event) {
   }
 
   const previewText = document.getElementById('previewText');
-  const originalText = previewText ? previewText.innerHTML : 'TAP / PILIH FOTO DI SINI';
+  const originalText = previewText ? previewText.innerHTML : 'TAP / PILIH FOTO DI SINI (OPSIONAL)';
   if (previewText) {
-    previewText.innerHTML = `<span class="material-symbols-rounded" style="font-size:22px; vertical-align:middle; display:inline-block; animation:spin 0.8s linear infinite; color:var(--primary);">sync</span> MENGOMPRESI & MENGUNGGAH FOTO...`;
+    previewText.innerHTML = `<span class="material-symbols-rounded" style="font-size:22px; vertical-align:middle; display:inline-block; animation:spin 0.8s linear infinite; color:var(--primary);">sync</span> (LOADING)...`;
   }
 
   for (let i = 0; i < files.length; i++) {
@@ -9606,11 +9750,7 @@ function simpanData() {
 }
 
 async function prosesSimpanKeDB(toko, jenis, catatan, items) {
-  if (typeof tampilkanLoadingProses === 'function') {
-    tampilkanLoadingProses('MENYIMPAN DATA PERMINTAAN... MOHON TUNGGU');
-  } else if (typeof showLoading === 'function') {
-    showLoading('MENYIMPAN DATA PERMINTAAN... MOHON TUNGGU');
-  }
+  showLoading('LOADING...');
   const _simpanStartTime = Date.now();
 
   const requests = getRequestsFromDB();
@@ -9669,11 +9809,10 @@ async function prosesSimpanKeDB(toko, jenis, catatan, items) {
         }
       }
 
-      // TUNGGU SAMPAI TOTAL GENAP 8 DETIK UNTUK ANIMASI LOADING
       const _elapsed = Date.now() - _simpanStartTime;
-      const _remaining = Math.max(0, 8000 - _elapsed);
+      const _remaining = Math.max(0, 400 - _elapsed);
       if (_remaining > 0) {
-await new Promise(resolve => setTimeout(resolve, _remaining));
+        await new Promise(resolve => setTimeout(resolve, _remaining));
       }
 
       if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
@@ -9881,11 +10020,10 @@ await new Promise(resolve => setTimeout(resolve, _remaining));
       setTimeout(dispatchWhatsAppNotification, 500);
     }
 
-    // TUNGGU SAMPAI TOTAL GENAP 8 DETIK UNTUK ANIMASI LOADING
     const _elapsed = Date.now() - _simpanStartTime;
-    const _remaining = Math.max(0, 8000 - _elapsed);
+    const _remaining = Math.max(0, 400 - _elapsed);
     if (_remaining > 0) {
-await new Promise(resolve => setTimeout(resolve, _remaining));
+      await new Promise(resolve => setTimeout(resolve, _remaining));
     }
 
     if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
@@ -9926,7 +10064,12 @@ function isPdfButtonAllowed(req) {
     return true;
   }
 
-  // 2. UNTUK ROLE TOKO & SALES (NON-ADMIN):
+  // 2. UNTUK USER NON-ADMIN: DOKUMEN BER-STATUS 'DONE' / 'SELESAI' TIDAK MENAMPILKAN TOMBOL PDF
+  if (stUpper === 'DONE' || stUpper === 'SELESAI') {
+    return false;
+  }
+
+  // 3. UNTUK ROLE TOKO & SALES (NON-ADMIN):
   // Wajib memiliki hak akses canPrintPdf === true dari Admin
   if (role === 'TOKO' || role === 'SALES') {
     if (!currentUser.canPrintPdf) {
@@ -9934,7 +10077,7 @@ function isPdfButtonAllowed(req) {
     }
   }
 
-  // 3. JIKA DOKUMEN MEMILIKI SURAT PARSIAL / BREAKDOWN PARSIAL:
+  // 4. JIKA DOKUMEN MEMILIKI SURAT PARSIAL / BREAKDOWN PARSIAL:
   // Selalu tampilkan & perbolehkan cetak PDF agar user dapat mencetak Surat Jalan Parsial maupun Induk!
   const noSurat = req.noSurat || req.no_surat || req.id;
   const partials = typeof getPartialBreakdownsFromDB === 'function' ? getPartialBreakdownsFromDB(noSurat) : [];
@@ -9943,7 +10086,7 @@ function isPdfButtonAllowed(req) {
     return true;
   }
 
-  // 4. JIKA STATUS DOKUMEN ADALAH REJECT, DITOLAK, ATAU BATAL (DAN TIDAK ADA SURAT PARSIAL):
+  // 5. JIKA STATUS DOKUMEN ADALAH REJECT, DITOLAK, ATAU BATAL (DAN TIDAK ADA SURAT PARSIAL):
   if (
     stUpper === 'BATAL' || 
     stUpper === 'REJECT' || 
@@ -9953,13 +10096,11 @@ function isPdfButtonAllowed(req) {
     return false;
   }
 
-  // 5. TOMBOL PDF MUNCUL JIKA STATUS DOKUMEN ADALAH 'APPROVE', 'PARSIAL', 'DONE PARSIAL', 'DONE', ATAU 'SELESAI'
+  // 6. TOMBOL PDF MUNCUL JIKA STATUS DOKUMEN ADALAH 'APPROVE', 'PARSIAL', ATAU 'DONE PARSIAL'
   if (
     stUpper === 'APPROVE' || 
     stUpper === 'PARSIAL' || 
-    stUpper === 'DONE PARSIAL' || 
-    stUpper === 'DONE' || 
-    stUpper === 'SELESAI'
+    stUpper === 'DONE PARSIAL'
   ) {
     return true;
   }
@@ -10013,21 +10154,51 @@ function filterRiwayat() {
     data = data.filter(r => matchesRequestSearchFilter(r, search));
   }
 
-  const thead = document.querySelector('.historyTable thead');
+  if (window._riwayatSortCol) {
+    const col = window._riwayatSortCol;
+    const dir = window._riwayatSortDir === 'desc' ? -1 : 1;
+    data.sort((a, b) => {
+      let valA = a[col] || '';
+      let valB = b[col] || '';
+      if (col === 'tanggal') {
+        valA = a.tanggal || a.createdAt || a.created_at || '';
+        valB = b.tanggal || b.createdAt || b.created_at || '';
+      }
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA < valB) return -1 * dir;
+      if (valA > valB) return 1 * dir;
+      return 0;
+    });
+  }
+
+  const thead = document.querySelector('#riwayatPage .historyTable thead');
   const tbody = document.getElementById('riwayatData');
   if (!thead || !tbody) return;
 
-  const role = currentUser ? currentUser.category : '';
+  const getRiwSortClass = (c) => window._riwayatSortCol === c ? 'sortable-th active-sort' : 'sortable-th';
 
   thead.innerHTML = `
     <tr>
       <th class="th-aksi-col" style="text-align: center !important;">AKSI</th>
-      <th class="th-area-col" style="text-align: center !important; white-space: nowrap !important;">AREA</th>
-      <th class="th-status-col" style="text-align: center !important;">STATUS</th>
-      <th style="text-align: center !important;">TANGGAL</th>
-      <th style="text-align: center !important;">NO SURAT</th>
-      <th style="text-align: center !important;">TOKO</th>
-      <th style="text-align: center !important;">JENIS</th>
+      <th id="thRiw_area" class="${getRiwSortClass('area')} th-area-col" onclick="sortTableRiwayat('area')" style="text-align: center !important; white-space: nowrap !important;">
+        <div class="th-sort-wrapper"><span>AREA</span><span class="material-symbols-rounded sort-icon" id="sortIconRiw_area">${getSortIconText('riwayat', 'area')}</span></div>
+      </th>
+      <th id="thRiw_status" class="${getRiwSortClass('status')} th-status-col" onclick="sortTableRiwayat('status')" style="text-align: center !important;">
+        <div class="th-sort-wrapper"><span>STATUS</span><span class="material-symbols-rounded sort-icon" id="sortIconRiw_status">${getSortIconText('riwayat', 'status')}</span></div>
+      </th>
+      <th id="thRiw_tanggal" class="${getRiwSortClass('tanggal')}" onclick="sortTableRiwayat('tanggal')" style="text-align: center !important;">
+        <div class="th-sort-wrapper"><span>TANGGAL</span><span class="material-symbols-rounded sort-icon" id="sortIconRiw_tanggal">${getSortIconText('riwayat', 'tanggal')}</span></div>
+      </th>
+      <th id="thRiw_noSurat" class="${getRiwSortClass('noSurat')}" onclick="sortTableRiwayat('noSurat')" style="text-align: center !important;">
+        <div class="th-sort-wrapper"><span>NO SURAT</span><span class="material-symbols-rounded sort-icon" id="sortIconRiw_noSurat">${getSortIconText('riwayat', 'noSurat')}</span></div>
+      </th>
+      <th id="thRiw_toko" class="${getRiwSortClass('toko')}" onclick="sortTableRiwayat('toko')" style="text-align: center !important;">
+        <div class="th-sort-wrapper"><span>TOKO</span><span class="material-symbols-rounded sort-icon" id="sortIconRiw_toko">${getSortIconText('riwayat', 'toko')}</span></div>
+      </th>
+      <th id="thRiw_jenis" class="${getRiwSortClass('jenis')}" onclick="sortTableRiwayat('jenis')" style="text-align: center !important;">
+        <div class="th-sort-wrapper"><span>JENIS</span><span class="material-symbols-rounded sort-icon" id="sortIconRiw_jenis">${getSortIconText('riwayat', 'jenis')}</span></div>
+      </th>
       <th style="text-align: center !important;">CATATAN</th>
     </tr>
   `;
@@ -11476,23 +11647,23 @@ function tutupDetailBarangV2(fromPopState = false) {
 
   const detailModal = document.getElementById('popupDetailBarangV2');
   if (detailModal) {
+    detailModal.dataset.active = "false";
+    detailModal.dataset.noSurat = "";
     detailModal.classList.add('closing');
     setTimeout(() => {
       detailModal.style.setProperty('display', 'none', 'important');
       detailModal.classList.remove('show', 'closing');
-      detailModal.dataset.active = "false";
-      detailModal.dataset.noSurat = "";
     }, 180);
   }
 
   const oldDetailModal = document.getElementById('popupDetail');
   if (oldDetailModal) {
+    oldDetailModal.dataset.active = "false";
+    oldDetailModal.dataset.noSurat = "";
     oldDetailModal.classList.add('closing');
     setTimeout(() => {
       oldDetailModal.style.setProperty('display', 'none', 'important');
       oldDetailModal.classList.remove('show', 'closing');
-      oldDetailModal.dataset.active = "false";
-      oldDetailModal.dataset.noSurat = "";
     }, 180);
   }
 
@@ -11521,24 +11692,16 @@ function refreshDetailModalIfOpen(noSurat) {
   const modalV2 = document.getElementById('popupDetailBarangV2');
   const modalOld = document.getElementById('popupDetail');
 
-  let activeNoSurat = noSurat;
-  if (!activeNoSurat) {
-    if (modalV2 && modalV2.dataset && modalV2.dataset.noSurat) activeNoSurat = modalV2.dataset.noSurat;
-    else if (modalOld && modalOld.dataset && modalOld.dataset.noSurat) activeNoSurat = modalOld.dataset.noSurat;
-    else if (window._currentDetailNoSurat) activeNoSurat = window._currentDetailNoSurat;
-  }
+  const isV2Open = modalV2 && modalV2.classList.contains('show') && modalV2.style.display !== 'none' && modalV2.dataset.active === "true";
+  const isOldOpen = modalOld && modalOld.classList.contains('show') && modalOld.style.display !== 'none' && modalOld.dataset.active === "true";
 
-  const isV2Open = modalV2 && (modalV2.classList.contains('show') || (modalV2.style.display && modalV2.style.display !== 'none') || modalV2.dataset.active === "true");
-  const isOldOpen = modalOld && (modalOld.classList.contains('show') || (modalOld.style.display && modalOld.style.display !== 'none') || modalOld.dataset.active === "true");
+  // JIKA TIDAK SEDANG DIBUKA PADA LAYAR, JANGAN TRIGERR UNTUK MEMBUKA POPUP DUA KALI
+  if (!isV2Open && !isOldOpen) return;
 
-  if ((isV2Open || isOldOpen) && activeNoSurat) {
-    if (typeof lihatDetail === 'function') {
-      lihatDetail(activeNoSurat, true);
-    } else if (typeof openDetail === 'function') {
-      openDetail(activeNoSurat);
-    } else if (typeof bukaDetailDariDashboard === 'function') {
-      bukaDetailDariDashboard(activeNoSurat);
-    }
+  let activeNoSurat = noSurat || (isV2Open ? modalV2.dataset.noSurat : (isOldOpen ? modalOld.dataset.noSurat : null));
+
+  if (activeNoSurat && typeof lihatDetail === 'function') {
+    lihatDetail(activeNoSurat, false);
   }
 }
 window.refreshDetailModalIfOpen = refreshDetailModalIfOpen;
@@ -11847,6 +12010,45 @@ showConfirm(`APAKAH ANDA YAKIN INGIN MENYIMPAN PERUBAHAN ITEM PERMINTAAN #${noSu
 }
 window.simpanPerubahanDetailAdmin = simpanPerubahanDetailAdmin;
 
+window._detailSortCol = null;
+window._detailSortDir = 'asc';
+window._isSortingDetail = false;
+window._currentDetailNoSurat = null;
+
+function sortTableDetailPermintaan(colKey) {
+  window._isSortingDetail = true;
+  if (window._detailSortCol === colKey) {
+    window._detailSortDir = window._detailSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    window._detailSortCol = colKey;
+    window._detailSortDir = 'asc';
+  }
+  const noSurat = window._currentDetailNoSurat;
+  if (noSurat && typeof lihatDetail === 'function') {
+    lihatDetail(noSurat);
+  }
+  window._isSortingDetail = false;
+}
+window.sortTableDetailPermintaan = sortTableDetailPermintaan;
+
+function updateDetailSortIcons() {
+  const cols = ['type', 'seri', 'barang', 'dus', 'alasan', 'qty'];
+  cols.forEach(c => {
+    const iconEl = document.getElementById('sortIconDetail_' + c);
+    const thEl = document.getElementById('thDetail_' + c);
+    if (iconEl) {
+      if (window._detailSortCol === c) {
+        iconEl.textContent = window._detailSortDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+        if (thEl) thEl.classList.add('active-sort');
+      } else {
+        iconEl.textContent = 'unfold_more';
+        if (thEl) thEl.classList.remove('active-sort');
+      }
+    }
+  });
+}
+window.updateDetailSortIcons = updateDetailSortIcons;
+
 async function lihatDetail(noSuratOrObj, fromDashboard = false) {
   window._lastDetailOpenTime = Date.now();
   if (typeof applyDetailPopupModeUI === 'function') applyDetailPopupModeUI();
@@ -11867,6 +12069,13 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
       String(r.id || '').trim().toUpperCase() === upperTarget ||
       decodeURIComponent(String(r.noSurat || '')).trim().toUpperCase() === upperTarget
     ));
+
+    if (!req && window._activeDetailReq && (
+      String(window._activeDetailReq.noSurat || '').trim().toUpperCase() === upperTarget ||
+      String(window._activeDetailReq.id || '').trim().toUpperCase() === upperTarget
+    )) {
+      req = window._activeDetailReq;
+    }
 
     if (!req && typeof supabase !== 'undefined' && supabase) {
       try {
@@ -11896,6 +12105,14 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
 
   if (!req) return false;
 
+  window._activeDetailReq = req;
+
+  if (window._currentDetailNoSurat !== req.noSurat && !window._isSortingDetail) {
+    window._detailSortCol = null;
+    window._detailSortDir = 'asc';
+  }
+  window._currentDetailNoSurat = req.noSurat;
+
   const isDus = String(req.jenis || '').toUpperCase() === 'DUS';
   const popupTitleV2 = document.getElementById('popupTitleV2');
   if (popupTitleV2) popupTitleV2.textContent = isDus ? 'DETAIL PERMINTAAN DUS' : 'DETAIL PERMINTAAN';
@@ -11911,9 +12128,55 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
   let rawItems = req.items;
   let itemsList = [];
   if (Array.isArray(rawItems)) {
-    itemsList = rawItems;
+    itemsList = rawItems.map((it, idx) => typeof it === 'object' && it !== null ? { ...it, _origIdx: idx } : { value: it, _origIdx: idx });
   } else if (typeof rawItems === 'string') {
-    try { itemsList = JSON.parse(rawItems || '[]'); } catch (e) { itemsList = []; }
+    try {
+      const parsed = JSON.parse(rawItems || '[]');
+      itemsList = Array.isArray(parsed) ? parsed.map((it, idx) => typeof it === 'object' && it !== null ? { ...it, _origIdx: idx } : { value: it, _origIdx: idx }) : [];
+    } catch (e) {
+      itemsList = [];
+    }
+  }
+
+  if (window._detailSortCol) {
+    const col = window._detailSortCol;
+    const dir = window._detailSortDir === 'desc' ? -1 : 1;
+    itemsList.sort((a, b) => {
+      let valA = '';
+      let valB = '';
+
+      if (col === 'type') {
+        valA = String(a.type || a.tipe || a.jenis || '').trim();
+        valB = String(b.type || b.tipe || b.jenis || '').trim();
+      } else if (col === 'seri') {
+        valA = String(a.seri || a.sn || a.serial || '').trim();
+        valB = String(b.seri || b.sn || b.serial || '').trim();
+      } else if (col === 'barang') {
+        valA = String(a.barang || a.permintaan || a.namaBarang || '').trim();
+        valB = String(b.barang || b.permintaan || b.namaBarang || '').trim();
+      } else if (col === 'dus') {
+        valA = String(a.dus || a.snDus || a.seriDus || a.seri || '').trim();
+        valB = String(b.dus || b.snDus || b.seriDus || b.seri || '').trim();
+      } else if (col === 'alasan') {
+        valA = String(a.alasan || a.keterangan || '').trim();
+        valB = String(b.alasan || b.keterangan || '').trim();
+      } else if (col === 'qty') {
+        valA = Number(a.qty || a.jumlah || 1);
+        valB = Number(b.qty || b.jumlah || 1);
+        if (valA < valB) return -1 * dir;
+        if (valA > valB) return 1 * dir;
+        return 0;
+      }
+
+      const strA = (valA === '-' || !valA) ? '' : valA;
+      const strB = (valB === '-' || !valB) ? '' : valB;
+
+      if (!strA && strB) return 1;
+      if (strA && !strB) return -1;
+      if (!strA && !strB) return 0;
+
+      return strA.localeCompare(strB, undefined, { numeric: true, sensitivity: 'base' }) * dir;
+    });
   }
 
   const hasEligibleBreakdownItem = Array.isArray(itemsList) && itemsList.some((it, idx) => {
@@ -12038,6 +12301,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
   const getTdAlasanStyle = (strVal) => getTdCellStyleByLength(strVal);
 
   let itemsHtml = itemsList.map((i, idx) => {
+    const itemIdx = (i && i._origIdx !== undefined) ? i._origIdx : idx;
     const tdStyleAutofit = getTdStyleAutofit(idx, itemsList.length);
     const tdStyleLeft = getTdStyleLeft(idx, itemsList.length);
 
@@ -12054,7 +12318,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
     const activePartialsList = (typeof getPartialBreakdownsFromDB === 'function' ? getPartialBreakdownsFromDB(req.noSurat) : []).filter(p => p && (p.status === 'PENDING' || p.status === 'APPROVE' || p.status === 'DONE'));
     const partialMatch = activePartialsList.find(p => Array.isArray(p.items) && p.items.some(pi => {
       if (pi.itemIdx !== undefined && pi.itemIdx !== null) {
-        return Number(pi.itemIdx) === idx;
+        return Number(pi.itemIdx) === itemIdx;
       }
       return pi.type && String(pi.type || pi.tipe || '').trim().toUpperCase() === String(typeVal).trim().toUpperCase() && String(typeVal).trim() !== '-';
     }));
@@ -12095,7 +12359,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
       let unlockBtnAdmin = '';
       let chkItemHtml = `
         <label class="chkBoxBox" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; border: 1.5px solid var(--border-color, #cbd5e1) !important; border-radius: 6px !important; background: var(--bg-box, #ffffff) !important; cursor: ${isUnfulfilled || isHandedOver ? 'not-allowed' : 'pointer'} !important; box-sizing: border-box !important; vertical-align: middle !important; transition: all 0.15s ease !important; margin: 0 !important; ${isUnfulfilled || isHandedOver ? 'opacity: 0.5 !important; background: rgba(0,0,0,0.05) !important;' : ''}" title="${isUnfulfilled || isHandedOver ? 'Item tidak dapat dipilih' : 'Pilih item ini'}">
-          <input type="checkbox" class="chkDetailItem chk-item-detail" data-item-index="${idx}" data-idx="${idx}" ${isUnfulfilled || isHandedOver ? 'disabled' : ''} onchange="updateSelectAllDetailState()" style="cursor: ${isUnfulfilled || isHandedOver ? 'not-allowed' : 'pointer'} !important; width: 16px !important; height: 16px !important; accent-color: #0284c7 !important; margin: 0 !important; padding: 0 !important; vertical-align: middle !important;">
+          <input type="checkbox" class="chkDetailItem chk-item-detail" data-item-index="${itemIdx}" data-idx="${itemIdx}" ${isUnfulfilled || isHandedOver ? 'disabled' : ''} onchange="updateSelectAllDetailState()" style="cursor: ${isUnfulfilled || isHandedOver ? 'not-allowed' : 'pointer'} !important; width: 16px !important; height: 16px !important; accent-color: #0284c7 !important; margin: 0 !important; padding: 0 !important; vertical-align: middle !important;">
         </label>
       `;
 
@@ -12103,7 +12367,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
         if (isAdmUserRole) {
           // Khusus Admin: Tombol X untuk membuka kunci status serah
           unlockBtnAdmin = `
-            <button type="button" class="btnIcon btnUnlockHandedOver" onclick="bukaKunciSerahPartAdmin('${req.noSurat}', ${idx})" title="BUKA KUNCI STATUS SERAH (KHUSUS ADMIN)" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; padding: 0 !important; border-radius: 6px !important; line-height: 1 !important; background: #dc2626 !important; color: #ffffff !important; border: none !important; cursor: pointer !important; box-sizing: border-box !important; margin: 0 !important; vertical-align: middle !important;">
+            <button type="button" class="btnIcon btnUnlockHandedOver" onclick="bukaKunciSerahPartAdmin('${req.noSurat}', ${itemIdx})" title="BUKA KUNCI STATUS SERAH (KHUSUS ADMIN)" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; padding: 0 !important; border-radius: 6px !important; line-height: 1 !important; background: #dc2626 !important; color: #ffffff !important; border: none !important; cursor: pointer !important; box-sizing: border-box !important; margin: 0 !important; vertical-align: middle !important;">
               <span class="material-symbols-rounded" style="font-size: 16px !important;">close</span>
             </button>
           `;
@@ -12129,20 +12393,20 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
       } else {
         if (isUnfulfilled) {
           unfulfilledBtn = `
-            <button type="button" class="btnIcon btnUndo" onclick="undoBarisItemDetailAdmin('${req.noSurat}', ${idx})" title="BATALKAN (UNDO)" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; padding: 0 !important; border-radius: 6px !important; line-height: 1 !important; background: #f59e0b !important; color: #ffffff !important; border: none !important; cursor: pointer !important; box-sizing: border-box !important; margin: 0 !important; vertical-align: middle !important;">
+            <button type="button" class="btnIcon btnUndo" onclick="undoBarisItemDetailAdmin('${req.noSurat}', ${itemIdx})" title="BATALKAN (UNDO)" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; padding: 0 !important; border-radius: 6px !important; line-height: 1 !important; background: #f59e0b !important; color: #ffffff !important; border: none !important; cursor: pointer !important; box-sizing: border-box !important; margin: 0 !important; vertical-align: middle !important;">
               <span class="material-symbols-rounded" style="font-size: 16px !important;">undo</span>
             </button>
           `;
         } else {
           unfulfilledBtn = `
-            <button type="button" class="btnIcon btnDelete" onclick="hapusBarisItemDetailAdmin('${req.noSurat}', ${idx})" title="TANDAI TIDAK DIPENUHI" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; padding: 0 !important; border-radius: 6px !important; line-height: 1 !important; background: #ef4444 !important; color: #ffffff !important; border: none !important; cursor: pointer !important; box-sizing: border-box !important; margin: 0 !important; vertical-align: middle !important;">
+            <button type="button" class="btnIcon btnDelete" onclick="hapusBarisItemDetailAdmin('${req.noSurat}', ${itemIdx})" title="TANDAI TIDAK DIPENUHI" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; padding: 0 !important; border-radius: 6px !important; line-height: 1 !important; background: #ef4444 !important; color: #ffffff !important; border: none !important; cursor: pointer !important; box-sizing: border-box !important; margin: 0 !important; vertical-align: middle !important;">
               <span class="material-symbols-rounded" style="font-size: 16px !important;">cancel</span>
             </button>
           `;
         }
 
         editPartBtn = `
-          <button type="button" class="btnIcon btnEditPartRow" onclick="bukaModalEditKetPartSingle('${req.noSurat}', ${idx})" title="EDIT KETERANGAN / NO PART (FREE TEXT)" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; padding: 0 !important; border-radius: 6px !important; line-height: 1 !important; background: ${isUnfulfilled ? '#9ca3af' : '#0284c7'} !important; color: #ffffff !important; border: none !important; cursor: ${isUnfulfilled ? 'not-allowed' : 'pointer'} !important; ${isUnfulfilled ? 'opacity: 0.6;' : ''} box-sizing: border-box !important; margin: 0 !important; vertical-align: middle !important;">
+          <button type="button" class="btnIcon btnEditPartRow" onclick="bukaModalEditKetPartSingle('${req.noSurat}', ${itemIdx})" title="EDIT KETERANGAN / NO PART (FREE TEXT)" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; padding: 0 !important; border-radius: 6px !important; line-height: 1 !important; background: ${isUnfulfilled ? '#9ca3af' : '#0284c7'} !important; color: #ffffff !important; border: none !important; cursor: ${isUnfulfilled ? 'not-allowed' : 'pointer'} !important; ${isUnfulfilled ? 'opacity: 0.6;' : ''} box-sizing: border-box !important; margin: 0 !important; vertical-align: middle !important;">
             <span class="material-symbols-rounded" style="font-size: 16px !important;">edit_note</span>
           </button>
         `;
@@ -12162,7 +12426,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
     const rowBgColor = isUnfulfilled ? 'rgba(239, 68, 68, 0.08)' : (idx % 2 === 1 ? '#f0f6fa' : '#ffffff');
     if (isDus) {
       return `
-        <tr style="background-color: ${rowBgColor} !important; background: ${rowBgColor} !important;">
+        <tr style="background-color: ${rowBgColor}; background: ${rowBgColor};">
           <td class="col-no" style="${tdStyleAutofit} text-align: center !important; ${strikeStyle}">${idx + 1}</td>
           <td class="col-type-seri ${getTdCellClassByLength(typeVal)}" style="${tdStyleLeft} ${getTdTypeSeriStyle(typeVal)} ${strikeStyle}">${typeVal}</td>
           <td class="col-type-seri ${getTdCellClassByLength(seriVal)}" style="${tdStyleLeft} ${getTdTypeSeriStyle(seriVal)} ${strikeStyle}">${seriVal}</td>
@@ -12176,7 +12440,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
       `;
     } else {
       return `
-        <tr style="background-color: ${rowBgColor} !important; background: ${rowBgColor} !important;">
+        <tr style="background-color: ${rowBgColor}; background: ${rowBgColor};">
           <td class="col-no" style="${tdStyleAutofit} text-align: center !important; ${strikeStyle}">${idx + 1}</td>
           <td class="col-type-seri ${getTdCellClassByLength(typeVal)}" style="${tdStyleLeft} ${getTdTypeSeriStyle(typeVal)} ${strikeStyle}">${typeVal}</td>
           <td class="col-type-seri ${getTdCellClassByLength(seriVal)}" style="${tdStyleLeft} ${getTdTypeSeriStyle(seriVal)} ${strikeStyle}">${seriVal}</td>
@@ -12406,12 +12670,24 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
     <thead>
       <tr style="background: #e2e8f0 !important; color: #0f172a !important;">
         <th class="col-no" style="${thStyleAutofit}">NO</th>
-        <th class="col-type-seri" style="${thStyleAutofitLeft}">TYPE</th>
-        <th class="col-type-seri" style="${thStyleAutofitLeft}">SERI BARANG</th>
-        <th class="col-permintaan-alasan" style="${thStyleFlex50}">PERMINTAAN</th>
-        <th class="col-type-seri" style="${thStyleAutofitLeft}">SERI DUS</th>
-        <th class="col-permintaan-alasan" style="${thStyleFlex50}">ALASAN</th>
-        <th class="col-qty" style="${(showKetPartCol || canServiceRowActions) ? thStyleAutofit : thStyleAutofitLast}">QTY</th>
+        <th id="thDetail_type" class="col-type-seri sortable-th" onclick="sortTableDetailPermintaan('type')" style="${thStyleAutofitLeft}">
+          <div class="th-sort-wrapper"><span>TYPE</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_type">unfold_more</span></div>
+        </th>
+        <th id="thDetail_seri" class="col-type-seri sortable-th" onclick="sortTableDetailPermintaan('seri')" style="${thStyleAutofitLeft}">
+          <div class="th-sort-wrapper"><span>SERI BARANG</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_seri">unfold_more</span></div>
+        </th>
+        <th id="thDetail_barang" class="col-permintaan-alasan sortable-th" onclick="sortTableDetailPermintaan('barang')" style="${thStyleFlex50}">
+          <div class="th-sort-wrapper"><span>PERMINTAAN</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_barang">unfold_more</span></div>
+        </th>
+        <th id="thDetail_dus" class="col-type-seri sortable-th" onclick="sortTableDetailPermintaan('dus')" style="${thStyleAutofitLeft}">
+          <div class="th-sort-wrapper"><span>SERI DUS</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_dus">unfold_more</span></div>
+        </th>
+        <th id="thDetail_alasan" class="col-permintaan-alasan sortable-th" onclick="sortTableDetailPermintaan('alasan')" style="${thStyleFlex50}">
+          <div class="th-sort-wrapper"><span>ALASAN</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_alasan">unfold_more</span></div>
+        </th>
+        <th id="thDetail_qty" class="col-qty sortable-th" onclick="sortTableDetailPermintaan('qty')" style="${(showKetPartCol || canServiceRowActions) ? thStyleAutofit : thStyleAutofitLast}">
+          <div class="th-sort-wrapper"><span>QTY</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_qty">unfold_more</span></div>
+        </th>
         ${thKetPartHtml}
         ${thActionHtml}
       </tr>
@@ -12420,11 +12696,21 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
     <thead>
       <tr style="background: #e2e8f0 !important; color: #0f172a !important;">
         <th class="col-no" style="${thStyleAutofit}">NO</th>
-        <th class="col-type-seri" style="${thStyleAutofitLeft}">TYPE</th>
-        <th class="col-type-seri" style="${thStyleAutofitLeft}">SERI BARANG</th>
-        <th class="col-permintaan-alasan" style="${thStyleFlex50}">PERMINTAAN</th>
-        <th class="col-permintaan-alasan" style="${thStyleFlex50}">ALASAN</th>
-        <th class="col-qty" style="${(showKetPartCol || canServiceRowActions) ? thStyleAutofit : thStyleAutofitLast}">QTY</th>
+        <th id="thDetail_type" class="col-type-seri sortable-th" onclick="sortTableDetailPermintaan('type')" style="${thStyleAutofitLeft}">
+          <div class="th-sort-wrapper"><span>TYPE</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_type">unfold_more</span></div>
+        </th>
+        <th id="thDetail_seri" class="col-type-seri sortable-th" onclick="sortTableDetailPermintaan('seri')" style="${thStyleAutofitLeft}">
+          <div class="th-sort-wrapper"><span>SERI BARANG</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_seri">unfold_more</span></div>
+        </th>
+        <th id="thDetail_barang" class="col-permintaan-alasan sortable-th" onclick="sortTableDetailPermintaan('barang')" style="${thStyleFlex50}">
+          <div class="th-sort-wrapper"><span>PERMINTAAN</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_barang">unfold_more</span></div>
+        </th>
+        <th id="thDetail_alasan" class="col-permintaan-alasan sortable-th" onclick="sortTableDetailPermintaan('alasan')" style="${thStyleFlex50}">
+          <div class="th-sort-wrapper"><span>ALASAN</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_alasan">unfold_more</span></div>
+        </th>
+        <th id="thDetail_qty" class="col-qty sortable-th" onclick="sortTableDetailPermintaan('qty')" style="${(showKetPartCol || canServiceRowActions) ? thStyleAutofit : thStyleAutofitLast}">
+          <div class="th-sort-wrapper"><span>QTY</span><span class="material-symbols-rounded sort-icon" id="sortIconDetail_qty">unfold_more</span></div>
+        </th>
         ${thKetPartHtml}
         ${thActionHtml}
       </tr>
@@ -12503,6 +12789,8 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
       ${bottomActionsHtml}
     </div>
   `;
+
+  if (typeof updateDetailSortIcons === 'function') updateDetailSortIcons();
 
   const popupDetailV2 = document.getElementById('popupDetailBarangV2');
   const isAlreadyOpen = popupDetailV2 && (
@@ -13735,27 +14023,38 @@ function getUserRealSignature(targetRole, targetArea = '', targetUsername = '', 
   const uname = String(targetUsername || '').toUpperCase();
   const fname = String(targetFullName || '').toUpperCase();
 
+  const sanitizeSigUrl = (url) => {
+    if (!url || typeof url !== 'string') return url;
+    if (url.includes('TTD_SKB_1787287871359.png')) {
+      return url.replace('TTD_SKB_1787287871359.png', 'TTD_SKB_1787708703707.png');
+    }
+    return url;
+  };
+
   const isValid = (s) => (typeof isValidSig === 'function' ? isValidSig(s) : (s && typeof s === 'string' && (s.startsWith('data:image/') || s.startsWith('http://') || s.startsWith('https://'))));
 
   // 1. CEK DARI STORE CENTRAL TTD MAP (ttdMap / TTD_DB_KEY)
-  let ttdMap = {};
+  let ttdMap = { ...SYSTEM_DEFAULT_TTD_MAP };
   try {
     const dbKey = typeof TTD_DB_KEY !== 'undefined' ? TTD_DB_KEY : 'STORE_TTD_DB_V7_CLEAN';
     const rawMap = (typeof appStorage !== 'undefined' ? appStorage.getItem(dbKey) : null) || 
                    (typeof localStorage !== 'undefined' ? localStorage.getItem(dbKey) : null) || 
                    (typeof localStorage !== 'undefined' ? localStorage.getItem('APP_USER_TTD_MAP') : null);
-    if (rawMap) ttdMap = JSON.parse(rawMap);
+    if (rawMap) {
+      const parsed = JSON.parse(rawMap);
+      ttdMap = { ...SYSTEM_DEFAULT_TTD_MAP, ...parsed };
+    }
   } catch (e) {}
 
   // A. Match Username / ID di ttdMap
   if (uname) {
-    if (isValid(ttdMap[uname])) return ttdMap[uname];
-    if (isValid(ttdMap[targetUsername])) return ttdMap[targetUsername];
+    if (isValid(ttdMap[uname])) return sanitizeSigUrl(ttdMap[uname]);
+    if (isValid(ttdMap[targetUsername])) return sanitizeSigUrl(ttdMap[targetUsername]);
   }
   // B. Match FullName di ttdMap
   if (fname) {
-    if (isValid(ttdMap[fname])) return ttdMap[fname];
-    if (isValid(ttdMap[targetFullName])) return ttdMap[targetFullName];
+    if (isValid(ttdMap[fname])) return sanitizeSigUrl(ttdMap[fname]);
+    if (isValid(ttdMap[targetFullName])) return sanitizeSigUrl(ttdMap[targetFullName]);
   }
 
   // 2. CEK LANGSUNG DI AKUN USER DATABASE (getUsersFromDB)
@@ -13765,7 +14064,7 @@ function getUserRealSignature(targetRole, targetArea = '', targetUsername = '', 
       String(x.username || '').toUpperCase() === uname ||
       String(x.id || '').toUpperCase() === uname
     ));
-    if (u && isValid(u.ttd)) return u.ttd;
+    if (u && isValid(u.ttd)) return sanitizeSigUrl(u.ttd);
   }
 
   if (fname) {
@@ -13773,7 +14072,7 @@ function getUserRealSignature(targetRole, targetArea = '', targetUsername = '', 
       String(x.fullName || '').toUpperCase() === fname ||
       String(x.full_name || '').toUpperCase() === fname
     ));
-    if (u && isValid(u.ttd)) return u.ttd;
+    if (u && isValid(u.ttd)) return sanitizeSigUrl(u.ttd);
   }
 
   // 3. CEK DARIPADA USER SAAAT INI (currentUser) JIKA MATCH ROLE / AREA
@@ -14386,14 +14685,14 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
           <div style="font-size: 11px; font-weight: bold; margin-bottom: 6px; color: #0f172a;">DETAIL PERMINTAAN:</div>
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11.5px; border: 1px solid #cbd5e1;">
             <thead>
-              <tr style="background: ${tableHeaderBg} !important; color: #ffffff !important;">
-                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">NO</th>
-                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">TIPE BARANG</th>
-                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI</th>
-                ${req.jenis === 'DUS' ? `<th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI DUS</th>` : ''}
-                <th style="padding:7px 8px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">PERMINTAAN BARANG</th>
-                <th style="padding:7px 8px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">ALASAN PERMINTAAN</th>
-                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; background: ${tableHeaderBg} !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">QTY</th>
+              <tr style="background: #0284c7 !important; color: #ffffff !important;">
+                <th style="width: 1%; text-align:center; padding:9px 8px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">NO</th>
+                <th style="width: 1%; padding:9px 10px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">TIPE BARANG</th>
+                <th style="width: 1%; padding:9px 10px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI</th>
+                ${req.jenis === 'DUS' ? `<th style="width: 1%; padding:9px 10px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI DUS</th>` : ''}
+                <th style="padding:9px 10px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">PERMINTAAN BARANG</th>
+                <th style="padding:9px 10px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">ALASAN PERMINTAAN</th>
+                <th style="width: 1%; text-align:center; padding:9px 8px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">QTY</th>
               </tr>
             </thead>
             <tbody>${itemRowsHtml}</tbody>
@@ -15611,15 +15910,6 @@ async function bukaBantuan() {
   // SERVICE TSM or ADMIN acts as Customer Service Support Receiver
   isAdminChat = isServiceTSMUser();
 
-  const isSysAdmin = currentUser && (
-    String(currentUser.category || currentUser.kategori || '').toUpperCase() === 'ADMIN' ||
-    String(currentUser.username || '').toUpperCase() === 'ADMIN'
-  );
-  const btnHapusChatHeader = document.getElementById('btnHapusSemuaChatHeader');
-  if (btnHapusChatHeader) {
-    btnHapusChatHeader.style.display = isSysAdmin ? 'inline-flex' : 'none';
-  }
-
   const popup = document.getElementById('popupBantuan');
   if (popup) {
     popup.style.setProperty('display', 'flex', 'important');
@@ -15634,7 +15924,7 @@ async function bukaBantuan() {
 
   if (isAdminChat) {
     // ADMIN / SERVICE SUPPORT VIEW: Hanya tampilkan chatList
-    document.getElementById('chatHeaderTitle').textContent = 'PUSAT SUPPORT ADMIN / SERVICE';
+    document.getElementById('chatHeaderTitle').textContent = 'PUSAT BANTUAN';
     if (chatList) chatList.style.setProperty('display', 'block', 'important');
     if (chatUserPicker) chatUserPicker.style.setProperty('display', 'none', 'important');
     if (chatBody) chatBody.style.setProperty('display', 'none', 'important');
@@ -15643,7 +15933,7 @@ async function bukaBantuan() {
     loadDaftarChatAdmin();
   } else {
     // USER / TOKO VIEW: Hanya tampilkan chatBody & chatFooter
-    document.getElementById('chatHeaderTitle').textContent = 'ADMIN SUPPORT';
+    document.getElementById('chatHeaderTitle').textContent = 'PUSAT BANTUAN';
     if (chatList) chatList.style.setProperty('display', 'none', 'important');
     if (chatUserPicker) chatUserPicker.style.setProperty('display', 'none', 'important');
     if (chatBody) chatBody.style.setProperty('display', 'flex', 'important');
@@ -15709,11 +15999,11 @@ function loadDaftarChatAdmin() {
   const actionToolbar = document.createElement('div');
   actionToolbar.style.cssText = 'display:flex; flex-direction:column; gap:2mm; margin-bottom:2mm; padding-bottom:2mm; border-bottom:1px solid var(--border-color); width:100%; box-sizing:border-box;';
   actionToolbar.innerHTML = `
-    <button type="button" onclick="bukaModalPilihUserChat()" style="width:100%; padding:9px 12px; background:linear-gradient(135deg, #0284c7, #0369a1); color:#ffffff; border:none; border-radius:4px; font-weight:700; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 5px rgba(2,132,199,0.25); box-sizing:border-box;">
-      <span class="material-symbols-rounded" style="font-size:17px;">add_comment</span> + MULAI CHAT KE TOKO / USER
+    <button type="button" onclick="bukaModalPilihUserChat()" style="width:100%; padding:9px 12px; background:linear-gradient(135deg, #10b981, #059669) !important; color:#ffffff !important; border:none; border-radius:4px; font-weight:800; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 6px rgba(16,185,129,0.35); box-sizing:border-box;">
+      <span class="material-symbols-rounded" style="font-size:17px; color:#ffffff !important;">add_comment</span> + MULAI CHAT KE TOKO / USER
     </button>
-    <button type="button" onclick="bukaModalBroadcastChat()" style="width:100%; padding:7px 12px; background:rgba(245,158,11,0.12); color:#d97706; border:1px dashed #d97706; border-radius:4px; font-weight:700; font-size:11.5px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-sizing:border-box;">
-      <span class="material-symbols-rounded" style="font-size:17px;">campaign</span> SIARKAN KE SEMUA TOKO
+    <button type="button" onclick="bukaModalBroadcastChat()" style="width:100%; padding:8px 12px; background:linear-gradient(135deg, #f97316, #ea580c) !important; color:#ffffff !important; border:none; border-radius:4px; font-weight:800; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 6px rgba(249,115,22,0.35); box-sizing:border-box;">
+      <span class="material-symbols-rounded" style="font-size:17px; color:#ffffff !important;">campaign</span> SIARKAN KE SEMUA TOKO
     </button>
   `;
   chatList.appendChild(actionToolbar);
@@ -16284,7 +16574,7 @@ function kembaliKeDaftarAdmin() {
   if (chatFooter) chatFooter.style.setProperty('display', 'none', 'important');
   if (btnBack) btnBack.style.setProperty('display', 'none', 'important');
   if (chatList) chatList.style.setProperty('display', 'block', 'important');
-  if (headerTitle) headerTitle.innerText = 'PUSAT SUPPORT ADMIN / SERVICE';
+  if (headerTitle) headerTitle.innerText = 'PUSAT BANTUAN';
   loadDaftarChatAdmin();
 }
 window.kembaliKeDaftarAdmin = kembaliKeDaftarAdmin;
@@ -16533,7 +16823,6 @@ if (roomTarget) await dbRealtime.ref(`chats/${roomTarget}`).remove().catch(() =>
     if (typeof updateGlobalDeviceAppBadge === 'function') updateGlobalDeviceAppBadge();
 
       hideLoading();
-      showNotif(`CHAT ROOM '${userTarget || roomTarget}' BERHASIL DIHAPUS DARI DATABASE & SEMUA PERANGKAT!`, 'success');
     } catch(err) {
       hideLoading();
       console.error('[HAPUS CHAT ROOM ERROR]:', err);
@@ -16792,6 +17081,38 @@ function filterTabelUserModal(query = '') {
 }
 window.filterTabelUserModal = filterTabelUserModal;
 
+window._userSortCol = null;
+window._userSortDir = 'asc';
+
+function sortTableUserManagement(colKey) {
+  if (window._userSortCol === colKey) {
+    window._userSortDir = window._userSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    window._userSortCol = colKey;
+    window._userSortDir = 'asc';
+  }
+  loadUsersManagement();
+}
+window.sortTableUserManagement = sortTableUserManagement;
+
+function updateUserSortIcons() {
+  const cols = ['username', 'fullName', 'storeCode', 'phone', 'category', 'area'];
+  cols.forEach(c => {
+    const iconEl = document.getElementById('sortIconUser_' + c);
+    const thEl = document.getElementById('thUser_' + c);
+    if (iconEl) {
+      if (window._userSortCol === c) {
+        iconEl.textContent = window._userSortDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+        if (thEl) thEl.classList.add('active-sort');
+      } else {
+        iconEl.textContent = 'unfold_more';
+        if (thEl) thEl.classList.remove('active-sort');
+      }
+    }
+  });
+}
+window.updateUserSortIcons = updateUserSortIcons;
+
 function loadUsersManagement() {
   loadAdminScriptUrlInput();
   const tbodyElements = document.querySelectorAll('#userTableBodyModal, #userTableBody');
@@ -16802,6 +17123,21 @@ function loadUsersManagement() {
     users = normalizeUserList([...SEED_USERS]);
     saveUsersToDB(users);
   }
+
+  if (window._userSortCol) {
+    const col = window._userSortCol;
+    const dir = window._userSortDir === 'desc' ? -1 : 1;
+    users.sort((a, b) => {
+      let valA = a[col] || '';
+      let valB = b[col] || '';
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA < valB) return -1 * dir;
+      if (valA > valB) return 1 * dir;
+      return 0;
+    });
+  }
+  updateUserSortIcons();
 
   tbodyElements.forEach(tbody => {
     if (!tbody) return;
@@ -16833,15 +17169,15 @@ function loadUsersManagement() {
       tr.style.backgroundColor = rowBg;
       tr.style.color = '#0f172a';
       tr.innerHTML = `
-        <td style="text-align:center; padding:10px 8px; background:${rowBg};">${chkHtml}</td>
-        <td style="font-weight: 400 ; color:#0f172a !important; padding:10px 12px; background:${rowBg};">${escapeHTML(uname)}</td>
-        <td style="font-family:monospace; color:#475569 !important; padding:10px 12px; background:${rowBg};">${escapeHTML(pwd)}</td>
-        <td style="color:#0f172a !important; font-weight: 400 ; padding:10px 12px; background:${rowBg};">${escapeHTML(fName)}</td>
-        <td style="padding:10px 12px; background:${rowBg};"><strong style="color:#0284c7 !important; font-weight:800;">${escapeHTML(sCode)}</strong></td>
-        <td style="color:#0f172a !important; padding:10px 12px; background:${rowBg};">${escapeHTML(phone)}</td>
-        <td style="padding:10px 12px; background:${rowBg};"><span class="badgeStatus badge-pending" style="font-weight:700; background:#e0f2fe !important; color:#0369a1 !important; border:1px solid #bae6fd !important; padding:3px 8px; border-radius:4px; font-size:11px;">${escapeHTML(cat)}</span></td>
-        <td style="padding:10px 12px; background:${rowBg};"><span style="color:#0284c7 !important; font-weight:700;">${escapeHTML(area)}</span></td>
-        <td style="text-align: center; white-space: nowrap !important; padding:10px 8px; background:${rowBg};">
+        <td style="text-align:center !important; padding:10px 8px; background:${rowBg};">${chkHtml}</td>
+        <td style="text-align:left !important; font-weight: 400 ; color:#0f172a !important; padding:10px 12px; background:${rowBg};">${escapeHTML(uname)}</td>
+        <td style="text-align:left !important; font-family:monospace; color:#475569 !important; padding:10px 12px; background:${rowBg};">${escapeHTML(pwd)}</td>
+        <td style="text-align:left !important; color:#0f172a !important; font-weight: 400 ; padding:10px 12px; background:${rowBg};">${escapeHTML(fName)}</td>
+        <td style="text-align:left !important; padding:10px 12px; background:${rowBg};"><strong style="color:#0284c7 !important; font-weight:800;">${escapeHTML(sCode)}</strong></td>
+        <td style="text-align:left !important; color:#0f172a !important; padding:10px 12px; background:${rowBg};">${escapeHTML(phone)}</td>
+        <td style="text-align:left !important; padding:10px 12px; background:${rowBg};"><span class="badgeStatus badge-pending" style="font-weight:700; background:#e0f2fe !important; color:#0369a1 !important; border:1px solid #bae6fd !important; padding:3px 8px; border-radius:4px; font-size:11px;">${escapeHTML(cat)}</span></td>
+        <td style="text-align:left !important; padding:10px 12px; background:${rowBg};"><span style="color:#0284c7 !important; font-weight:700;">${escapeHTML(area)}</span></td>
+        <td style="text-align: center !important; white-space: nowrap !important; padding:10px 8px; background:${rowBg};">
           <div style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; flex-wrap: nowrap !important; white-space: nowrap !important;">
             <button type="button" class="btnIcon btnForceLogout" onclick="paksaLogoutUserByAdmin('${uname}')" title="PAKSA LOGOUT / RESET SESI AKUN DEVISI" style="background:#ea580c !important; color:#ffffff !important; border:none !important; border-radius:4px !important; width:28px !important; height:28px !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; cursor:pointer !important; flex-shrink:0 !important;"><span class="material-symbols-rounded" style="font-size:15px !important;">logout</span></button>
             <button type="button" class="btnIcon btnEdit" onclick="bukaUserModal('${uKey}', this)" title="EDIT USER" style="background:#0284c7 !important; color:#ffffff !important; border:none !important; border-radius:4px !important; width:28px !important; height:28px !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; cursor:pointer !important; flex-shrink:0 !important;"><span class="material-symbols-rounded" style="font-size:15px !important;">edit</span></button>
@@ -17382,6 +17718,7 @@ async function simpanUserData(btnElement = null) {
     return;
   }
 
+  showLoading('LOADING...');
   try {
     const users = (typeof getUsersFromDB === 'function') ? getUsersFromDB() : [];
 
@@ -17548,7 +17885,7 @@ async function simpanUserData(btnElement = null) {
           }
         }
 
-        // 3. BACKGROUND SYNC KE TABEL toko_list SUPABASE
+        // 3. BACKGROUND CLOUD SYNC KE TABEL toko_list SUPABASE
         (async () => {
           if (typeof supabase !== 'undefined' && supabase) {
             try {
@@ -17579,6 +17916,8 @@ async function simpanUserData(btnElement = null) {
   } catch (err) {
     console.error('Error saving user data:', err);
     showNotif('TERJADI KESALAHAN SAAT MENYIMPAN DATA USER!', 'error');
+  } finally {
+    hideLoading();
   }
 }
 window.simpanUserData = simpanUserData;
@@ -18063,7 +18402,7 @@ async function prosesUploadExcelLookup(event) {
     return;
   }
 
-  showLoading('MEMBACA FILE EXCEL MASTER TYPE & KODE UNIT...');
+  showLoading('(LOADING)...');
   const reader = new FileReader();
   reader.onload = async function(e) {
     try {
@@ -18611,6 +18950,40 @@ function tutupModalTambahToko() {
 window.bukaModalTambahToko = bukaModalTambahToko;
 window.tutupModalTambahToko = tutupModalTambahToko;
 
+window._tokoSortCol = null;
+window._tokoSortDir = 'asc';
+
+function sortTableDaftarTokoModal(colKey) {
+  if (window._tokoSortCol === colKey) {
+    window._tokoSortDir = window._tokoSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    window._tokoSortCol = colKey;
+    window._tokoSortDir = 'asc';
+  }
+  const input = document.getElementById('cariTokoModalInput');
+  const kw = input ? input.value : '';
+  loadDaftarTokoModal(kw);
+}
+window.sortTableDaftarTokoModal = sortTableDaftarTokoModal;
+
+function updateTokoSortIcons() {
+  const cols = ['fullName', 'area', 'storeCode'];
+  cols.forEach(c => {
+    const iconEl = document.getElementById('sortIconToko_' + c);
+    const thEl = document.getElementById('thToko_' + c);
+    if (iconEl) {
+      if (window._tokoSortCol === c) {
+        iconEl.textContent = window._tokoSortDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+        if (thEl) thEl.classList.add('active-sort');
+      } else {
+        iconEl.textContent = 'unfold_more';
+        if (thEl) thEl.classList.remove('active-sort');
+      }
+    }
+  });
+}
+window.updateTokoSortIcons = updateTokoSortIcons;
+
 function loadDaftarTokoModal(filterKeyword = '') {
   const tbody = document.getElementById('daftarTokoTableBody');
   const btnHapus = document.getElementById('btnHapusCariTokoModal');
@@ -18638,6 +19011,21 @@ function loadDaftarTokoModal(filterKeyword = '') {
     });
   }
   if (infoHasil) infoHasil.style.display = 'none';
+
+  if (window._tokoSortCol) {
+    const col = window._tokoSortCol;
+    const dir = window._tokoSortDir === 'desc' ? -1 : 1;
+    areaStores.sort((a, b) => {
+      let valA = a[col] || '';
+      let valB = b[col] || '';
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA < valB) return -1 * dir;
+      if (valA > valB) return 1 * dir;
+      return 0;
+    });
+  }
+  updateTokoSortIcons();
 
   if (areaStores.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:15px; color:var(--text-muted);">${kw ? 'TIDAK ADA TOKO YANG COCOK DENGAN PENCARIAN.' : 'BELUM ADA TOKO TERDAFTAR DI AREA ANDA.'}</td></tr>`;
@@ -18700,6 +19088,7 @@ async function simpanTokoBaru(btnElement = null) {
   }
 
   setBtnLoading(btnSimpan, true, editStoreId ? 'MEMPERBARUI...' : 'MENYIMPAN...');
+  showLoading('LOADING...');
 
   try {
     if (editStoreId) {
@@ -18857,6 +19246,7 @@ async function simpanTokoBaru(btnElement = null) {
     showNotif('GAGAL MENYIMPAN TOKO: ' + (err.message || err), 'error');
   } finally {
     setBtnLoading(btnSimpan, false);
+    hideLoading();
   }
 }
 window.simpanTokoBaru = simpanTokoBaru;
@@ -18994,7 +19384,7 @@ async function prosesUploadExcelToko(event) {
     return;
   }
 
-  showLoading('MEMBACA FILE EXCEL DAFTAR TOKO (KOLOM A = NAMA, KOLOM B = AREA)...');
+  showLoading('(LOADING)...');
 
   const reader = new FileReader();
   reader.onload = async function(e) {
@@ -19499,10 +19889,30 @@ function closePopup() {
   }
 }
 
-function showLoading(msg = '', allowCancel = false, onCancelCallback = null) {
-  // Completely disabled loading overlay per user request ("loading mohon tunggu nya hilangkan saja")
-  hideLoading();
-  return;
+function showLoading(msg = 'LOADING...', allowCancel = false, onCancelCallback = null) {
+  const miniModal = document.getElementById('miniCenterLoading');
+  const txt = document.getElementById('miniCenterLoadingText');
+
+  if (txt) {
+    let cleanText = String(msg || 'LOADING...').replace(/\.+$|\(\.\.\.\)/g, '').trim().toUpperCase();
+    if (!cleanText || cleanText === 'LOADING' || cleanText === '(LOADING)') {
+      cleanText = 'LOADING';
+    }
+    txt.innerHTML = `${cleanText}<span class="animatedDots" style="display: inline-flex !important; margin-left: 2px !important;"><span class="dot1">.</span><span class="dot2">.</span><span class="dot3">.</span></span>`;
+  }
+
+  if (miniModal) {
+    miniModal.style.setProperty('display', 'flex', 'important');
+    miniModal.style.setProperty('visibility', 'visible', 'important');
+    miniModal.style.setProperty('opacity', '1', 'important');
+    miniModal.style.setProperty('pointer-events', 'auto', 'important');
+    miniModal.style.setProperty('z-index', '2147483600', 'important');
+    miniModal.classList.add('show');
+  }
+
+  if (allowCancel && typeof onCancelCallback === 'function') {
+    window._onCancelLoadingCallback = onCancelCallback;
+  }
 }
 window.showLoading = showLoading;
 
@@ -20376,7 +20786,7 @@ async function prosesExcelAutoFill(event) {
     return;
   }
 
-  if (typeof showLoading === 'function') showLoading('Membaca Dokumen...', true);
+  if (typeof showLoading === 'function') showLoading('(LOADING)...', true);
 
   try {
     const data = await file.arrayBuffer();
@@ -20848,7 +21258,37 @@ function updateAiKeyBadgeStatus() {
   }
 }
 
+function isGeminiKeyAdminAllowed() {
+  let u = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : null;
+  if (!u) {
+    try {
+      const s = appStorage.getItem(SESSION_KEY) || (typeof localStorage !== 'undefined' ? localStorage.getItem(SESSION_KEY) : null);
+      if (s) u = JSON.parse(s);
+    } catch(e) {}
+  }
+  if (!u) return false;
+
+  const role = String(u.role || '').toUpperCase();
+  const category = String(u.category || '').toUpperCase();
+  const username = String(u.username || '').toUpperCase();
+  const area = String(u.area || '').toUpperCase();
+
+  const isAdmin = (role === 'ADMIN' || category === 'ADMIN' || username.includes('ADMIN'));
+  const isServiceTSM = (category === 'SERVICE' || role === 'SERVICE') && (area === 'TSM' || username.includes('TSM'));
+
+  return isAdmin || isServiceTSM;
+}
+window.isGeminiKeyAdminAllowed = isGeminiKeyAdminAllowed;
+
 function aturGeminiApiKey() {
+  if (!isGeminiKeyAdminAllowed()) {
+    if (typeof showNotif === 'function') {
+      showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!', 'warning');
+    } else {
+      alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!');
+    }
+    return;
+  }
   if (typeof bukaAkun === 'function') bukaAkun();
   setTimeout(() => {
     const section = document.getElementById('sectionEmbeddedGemini');
@@ -20900,6 +21340,30 @@ function syncGeminiApiKeyToLocalCache(keyVal) {
 }
 window.syncGeminiApiKeyToLocalCache = syncGeminiApiKeyToLocalCache;
 
+async function fetchGlobalGeminiKeyFromSupabase() {
+  try {
+    const supa = (typeof window.supabaseClient !== 'undefined' && window.supabaseClient) ? window.supabaseClient : ((typeof supabase !== 'undefined' && supabase && typeof supabase.from === 'function') ? supabase : (window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null));
+    if (!supa) return;
+
+    const { data } = await supa.from('permintaan_toko').select('catatan').eq('no_surat', '__SYSTEM_GEMINI_KEY__').maybeSingle();
+    if (data && data.catatan) {
+      let keyVal = '';
+      try {
+        const parsed = JSON.parse(data.catatan);
+        if (parsed.geminiApiKey !== undefined) keyVal = String(parsed.geminiApiKey).trim();
+      } catch(e) {
+        keyVal = String(data.catatan).trim();
+      }
+      if (keyVal) {
+        syncGeminiApiKeyToLocalCache(keyVal);
+      }
+    }
+  } catch(e) {
+    console.warn('[FETCH GLOBAL GEMINI KEY ERROR]:', e);
+  }
+}
+window.fetchGlobalGeminiKeyFromSupabase = fetchGlobalGeminiKeyFromSupabase;
+
 let __lastSyncedGeminiKeyVal = null;
 let __isSyncingGeminiKeyNow = false;
 
@@ -20913,10 +21377,10 @@ async function autoSyncGeminiKeyToSupabase(force = false) {
     return true;
   }
 
-  // Hanya Admin / Pusat yang berhak memperbarui Kunci Utama Terpusat di Supabase
-  const isAdmin = !currentUser || currentUser.role === 'ADMIN' || currentUser.category === 'ADMIN' || (currentUser.username && String(currentUser.username).toLowerCase().includes('admin'));
-  if (!isAdmin) {
-    console.log('[GEMINI AI] Non-admin user key saved locally only (not overwriting Supabase global key).');
+  // HANYA ADMIN DAN SERVICE TSM YANG BERHAK MEMPERBARUI KUNCI GEMINI TERPUSAT DI SUPABASE
+  const isAllowed = isGeminiKeyAdminAllowed();
+  if (!isAllowed) {
+    console.log('[GEMINI AI] Non-admin / non-Service TSM user key saved locally only.');
     return false;
   }
 
@@ -20943,7 +21407,6 @@ async function autoSyncGeminiKeyToSupabase(force = false) {
     if (typeof safeSupabaseUpsertPermintaan === 'function') {
       const res = await safeSupabaseUpsertPermintaan(systemGeminiRow);
       if (res && !res.error) {
-        console.log('⚡ [SUPABASE SUCCESS]: __SYSTEM_GEMINI_KEY__ pushed to permintaan_toko!');
         success = true;
         __lastSyncedGeminiKeyVal = key;
       }
@@ -20951,7 +21414,6 @@ async function autoSyncGeminiKeyToSupabase(force = false) {
       const supa = (typeof window.supabaseClient !== 'undefined' && window.supabaseClient) ? window.supabaseClient : ((typeof supabase !== 'undefined' && supabase && typeof supabase.from === 'function') ? supabase : (window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null));
       if (supa) {
         await supa.from('permintaan_toko').upsert([systemGeminiRow], { onConflict: 'id' });
-        console.log('⚡ [SUPABASE SUCCESS]: __SYSTEM_GEMINI_KEY__ pushed to permintaan_toko!');
         success = true;
         __lastSyncedGeminiKeyVal = key;
       }
@@ -20966,15 +21428,27 @@ async function autoSyncGeminiKeyToSupabase(force = false) {
 }
 window.autoSyncGeminiKeyToSupabase = autoSyncGeminiKeyToSupabase;
 
-// JALANKAN 1X SAJA PADA STARTUP
+// JALANKAN SYNC GEMINI KEY DARIN SUPABASE PADA STARTUP UNTUK SEMUA USER
 setTimeout(() => {
+  if (typeof fetchGlobalGeminiKeyFromSupabase === 'function') {
+    fetchGlobalGeminiKeyFromSupabase().catch(() => {});
+  }
   if (typeof autoSyncGeminiKeyToSupabase === 'function') {
     autoSyncGeminiKeyToSupabase().catch(() => {});
   }
-}, 1000);
+}, 800);
 
 function simpanGeminiApiKeyDariModal() {
-  const input = document.getElementById('inputGeminiApiKeyVal');
+  if (!isGeminiKeyAdminAllowed()) {
+    if (typeof showNotif === 'function') {
+      showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!', 'warning');
+    } else {
+      alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!');
+    }
+    return;
+  }
+
+  const input = document.getElementById('inputGeminiApiKeyVal') || document.getElementById('inputGeminiApiKeyVal_inlineScript');
   const val = input ? input.value.trim() : '';
   if (!val) {
     if (typeof showNotif === 'function') showNotif('API KEY KOSONG. SILAHKAN TEMPEL API KEY ANDA!', 'warning');
@@ -20985,8 +21459,8 @@ function simpanGeminiApiKeyDariModal() {
   localStorage.setItem('GEMINI_API_KEY', val);
   appStorage.setItem('gemini_api_key', val);
   appStorage.setItem('GEMINI_API_KEY', val);
-  updateAiKeyBadgeStatus();
-  tutupModalGeminiApiKey();
+  if (typeof updateAiKeyBadgeStatus === 'function') updateAiKeyBadgeStatus();
+  if (typeof tutupModalGeminiApiKey === 'function') tutupModalGeminiApiKey();
 
   if (typeof autoSyncGeminiKeyToSupabase === 'function') {
     autoSyncGeminiKeyToSupabase(true).catch(() => {});
@@ -20995,20 +21469,29 @@ function simpanGeminiApiKeyDariModal() {
     pushCentralCloudDB().catch(() => {});
   }
 
-  if (typeof showNotif === 'function') showNotif('GEMINI API KEY BERHASIL DISIMPAN & DISINKRONKAN KE SUPABASE!', 'success');
+  if (typeof showNotif === 'function') showNotif('GEMINI API KEY BERHASIL DISIMPAN & DISINKRONKAN KE SELURUH AKUN!', 'success');
   else alert('GEMINI API KEY BERHASIL DISIMPAN & DISINKRONKAN KE SUPABASE!');
 }
 window.simpanGeminiApiKeyDariModal = simpanGeminiApiKeyDariModal;
 
 function hapusGeminiApiKeyPermanen() {
+  if (!isGeminiKeyAdminAllowed()) {
+    if (typeof showNotif === 'function') {
+      showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!', 'warning');
+    } else {
+      alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!');
+    }
+    return;
+  }
+
   localStorage.removeItem('gemini_api_key');
   localStorage.removeItem('GEMINI_API_KEY');
   appStorage.removeItem('gemini_api_key');
   appStorage.removeItem('GEMINI_API_KEY');
-  const input = document.getElementById('inputGeminiApiKeyVal');
+  const input = document.getElementById('inputGeminiApiKeyVal') || document.getElementById('inputGeminiApiKeyVal_inlineScript');
   if (input) input.value = '';
-  updateAiKeyBadgeStatus();
-  tutupModalGeminiApiKey();
+  if (typeof updateAiKeyBadgeStatus === 'function') updateAiKeyBadgeStatus();
+  if (typeof tutupModalGeminiApiKey === 'function') tutupModalGeminiApiKey();
 
   if (typeof safeSupabaseUpsertPermintaan === 'function') {
     safeSupabaseUpsertPermintaan({
@@ -21128,7 +21611,7 @@ async function prosesPdfAutoFillGemini(event) {
   if (!file) return;
 
   // LANGSUNG TAMPILKAN LOADING OVERLAY
-  if (typeof showLoading === 'function') showLoading('Membaca Dokumen...', true);
+  if (typeof showLoading === 'function') showLoading('(LOADING)...', true);
 
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
@@ -21372,7 +21855,7 @@ async function prosesGambarAutoFillGemini(event) {
   if (!file) return;
 
   // LANGSUNG TAMPILKAN LOADING OVERLAY
-  if (typeof showLoading === 'function') showLoading('Membaca Dokumen...', true);
+  if (typeof showLoading === 'function') showLoading('(LOADING)...', true);
 
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
@@ -22324,12 +22807,11 @@ function kirimNotifDanWaBreakdown(noSurat, partialId, statusType, extra = {}) {
 }
 window.kirimNotifDanWaBreakdown = kirimNotifDanWaBreakdown;
 
-function tampilkanLoadingProses(pesan = 'MOHON TUNGGU...') {
-  // Completely disabled loading overlay per user request
-  tutupLoadingProses();
-  return;
+function tampilkanLoadingProses(pesan = 'LOADING...') {
+  if (typeof showLoading === 'function') {
+    showLoading(pesan || 'LOADING...');
+  }
 }
-window.tampilkanLoadingProses = tampilkanLoadingProses;
 window.tampilkanLoadingProses = tampilkanLoadingProses;
 
 function tutupLoadingProses() {
@@ -22621,17 +23103,17 @@ function bukaModalBuatParsial(noSurat) {
           <div style="overflow-x: auto; width: 100%; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); border-left: none !important; border-right: none !important; margin: 0 !important; border-radius: 0px !important; flex: 1;">
             <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; border-radius: 0px !important;">
               <thead style="position: sticky; top: 0; z-index: 5; background: #e2e8f0 !important; border-radius: 0px !important;">
-                <tr style="background: #e2e8f0 !important; border-bottom: 2px solid #cbd5e1; color: #0f172a !important; white-space: nowrap !important; border-radius: 0px !important;">
-                  <th style="padding: 2mm !important; text-align: center !important; width: 35px; white-space: nowrap !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-radius: 0px !important; border-right: 1px solid #cbd5e1 !important;">
+                <tr style="background: #e2e8f0 !important; border-bottom: 2px solid #cbd5e1; color: #0f172a !important; white-space: nowrap !important; border-radius: 0px !important; font-weight: 700 !important;">
+                  <th style="padding: 2mm !important; text-align: center !important; width: 35px; white-space: nowrap !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; border-radius: 0px !important; border-right: 1px solid #cbd5e1 !important;">
           <input type="checkbox" id="chkParsialSelectAll" onchange="toggleSelectAllParsial(this)" title="Centang / Batal Centang Semua" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
         </th>
-                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">TYPE</th>
-                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">SERI BARANG</th>
-                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">PERMINTAAN</th>
-                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">MINTA</th>
-                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">TERKIRIM</th>
-                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; border-right: 1px solid #cbd5e1 !important;">SISA</th>
-                  <th style="padding: 2mm !important; text-align: center !important; width: 80px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important;">SERAHKAN</th>
+                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; border-right: 1px solid #cbd5e1 !important;">TYPE</th>
+                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; border-right: 1px solid #cbd5e1 !important;">SERI BARANG</th>
+                  <th style="padding: 2mm !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; border-right: 1px solid #cbd5e1 !important;">PERMINTAAN</th>
+                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; border-right: 1px solid #cbd5e1 !important;">MINTA</th>
+                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; border-right: 1px solid #cbd5e1 !important;">TERKIRIM</th>
+                  <th style="padding: 2mm !important; text-align: center !important; width: 65px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; border-right: 1px solid #cbd5e1 !important;">SISA</th>
+                  <th style="padding: 2mm !important; text-align: center !important; width: 80px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important;">SERAHKAN</th>
                 </tr>
               </thead>
               <tbody id="tableBodyBuatParsial" style="background: var(--bg-card) !important; color: var(--text-main) !important; border-radius: 0px !important;">
@@ -23613,14 +24095,14 @@ function bukaDetailSuratParsial(noSurat, partialId) {
           <div style="overflow-x: auto; width: 100%; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); border-left: none !important; border-right: none !important; margin: 0 !important; border-radius: 0px !important; flex: 1;">
             <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; border-radius: 0px !important;">
               <thead style="position: sticky; top: 0; z-index: 5; background: #e2e8f0 !important; border-radius: 0px !important;">
-                <tr style="background: #e2e8f0 !important; border-bottom: 2px solid #cbd5e1; color: #0f172a !important; white-space: nowrap !important; font-weight: 900 !important; border-radius: 0px !important;">
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">NO</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">TYPE</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">SERI BARANG</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">PERMINTAAN</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">ALASAN</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; width: 75px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">QTY</th>
-                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 900 !important; letter-spacing: 0.5px;">KETERANGAN PART</th>
+                <tr style="background: #e2e8f0 !important; border-bottom: 2px solid #cbd5e1; color: #0f172a !important; white-space: nowrap !important; font-weight: 700 !important; border-radius: 0px !important;">
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">NO</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">TYPE</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">SERI BARANG</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">PERMINTAAN</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">ALASAN</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; width: 75px; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; letter-spacing: 0.5px; border-right: 1px solid #cbd5e1 !important;">QTY</th>
+                  <th style="padding: 10px 8px !important; text-align: center !important; white-space: nowrap !important; border-radius: 0px !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 700 !important; letter-spacing: 0.5px;">KETERANGAN PART</th>
                 </tr>
               </thead>
               <tbody>
@@ -23677,6 +24159,8 @@ function applyDetailPopupModeUI(mode = getDetailPopupMode()) {
   const textEl = document.getElementById('textToggleDetailMode');
   const btnEl = document.getElementById('btnToggleDetailModeV2');
 
+  if (textEl) textEl.style.setProperty('display', 'none', 'important');
+
   if (mode === 'B') {
     targets.forEach(el => {
       el.classList.remove('mode-a');
@@ -23688,11 +24172,9 @@ function applyDetailPopupModeUI(mode = getDetailPopupMode()) {
     if (listParsialModal) listParsialModal.style.setProperty('z-index', '2100', 'important');
     if (parsialSubModal) parsialSubModal.style.setProperty('z-index', '2200', 'important');
 
-    if (iconEl) iconEl.textContent = 'width_normal';
-    if (textEl) textEl.textContent = 'MODE B';
+    if (iconEl) iconEl.textContent = 'fullscreen';
     if (btnEl) {
-      btnEl.title = 'Tukar Ke MODE A (Fullscreen Layar)';
-      btnEl.style.setProperty('background', 'rgba(255,255,255,0.35)', 'important');
+      btnEl.title = 'TAMPILAN LAYAR PENUH (FULLSCREEN)';
     }
   } else {
     targets.forEach(el => {
@@ -23705,11 +24187,9 @@ function applyDetailPopupModeUI(mode = getDetailPopupMode()) {
     if (listParsialModal) listParsialModal.style.setProperty('z-index', '2147483645', 'important');
     if (parsialSubModal) parsialSubModal.style.setProperty('z-index', '2147483650', 'important');
 
-    if (iconEl) iconEl.textContent = 'fullscreen';
-    if (textEl) textEl.textContent = 'MODE A';
+    if (iconEl) iconEl.textContent = 'fullscreen_exit';
     if (btnEl) {
-      btnEl.title = 'Tukar Ke MODE B (Di Dalam Area Konten Utama)';
-      btnEl.style.setProperty('background', 'rgba(255,255,255,0.2)', 'important');
+      btnEl.title = 'KELUAR DARI LAYAR PENUH (MODE NORMAL)';
     }
   }
 }
@@ -23932,13 +24412,13 @@ async function cetakPdfSuratParsial(noSurat, partialId) {
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11.5px; border: 1px solid #cbd5e1;">
             <thead>
               <tr style="background: #0284c7 !important; color: #ffffff !important;">
-                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">NO</th>
-                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">TIPE BARANG</th>
-                <th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI</th>
-                ${req.jenis === 'DUS' ? `<th style="width: 1%; padding:7px 8px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI DUS</th>` : ''}
-                <th style="padding:7px 8px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">PERMINTAAN BARANG</th>
-                <th style="padding:7px 8px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">ALASAN PERMINTAAN</th>
-                <th style="width: 1%; text-align:center; padding:7px 6px; border:1px solid #cbd5e1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">QTY</th>
+                <th style="width: 1%; text-align:center; padding:9px 8px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">NO</th>
+                <th style="width: 1%; padding:9px 10px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">TIPE BARANG</th>
+                <th style="width: 1%; padding:9px 10px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI</th>
+                ${req.jenis === 'DUS' ? `<th style="width: 1%; padding:9px 10px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: nowrap !important;">NO. SERI DUS</th>` : ''}
+                <th style="padding:9px 10px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">PERMINTAAN BARANG</th>
+                <th style="padding:9px 10px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; text-align:center; white-space: normal !important;">ALASAN PERMINTAAN</th>
+                <th style="width: 1%; text-align:center; padding:9px 8px; border:1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight:800 !important; white-space: nowrap !important;">QTY</th>
               </tr>
             </thead>
             <tbody>
@@ -25011,7 +25491,7 @@ function handleBuktiPermintaanSelect(event) {
 
   if (files.length > 1 || currentTotal + files.length > 1) {
     if (typeof showNotif === 'function') {
-      showNotif('MAKSIMAL HANYA 1 FILE BUKTI (FOTO / PDF) YANG BISA DIKIRIM PER PERMINTAAN! HAPUS FILE YANG SUDAH ADA TERLEBIH DAHULU JIKA INGIN MENGGANTI.', 'warning');
+      showNotif('MAKSIMAL HANYA 1 FILE BUKTI (FOTO 1 LEMBAR ATAU 1 FILE PDF) YANG BISA DIUNGGAH! HAPUS FILE LAMA JIKA INGIN MENGGANTI.', 'warning');
     }
     event.target.value = '';
     return;
@@ -25563,16 +26043,8 @@ window.handleArtemisFileInputChange = handleArtemisFileInputChange;
 
 
 
-/* COMPLETELY DISABLE ALL LOADING OVERLAY POPUPS (MOHON TUNGGU...) PER USER REQUEST */
-function showLoading(msg = '', allowCancel = false, onCancelCallback = null) {
-  hideLoading();
-  return;
-}
-window.showLoading = showLoading;
-
-function tampilkanLoadingProses(pesan = 'MOHON TUNGGU...') {
-  tutupLoadingProses();
-  return;
+function tampilkanLoadingProses(pesan = '(LOADING)...') {
+  showLoading(pesan);
 }
 window.tampilkanLoadingProses = tampilkanLoadingProses;
 
@@ -25945,7 +26417,7 @@ async function handleUploadBuktiFileInputChange(event) {
 
   if (files.length > 1 || currentTotal + files.length > 1) {
     if (typeof showNotif === 'function') {
-      showNotif('MAKSIMAL HANYA 1 FILE BUKTI (FOTO / PDF) YANG BISA DIKIRIM PER PERMINTAAN! HAPUS FILE YANG SUDAH ADA TERLEBIH DAHULU JIKA INGIN MENGGANTI.', 'warning');
+      showNotif('MAKSIMAL HANYA 1 FILE BUKTI (FOTO 1 LEMBAR ATAU 1 FILE PDF) YANG BISA DIUNGGAH! HAPUS FILE LAMA JIKA INGIN MENGGANTI.', 'warning');
     }
     event.target.value = '';
     return;
@@ -26262,3 +26734,76 @@ function pilihFileBuktiWithCheck() {
   }
 }
 window.pilihFileBuktiWithCheck = pilihFileBuktiWithCheck;
+
+
+/* ==========================================================================
+   TOPBAR MENU SEARCH SYSTEM (MENU SEARCH ONLY)
+   ========================================================================== */
+const APP_MENU_SEARCH_LIST = [
+  { id: 'dashboardPage', title: 'Dashboard Utama', desc: 'Statistik & Ringkasan Data Permintaan', keywords: 'dashboard utama statistik rincian ringkasan home beranda', icon: 'dashboard', action: () => showPage('dashboardPage') },
+  { id: 'inputPage', title: 'Input Permintaan', desc: 'Buat & Pengajuan Permintaan Toko Baru', keywords: 'input buat buatkan tambah permintaan barang form buatkan permintaan toko unit dus', icon: 'edit_note', action: () => showPage('inputPage') },
+  { id: 'riwayatPage', title: 'Riwayat Permintaan', desc: 'Histori, Status, Tracking & Lacak Permintaan', keywords: 'riwayat histori daftar tracking lacak permintaan toko status barang done approve reject pending', icon: 'history', action: () => bukaMenuRiwayat() },
+  { id: 'masterDbPage', title: 'Master Database', desc: 'Master Data Barang, Toko & Kode Unit', keywords: 'master database data barang daftar toko unit dus barang serial sn', icon: 'database', action: () => showPage('masterDbPage') },
+  { id: 'userManagementPage', title: 'Kelola User & Akses', desc: 'Manajemen Pengguna, Peran & Hak Akses', keywords: 'kelola user akun manajemen pengguna akses role password reset admin', icon: 'manage_accounts', action: () => showPage('userManagementPage') },
+  { id: 'akunPage', title: 'Profil Saya', desc: 'Pengaturan Akun, Sandi & Tanda Tangan TTD', keywords: 'profil saya akun tanda tangan ttd ubah password hp hp nama pengguna', icon: 'person', action: () => bukaAkun() },
+  { id: 'logoutAction', title: 'Keluar (Logout)', desc: 'Tutup Sesi & Keluar dari Aplikasi', keywords: 'keluar logout exit tutup sesi', icon: 'logout', action: () => logout() }
+];
+
+function onSearchMenuInput(queryInput) {
+  const dropdown = document.getElementById('menuSearchResultsDropdown');
+  if (!dropdown) return;
+
+  const query = String(queryInput || '').trim().toLowerCase();
+  if (!query) {
+    dropdown.style.display = 'none';
+    dropdown.innerHTML = '';
+    return;
+  }
+
+  const matches = APP_MENU_SEARCH_LIST.filter(item => {
+    return item.title.toLowerCase().includes(query) || item.keywords.toLowerCase().includes(query);
+  });
+
+  dropdown.style.display = 'flex';
+  if (matches.length === 0) {
+    dropdown.innerHTML = `<div class="menu-search-empty">⚠️ Menu "${queryInput}" tidak ditemukan</div>`;
+  } else {
+    dropdown.innerHTML = matches.map(m => `
+      <div class="menu-search-item" onclick="eksekusiKlikPencarianMenu('${m.id}')">
+        <span class="material-symbols-rounded">${m.icon}</span>
+        <div style="display:flex; flex-direction:column; gap:1px;">
+          <span style="font-weight:700; font-size:12.5px;">${m.title}</span>
+          <span style="font-size:10px; color:#94a3b8; font-weight:400;">${m.desc}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+window.onSearchMenuInput = onSearchMenuInput;
+
+function eksekusiKlikPencarianMenu(menuId) {
+  const dropdown = document.getElementById('menuSearchResultsDropdown');
+  const searchInput = document.getElementById('globalSearchBar');
+  if (dropdown) dropdown.style.display = 'none';
+  if (searchInput) searchInput.value = '';
+
+  const item = APP_MENU_SEARCH_LIST.find(m => m.id === menuId);
+  if (item && typeof item.action === 'function') {
+    item.action();
+  }
+}
+window.eksekusiKlikPencarianMenu = eksekusiKlikPencarianMenu;
+
+function executeGlobalSearch(query) {
+  onSearchMenuInput(query);
+}
+window.executeGlobalSearch = executeGlobalSearch;
+
+// CLOSE MENU SEARCH DROPDOWN WHEN CLICKING OUTSIDE
+document.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('menuSearchResultsDropdown');
+  const searchInput = document.getElementById('globalSearchBar');
+  if (dropdown && searchInput && !searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
+});

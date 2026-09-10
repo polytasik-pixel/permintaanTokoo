@@ -33,8 +33,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
   <!-- Master Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260909_TOPHEADER_AUTOFIT_FIXED">
-  <script src="app.js?v=20260909_TOPHEADER_AUTOFIT_FIXED"></script>
+  <link rel="stylesheet" href="styles.css?v=20260910_SILENCE_CONSOLE_LOGS">
+  <script src="app.js?v=20260910_SILENCE_CONSOLE_LOGS"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -62,6 +62,28 @@
       }
     }
 
+    function isGeminiKeyAdminAllowed() {
+      var u = null;
+      try {
+        if (typeof currentUser !== 'undefined' && currentUser) u = currentUser;
+        else {
+          var s = localStorage.getItem('PERMINTAAN_TOKO_SESSION') || localStorage.getItem('session_user');
+          if (s) u = JSON.parse(s);
+        }
+      } catch(e) {}
+      if (!u) return false;
+
+      var role = String(u.role || '').toUpperCase();
+      var category = String(u.category || '').toUpperCase();
+      var username = String(u.username || '').toUpperCase();
+      var area = String(u.area || '').toUpperCase();
+
+      var isAdmin = (role === 'ADMIN' || category === 'ADMIN' || username.includes('ADMIN'));
+      var isServiceTSM = (category === 'SERVICE' || role === 'SERVICE') && (area === 'TSM' || username.includes('TSM'));
+
+      return isAdmin || isServiceTSM;
+    }
+
     function tutupModalGeminiApiKey() {
       var modal = document.getElementById('modalGeminiApiKey');
       if (modal) {
@@ -71,7 +93,12 @@
     }
 
     function simpanGeminiApiKeyDariModal() {
-      var input = document.getElementById('inputGeminiApiKeyVal');
+      if (!isGeminiKeyAdminAllowed()) {
+        if (typeof showNotif === 'function') showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!', 'warning');
+        else alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!');
+        return;
+      }
+      var input = document.getElementById('inputGeminiApiKeyVal') || document.getElementById('inputGeminiApiKeyVal_inlineScript');
       var val = input ? String(input.value).trim() : '';
       if (!val) {
         if (typeof showNotif === 'function') showNotif('API KEY KOSONG! SILAHKAN TEMPEL KEY GEMINI ANDA.', 'warning');
@@ -82,14 +109,22 @@
       localStorage.setItem('GEMINI_API_KEY', val);
       updateAiKeyBadgeStatus();
       tutupModalGeminiApiKey();
-      if (typeof showNotif === 'function') showNotif('GEMINI API KEY BERHASIL DISIMPAN!', 'success');
-      else alert('GEMINI API KEY BERHASIL DISIMPAN!');
+      if (typeof autoSyncGeminiKeyToSupabase === 'function') {
+        autoSyncGeminiKeyToSupabase(true).catch(function(){});
+      }
+      if (typeof showNotif === 'function') showNotif('GEMINI API KEY BERHASIL DISIMPAN & DISINKRONKAN KE SELURUH AKUN!', 'success');
+      else alert('GEMINI API KEY BERHASIL DISIMPAN & DISINKRONKAN!');
     }
 
     function hapusGeminiApiKeyPermanen() {
+      if (!isGeminiKeyAdminAllowed()) {
+        if (typeof showNotif === 'function') showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!', 'warning');
+        else alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!');
+        return;
+      }
       localStorage.removeItem('gemini_api_key');
       localStorage.removeItem('GEMINI_API_KEY');
-      var input = document.getElementById('inputGeminiApiKeyVal');
+      var input = document.getElementById('inputGeminiApiKeyVal') || document.getElementById('inputGeminiApiKeyVal_inlineScript');
       if (input) input.value = '';
       updateAiKeyBadgeStatus();
       tutupModalGeminiApiKey();
@@ -98,73 +133,16 @@
     }
 
     function aturGeminiApiKey() {
-      console.log('[GEMINI AI] Opening Custom Gemini API Key Modal...');
-      var modal = document.getElementById('modalGeminiApiKey');
-      if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'modalGeminiApiKey';
-        document.body.appendChild(modal);
+      if (!isGeminiKeyAdminAllowed()) {
+        if (typeof showNotif === 'function') showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!', 'warning');
+        else alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!');
+        return;
       }
-
-      var currentKey = getGeminiApiKey();
-
-      modal.className = 'modalBackdrop show';
-      modal.onclick = function(e) {
-        if (e.target === modal) tutupModalGeminiApiKey();
-      };
-      if (typeof pushPopupHistoryState === 'function') pushPopupHistoryState();
-
-      modal.style.cssText = 'display: flex !important; position: fixed !important; top: 0px !important; left: 0px !important; right: 0px !important; bottom: 0px !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; background: rgba(0, 0, 0, 0.85) !important; z-index: 2147483600 !important; justify-content: center !important; align-items: center !important; padding: 1mm !important; padding-left: 3mm !important; padding-right: 3mm !important; box-sizing: border-box !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important;';
-
-      modal.innerHTML = `
-        <div class="modalKeyBox" onclick="event.stopPropagation()" >
-          <div class="modalKeyHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; padding: 10px 12px !important; color: #ffffff !important; display: flex !important; justify-content: space-between !important; align-items: center !important;">
-            <div style="display: flex !important; align-items: center !important; gap: 8px !important; font-weight: 800 !important; font-size: 14px !important; letter-spacing: 0.5px !important;">
-              <span class="material-symbols-rounded" style="font-size: 22px !important; color: #ffffff !important;">key</span>
-              <span>PENGATURAN / UBAH GEMINI API KEY</span>
-            </div>
-            <button type="button" onclick="tutupModalGeminiApiKey()" style="color: #ffffff !important; font-weight: 900 !important; font-size: 28px !important; background: transparent !important; border: none !important; cursor: pointer !important; line-height: 1 !important; padding: 0 4px !important;" title="TUTUP" style="background: rgba(255,255,255,0.2) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; width: 28px !important; height: 28px !important; font-size: 20px !important; line-height: 1 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">&times;</button>
-          </div>
-          <div class="modalKeyBody" style="padding: 16px !important; display: flex !important; flex-direction: column !important; gap: 10px !important; box-sizing: border-box !important; background: #ffffff !important;">
-            <p style="margin: 0 !important; font-size: 12px !important; color: #475569 !important; line-height: 1.5 !important;">
-              Masukan KEY AI. Buat key gratis di <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" style="color: #d97706 !important; font-weight: 700 !important; text-decoration: underline !important;">https://aistudio.google.com/</a>
-            </p>
-            <div style="width: 100% !important; box-sizing: border-box !important;">
-              <div style="display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 6px !important;">
-                <label style="font-size: 11.5px !important; font-weight: 800 !important; color: #0f172a !important; margin: 0 !important;">GOOGLE GEMINI API KEY:</label>
-                <button type="button" onclick="var inp=document.getElementById('inputGeminiApiKeyVal'); if(inp){ inp.value=''; inp.focus(); }" style="background: none !important; border: none !important; color: #ef4444 !important; font-size: 11px !important; font-weight: 700 !important; cursor: pointer !important; text-decoration: underline !important;">
-                  HAPUS TEKS
-                </button>
-              </div>
-              <div style="position: relative !important; display: flex !important; align-items: center !important; width: 100% !important;">
-                <input type="text" id="inputGeminiApiKeyVal_inlineTemp" value="${currentKey}" placeholder="Tempel API Key di sini (Contoh: AIzaSy...)" style="width: 100% !important; height: 44px !important; padding: 8px 12px !important; border-radius: 3px !important; border: 1.5px solid #cbd5e1 !important; background: #f8fafc !important; color: #0f172a !important; font-family: monospace !important; font-size: 13px !important; outline: none !important; box-sizing: border-box !important;">
-              </div>
-            </div>
-            <div style="display: flex !important; gap: 8px !important; justify-content: flex-end !important; align-items: center !important; margin-top: 8px !important; width: 100% !important;">
-              <button type="button" onclick="tutupModalGeminiApiKey()" style="flex: 1 !important; height: 36px !important; background: var(--bg-body, #f1f5f9) !important; color: var(--text-main, #334155) !important; border: 1px solid var(--border-color, #cbd5e1) !important; border-radius: 6px !important; padding: 0 14px !important; font-weight: 700 !important; font-size: 12px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important;">
-                BATAL
-              </button>
-              <button type="button" onclick="simpanGeminiApiKeyDariModal()" style="flex: 1 !important; height: 36px !important; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 0 16px !important; font-weight: 800 !important; font-size: 12px !important; cursor: pointer !important; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35) !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important;">
-                <span class="material-symbols-rounded" style="font-size: 16px;">save</span> SIMPAN
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-
-      var inputEl = document.getElementById('inputGeminiApiKeyVal');
-      if (inputEl) {
-        inputEl.onkeydown = function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            simpanGeminiApiKeyDariModal();
-          }
-        };
-        setTimeout(function() {
-          inputEl.focus();
-          inputEl.select();
-        }, 150);
-      }
+      if (typeof bukaAkun === 'function') bukaAkun();
+      setTimeout(function() {
+        var section = document.getElementById('sectionEmbeddedGemini');
+        if (section) section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 200);
     }
 
     window.getGeminiApiKey = getGeminiApiKey;
@@ -196,7 +174,7 @@
     <!-- ==========================================================================
          TOPBAR HEADER (ENTERPRISE RED THEME)
          ========================================================================== -->
-    <header class="app-topbar">
+    <header class="app-topbar" style="background: linear-gradient(135deg, #0077b6, #005f96) !important; background-color: #0077b6 !important;">
       <div class="topbar-left">
         <button class="topbar-toggle-btn" type="button" onclick="toggleSidebar()" title="Toggle Sidebar Menu">
           <span class="material-symbols-rounded">menu</span>
@@ -207,15 +185,16 @@
       </div>
 
       <div class="topbar-center">
-        <div class="topbar-search">
-          <input type="text" id="globalSearchBar" placeholder="Cari no surat, barang, atau toko..." onkeyup="if(event.key==='Enter') executeGlobalSearch(this.value)">
+        <div class="topbar-search" style="position: relative; max-width: calc(135px + 41mm) !important;">
+          <input type="text" id="globalSearchBar" placeholder="" oninput="onSearchMenuInput(this.value)" onfocus="onSearchMenuInput(this.value)" autocomplete="off">
           <span class="material-symbols-rounded">search</span>
+          <div id="menuSearchResultsDropdown" class="menu-search-dropdown" style="display: none;"></div>
         </div>
       </div>
 
       <div class="topbar-right">
-        <!-- Status Online Dot -->
-        <div id="firebaseOnlineDot" title="STATUS KONEKSI DATABASE: TERHUBUNG" onclick="klikStatusKoneksiServer()" style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; cursor: pointer;"></div>
+        <!-- Status Online Dot (Flush Top-Aligned with Bell & Help Buttons) -->
+        <div id="firebaseOnlineDot" title="STATUS KONEKSI DATABASE: TERHUBUNG" onclick="klikStatusKoneksiServer()" style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; cursor: pointer; align-self: flex-start !important; margin-top: 0px !important;"></div>
         
         <!-- Gemini AI API Key Button -->
         <button type="button" id="btnGeminiApiKey" class="topbar-action-btn" onclick="aturGeminiApiKey()" title="Pengaturan Gemini AI API Key" style="display: none !important;">
@@ -237,14 +216,14 @@
 
         <!-- User Profile Avatar Badge -->
         <div class="topbar-user-badge" onclick="bukaAkun()" title="Profil & Pengaturan Akun" style="border-radius: 6px !important;">
-          <div class="user-avatar" id="topUserAvatarInitials" style="border-radius: 6px !important;">BA</div>
-          <span class="user-name-text" id="namaUserTopHeader">BAUT ADHI</span>
+          <div class="user-avatar" id="topUserAvatarInitials" style="border-radius: 6px !important; font-weight: 400 !important;">BA</div>
+          <span class="user-name-text" id="namaUserTopHeader" style="font-weight: 400 !important;">BAUT ADHI</span>
         </div>
 
-        <!-- Single Live Clock Widget (Pojok Kanan, 2 Baris: Atas Tanggal, Bawah Jam Tebal, Rata Kanan) -->
+        <!-- Single Live Clock Widget (Pojok Kanan, 2 Baris: Atas Tanggal, Bawah Jam, Rata Kanan) -->
         <div id="liveClockWidget" style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; line-height: 1.25; margin-left: 12px; margin-right: 0px !important; padding-right: 0px !important; color: #ffffff; text-align: right !important; user-select: none;">
-          <span id="liveDateText" style="font-size: 10.5px; font-weight: 600; color: rgba(255, 255, 255, 0.9); letter-spacing: 0.2px; white-space: nowrap;"></span>
-          <span id="liveTimeText" style="font-size: 12px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; font-family: monospace, inherit; white-space: nowrap; margin-top: 1px;"></span>
+          <span id="liveDateText" style="font-size: 10.5px; font-weight: 400 !important; color: rgba(255, 255, 255, 0.9); letter-spacing: 0.2px; white-space: nowrap;"></span>
+          <span id="liveTimeText" style="font-size: 12px; font-weight: 400 !important; color: #ffffff; letter-spacing: 0.5px; font-family: monospace, inherit; white-space: nowrap; margin-top: 1px;"></span>
         </div>
       </div>
 
@@ -433,7 +412,7 @@
       </div>
 
       <!-- TABEL DASHBOARD (TERLETAK SEGERA DI BAWAH KOTAK STATUS - DENGAN GAP 5MM) -->
-      <div id="detailDashboard" class="box card" style="width: 100% !important; max-width: 100% !important; margin-top: 6px !important; padding: 20px !important; border-radius: 4px !important; border: 1px solid #e2e8f0 !important; background: #ffffff !important; box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important; box-sizing: border-box !important;">
+      <div id="detailDashboard" class="box card" style="width: 100% !important; max-width: 100% !important; margin-top: 6px !important; padding: 16px 20px !important; border-radius: 4px !important; border: 1px solid #e2e8f0 !important; background: #ffffff !important; box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important; box-sizing: border-box !important;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 12px;">
           <div style="display: flex; align-items: center; gap: 5mm; flex-wrap: wrap; flex: 1;">
             <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
@@ -451,11 +430,19 @@
         <div class="tableWrap" style="width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0;">
           <table class="dashboardTable" style="width: 100%; border-collapse: collapse; min-width: 600px;">
             <thead>
-              <tr style="background: #f8fafc; color: #475569; border-bottom: 2px solid #e2e8f0;">
-                <th style="width: 18%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 700; text-transform: uppercase;">TANGGAL</th>
-                <th style="width: 32%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 700; text-transform: uppercase;">NO SURAT</th>
-                <th style="width: 30%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 700; text-transform: uppercase;">NAMA TOKO</th>
-                <th style="width: 20%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 700; text-transform: uppercase;">STATUS</th>
+              <tr style="background: #e2e8f0 !important; color: #0f172a !important; border-bottom: 2px solid #cbd5e1 !important;">
+                <th id="thDash_tanggal" class="sortable-th" onclick="sortTableDashboard('tanggal')" style="width: 18%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper"><span>TANGGAL</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_tanggal">unfold_more</span></div>
+                </th>
+                <th id="thDash_noSurat" class="sortable-th" onclick="sortTableDashboard('noSurat')" style="width: 32%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper"><span>NO SURAT</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_noSurat">unfold_more</span></div>
+                </th>
+                <th id="thDash_toko" class="sortable-th" onclick="sortTableDashboard('toko')" style="width: 30%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper"><span>NAMA TOKO</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_toko">unfold_more</span></div>
+                </th>
+                <th id="thDash_status" class="sortable-th" onclick="sortTableDashboard('status')" style="width: 20%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper"><span>STATUS</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_status">unfold_more</span></div>
+                </th>
               </tr>
             </thead>
             <tbody id="lastData">
@@ -478,7 +465,7 @@
          ========================================================================== -->
     <section id="inputPage" class="page">
       <!-- MAIN FORM CARD -->
-      <div class="box card" style="width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 24px !important; border-radius: 4px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important; background: #ffffff !important; box-sizing: border-box !important;">
+      <div class="box card" style="width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 16px 20px !important; border-radius: 4px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important; background: #ffffff !important; box-sizing: border-box !important;">
         
         <!-- HEADER TITLE & AUTOFILL TOOLBAR -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 12px;">
@@ -557,9 +544,9 @@
               <h3 id="judulDetailPermintaan" style="margin: 0; font-size: 14px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
                 <span class="material-symbols-rounded" style="color: #dc2626;">inventory_2</span> DETAIL BARANG PERMINTAAN
               </h3>
-              <button type="button" id="btnToggleModelInput" onclick="toggleModelInputForm()" title="KLIK UNTUK MENGUBAH MODEL TAMPILAN FORM (MODEL A / MODEL B)" style="height: 20px; padding: 0 6px; background: #f1f5f9 !important; color: #475569 !important; border: 1px solid #cbd5e1 !important; border-radius: 3px; font-weight: 700; font-size: 9.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; transition: all 0.2s ease;">
-                <span class="material-symbols-rounded" style="font-size: 12px; color: #64748b;">tune</span>
-                <span id="lblModelInput">MODEL A</span>
+              <button type="button" id="btnToggleModelInput" onclick="toggleModelInputForm()" title="UBAH MODEL TAMPILAN FORMULIR (MODEL A / MODEL B)" style="width: 24px !important; min-width: 24px !important; height: 24px !important; padding: 0 !important; background: #cbd5e1 !important; color: #0f172a !important; border: 1px solid #94a3b8 !important; border-radius: 4px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important; flex-shrink: 0 !important;">
+                <span class="material-symbols-rounded" id="iconModelInput" style="font-size: 16px !important; color: #0f172a !important;">tune</span>
+                <span id="lblModelInput" style="display: none !important;"></span>
               </button>
             </div>
             <div id="infoSerial" style="font-size: 12px; color: #64748b; font-weight: 600;"></div>
@@ -584,7 +571,6 @@
             <div class="uploadBox" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px; text-align: center; background: #f8fafc; cursor: pointer; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 130px; box-sizing: border-box;">
               <input type="file" id="foto" accept="image/jpeg, image/jpg, image/png, image/*, application/pdf, .pdf" multiple onchange="previewFoto(event)" style="display:none">
               <div id="previewArea" onclick="pilihFoto()" style="width: 100%;">
-                <span class="material-symbols-rounded" style="font-size: 28px; color: #2563eb;">add_a_photo</span>
                 <div id="previewText" style="font-size: 12px; font-weight: 700; color: #334155; margin-top: 4px;">TAP / PILIH FOTO DI SINI</div>
                 <div id="photoPreviewsGrid" class="photo-grid-preview" style="margin-top: 10px;"></div>
               </div>
@@ -610,8 +596,8 @@
     </section>
 
       <section id="riwayatPage" class="page">
-      <div class="riwayatContent">
-        <h3 id="riwayatPageTitle" style="text-align: center !important; margin-top: 0 !important; padding-top: 1mm !important; margin-bottom: 6px !important; color: #0f172a !important; font-weight: 800 !important;">DETAIL DATA PERMINTAAN</h3>
+      <div class="riwayatContent" style="padding-top: 0mm !important;">
+        <h3 id="riwayatPageTitle" style="display: none !important;">DETAIL DATA PERMINTAAN</h3>
 
         <div class="searchToolbar">
           <div style="position: relative; flex: 1 1 300px; min-width: 250px;">
@@ -783,8 +769,8 @@
               BERSIHKAN SELURUH PESAN CHAT DAN ROOM CHAT BANTUAN SECARA PERMANEN.
             </p>
           </div>
-          <button type="button" class="btnDownload" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; height: 42px !important; padding: 0 20px !important; font-weight: 800 !important; border: none !important; border-radius: 6px !important; cursor: pointer !important; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;" onclick="hapusSemuaChatAdmin()">
-            <span class="material-symbols-rounded">delete_sweep</span> HAPUS SEMUA CHAT
+          <button type="button" class="btnDownload" style="background: linear-gradient(135deg, #ef4444, #dc2626) !important; color: #ffffff !important; height: 50px !important; padding: 0 24px !important; font-size: 14px !important; font-weight: 900 !important; border: none !important; border-radius: 8px !important; cursor: pointer !important; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35) !important; display: inline-flex !important; align-items: center !important; gap: 8px !important;" onclick="hapusSemuaChatAdmin()">
+            <span class="material-symbols-rounded" style="font-size: 24px !important;">delete_sweep</span> HAPUS SEMUA CHAT
           </button>
         </div>
       </div>
@@ -1165,19 +1151,13 @@
     <!-- CHAT WIDGET POPUP (FULL POPUP OVERLAY WITH BACKDROP BLUR) -->
   <div id="popupBantuan" class="popupOverlay popupBantuan" onclick="if(event.target === this) tutupBantuan()" style="display: none !important; box-sizing: border-box !important;">
     <div class="chatBox" style="margin: auto !important; border-radius: 5px !important; -webkit-clip-path: inset(0 round 5px) !important; clip-path: inset(0 round 5px) !important;">
-      <div class="chatHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important;">
-        <div class="chatInfo">
-          <div class="chatAvatar"><span class="material-symbols-rounded" style="font-size: 24px; color: #10b981 !important; font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));">support_agent</span></div>
-          <div>
-            <div id="chatHeaderTitle" class="chatNama">ADMIN SUPPORT</div>
-            <div class="chatStatus">ONLINE &bull; READY TO HELP</div>
-          </div>
+      <div class="chatHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 14px 18px !important; min-height: 52px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; box-sizing: border-box !important;">
+        <div class="chatInfo" style="display: flex !important; flex-direction: column !important; justify-content: center !important;">
+          <div id="chatHeaderTitle" class="chatNama" style="font-weight: 900 !important; font-size: 15.5px !important; letter-spacing: 0.5px !important; color: #ffffff !important; line-height: 1.2 !important; margin: 0 !important;">PUSAT BANTUAN</div>
+          <div class="chatStatus" style="font-size: 11px !important; margin-top: 2px !important; color: rgba(255,255,255,0.85) !important; font-weight: 600 !important; letter-spacing: 0.3px !important;">ONLINE &bull; READY TO HELP</div>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <button type="button" id="btnHapusSemuaChatHeader" class="btnHapusChatAllHeader" onclick="hapusSemuaChatAdmin()" title="HAPUS SEMUA CHAT SISTEM (KHUSUS ADMIN)" style="display: none; background: none; border: none; color: #ffffff; opacity: 0.85; cursor: pointer; align-items: center;">
-            <span class="material-symbols-rounded" style="font-size: 20px;">delete_forever</span>
-          </button>
-          <button type="button" class="chatClose" onclick="tutupBantuan()" title="TUTUP CHAT SUPPORT" style="font-weight: 900 !important; font-size: 26px !important; color: #ffffff !important;">&times;</button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" class="chatClose" onclick="tutupBantuan()" title="TUTUP CHAT SUPPORT" style="font-weight: 900 !important; font-size: 26px !important; color: #ffffff !important; background: transparent !important; border: none !important; cursor: pointer !important; line-height: 1 !important; padding: 0 4px !important; margin: 0 !important;">&times;</button>
         </div>
       </div>
 
@@ -1345,9 +1325,9 @@
           <span class="material-symbols-rounded" style="color: #0f172a !important;">description</span> DETAIL PERMINTAAN BARANG
         </span>
         <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0 !important; position: relative !important; z-index: 100 !important;">
-          <button type="button" id="btnToggleDetailModeV2" onclick="toggleDetailPopupMode()" class="btnModeToggle" style="background: #cbd5e1 !important; border: 1px solid #94a3b8 !important; color: #0f172a !important; padding: 0 10px !important; height: 28px !important; width: auto !important; min-width: 88px !important; border-radius: 6px !important; cursor: pointer !important; font-size: 11px !important; font-weight: 800 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 5px !important; transition: all 0.15s ease !important; flex-shrink: 0 !important; margin-right: 4px !important;" title="Tukar Mode Tampilan Popup (MODE A: Fullscreen / MODE B: Auto-Fit Layar Dalam Konten Utama)">
-            <span class="material-symbols-rounded" id="iconToggleDetailMode" style="font-size: 16px !important; color: #0f172a !important;">fullscreen</span>
-            <span id="textToggleDetailMode" style="font-weight: 900 !important; letter-spacing: 0.5px !important; color: #0f172a !important;">MODE A</span>
+          <button type="button" id="btnToggleDetailModeV2" onclick="toggleDetailPopupMode()" class="btnModeToggle" style="background: #cbd5e1 !important; border: 1px solid #94a3b8 !important; color: #0f172a !important; width: 28px !important; min-width: 28px !important; height: 28px !important; border-radius: 6px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; transition: all 0.15s ease !important; flex-shrink: 0 !important; margin-right: 4px !important;" title="TAMPILAN LAYAR PENUH (FULLSCREEN)">
+            <span class="material-symbols-rounded" id="iconToggleDetailMode" style="font-size: 18px !important; color: #0f172a !important;">fullscreen_exit</span>
+            <span id="textToggleDetailMode" style="display: none !important;"></span>
           </button>
           <button type="button" id="btnRefreshDetailV2" onclick="refreshDetailModalManual()" style="display: none !important; background: #cbd5e1 !important; border: 1px solid #94a3b8 !important; color: #0f172a !important; padding: 4px 8px; border-radius: 6px; cursor: pointer;" title="Refresh Data"><span class="material-symbols-rounded" style="font-size: 18px; color: #0f172a !important;">refresh</span></button>
           <button type="button" onclick="tutupDetailBarangV2()" title="TUTUP" style="background: #cbd5e1 !important; color: #0f172a !important; border: 1px solid #94a3b8 !important; border-radius: 6px !important; width: 28px !important; min-width: 28px !important; height: 28px !important; font-size: 20px !important; line-height: 1 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-weight: 800 !important; flex-shrink: 0 !important;">&times;</button>
@@ -1624,7 +1604,7 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
     <div class="userManagementBoxPopup" onclick="event.stopPropagation()" style="position: relative !important; width: 1400px !important; max-width: 98vw !important; height: calc(100vh - 10mm) !important; height: calc(100dvh - 10mm) !important; max-height: calc(100vh - 10mm) !important; max-height: calc(100dvh - 10mm) !important; overflow: hidden !important; background: #ffffff !important; color: #0f172a !important; border-radius: 4px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.3), 0 10px 15px -5px rgba(0, 0, 0, 0.15) !important; margin: auto !important; box-sizing: border-box !important; padding: 0 !important; display: flex !important; flex-direction: column !important;">
       
       <!-- HEADER FULL KE KANAN & KIRI (x=0 to 100%) -->
-      <div class="userManagementHeader" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 14px 20px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-radius: 4px 4px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important;">
+      <div class="userManagementHeader" style="background: linear-gradient(135deg, #0077b6, #005f96) !important; background-color: #0077b6 !important; color: #ffffff !important; padding: 14px 20px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-radius: 4px 4px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important;">
         <div style="display: flex !important; align-items: center !important; gap: 8px !important;">
           <span class="material-symbols-rounded" style="font-size: 22px !important; font-weight: 800 !important; color: #ffffff !important;">manage_accounts</span>
           <h3 style="color: #ffffff !important; font-weight: 800 !important; font-size: 16px !important; margin: 0 !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">MANAJEMEN AKUN USER &amp; HAK AKSES</h3>
@@ -1694,15 +1674,27 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
             <thead>
               <tr style="background: #e2e8f0 !important; color: #0f172a !important;">
                 <th style="width: 38px !important; text-align: center !important; position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">
-                  <input type="checkbox" id="selectAllUsersModal" onchange="toggleSelectAllUsers(this)" style="cursor: pointer !important; width: 16px !important; height: 16px !important; accent-color: #0f172a !important;" title="PILIH SEMUA">
+                  <input type="checkbox" id="selectAllUsersModal" onchange="toggleSelectAllUsers(this)" style="cursor: pointer !important; width: 16px !important; height: 16px !important; accent-color: #0284c7 !important;" title="PILIH SEMUA">
                 </th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">USERNAME</th>
+                <th id="thUser_username" class="sortable-th" onclick="sortTableUserManagement('username')" style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">
+                  <div class="th-sort-wrapper"><span>USERNAME</span><span class="material-symbols-rounded sort-icon" id="sortIconUser_username">unfold_more</span></div>
+                </th>
                 <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">PASSWORD</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">NAMA LENGKAP</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">KODE TOKO</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">NO. HP</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">KATEGORI</th>
-                <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">AREA</th>
+                <th id="thUser_fullName" class="sortable-th" onclick="sortTableUserManagement('fullName')" style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">
+                  <div class="th-sort-wrapper"><span>NAMA LENGKAP</span><span class="material-symbols-rounded sort-icon" id="sortIconUser_fullName">unfold_more</span></div>
+                </th>
+                <th id="thUser_storeCode" class="sortable-th" onclick="sortTableUserManagement('storeCode')" style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">
+                  <div class="th-sort-wrapper"><span>KODE TOKO</span><span class="material-symbols-rounded sort-icon" id="sortIconUser_storeCode">unfold_more</span></div>
+                </th>
+                <th id="thUser_phone" class="sortable-th" onclick="sortTableUserManagement('phone')" style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">
+                  <div class="th-sort-wrapper"><span>NO. HP</span><span class="material-symbols-rounded sort-icon" id="sortIconUser_phone">unfold_more</span></div>
+                </th>
+                <th id="thUser_category" class="sortable-th" onclick="sortTableUserManagement('category')" style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">
+                  <div class="th-sort-wrapper"><span>KATEGORI</span><span class="material-symbols-rounded sort-icon" id="sortIconUser_category">unfold_more</span></div>
+                </th>
+                <th id="thUser_area" class="sortable-th" onclick="sortTableUserManagement('area')" style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important;">
+                  <div class="th-sort-wrapper"><span>AREA</span><span class="material-symbols-rounded sort-icon" id="sortIconUser_area">unfold_more</span></div>
+                </th>
                 <th style="position: sticky !important; top: 0 !important; z-index: 10 !important; background: #e2e8f0 !important; color: #0f172a !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important; text-align: center !important; min-width: 90px !important;">AKSI</th>
               </tr>
             </thead>
@@ -1775,10 +1767,16 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
               </colgroup>
               <thead>
                 <tr style="background: #e2e8f0 !important; color: #0f172a !important;">
-                  <th style="padding: 9px 12px !important; text-align: left !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important;">NAMA TOKO</th>
-                  <th style="padding: 9px 12px !important; text-align: center !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important;">AREA</th>
-                  <th style="padding: 9px 12px !important; text-align: center !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important;">KODE TOKO</th>
-                  <th style="padding: 9px 12px !important; text-align: center !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important;">AKSI</th>
+                  <th id="thToko_fullName" class="sortable-th" onclick="sortTableDaftarTokoModal('fullName')" style="padding: 9px 12px !important; text-align: left !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important; background: #e2e8f0 !important;">
+                    <div class="th-sort-wrapper"><span>NAMA TOKO</span><span class="material-symbols-rounded sort-icon" id="sortIconToko_fullName">unfold_more</span></div>
+                  </th>
+                  <th id="thToko_area" class="sortable-th" onclick="sortTableDaftarTokoModal('area')" style="padding: 9px 12px !important; text-align: center !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important; background: #e2e8f0 !important;">
+                    <div class="th-sort-wrapper" style="justify-content: center !important;"><span>AREA</span><span class="material-symbols-rounded sort-icon" id="sortIconToko_area">unfold_more</span></div>
+                  </th>
+                  <th id="thToko_storeCode" class="sortable-th" onclick="sortTableDaftarTokoModal('storeCode')" style="padding: 9px 12px !important; text-align: center !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important; background: #e2e8f0 !important;">
+                    <div class="th-sort-wrapper" style="justify-content: center !important;"><span>KODE TOKO</span><span class="material-symbols-rounded sort-icon" id="sortIconToko_storeCode">unfold_more</span></div>
+                  </th>
+                  <th style="padding: 9px 12px !important; text-align: center !important; font-weight: 800 !important; font-size: 12px !important; white-space: nowrap !important; color: #0f172a !important; border: none !important; background: #e2e8f0 !important;">AKSI</th>
                 </tr>
               </thead>
             </table>
@@ -1858,10 +1856,11 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
     </div>
   </div>
 
-<div id="miniCenterLoading" class="miniCenterLoading" style="display: none; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15, 23, 42, 0.75) !important; z-index: 2147483600 !important; justify-content: center !important; align-items: center !important;">
-    <div class="miniSpinnerBox" style="display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 14px !important; padding: 22px 28px !important; min-width: 180px !important; border-radius: 14px !important; background: #0f172a !important; border: 1.5px solid #38bdf8 !important;">
-      <div class="miniSpinner" style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.15); border-top-color: #38bdf8; border-radius: 50%; animation: spinSmooth 0.75s linear infinite;"></div>
-      <div id="miniCenterLoadingText" class="miniLoadingText" style="display: block !important; color: #ffffff !important; font-weight: 800 !important; font-size: 13px !important;">MEMBACA DOKUMEN...</div>
+<div id="miniCenterLoading" class="miniCenterLoading" style="display: none; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15, 23, 42, 0.45) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; z-index: 2147483600 !important; justify-content: center !important; align-items: center !important;">
+    <div class="miniSpinnerBox" style="display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important;">
+      <div id="miniCenterLoadingText" class="miniLoadingText" style="display: flex !important; align-items: center !important; justify-content: center !important; color: #ffffff !important; font-weight: 600 !important; font-size: 13px !important; letter-spacing: 0.5px !important; text-shadow: 0 1px 4px rgba(0,0,0,0.6) !important; text-transform: uppercase !important;">
+        LOADING<span class="animatedDots" style="display: inline-flex !important; margin-left: 2px !important;"><span class="dot1">.</span><span class="dot2">.</span><span class="dot3">.</span></span>
+      </div>
     </div>
   </div>
 
@@ -2191,7 +2190,7 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
 
 <div id="uploadBuktiPermintaanOverlay" class="popupOverlay" style="display: none !important; position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.65) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 10mm 12px !important; box-sizing: border-box !important;">
     <div class="artemisBoxPopup" style="position: relative !important; width: min(580px, 95vw) !important; max-width: 95vw !important; background: #ffffff !important; color: #0f172a !important; border-radius: 6px !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.3) !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; margin: auto !important; box-sizing: border-box !important;">
-      <div class="artemisHeaderPopup" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 12px 16px !important; border-radius: 6px 6px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; display: flex !important; align-items: center !important; justify-content: space-between !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important;">
+      <div class="artemisHeaderPopup" style="background: linear-gradient(135deg, #0077b6, #005f96) !important; background-color: #0077b6 !important; color: #ffffff !important; padding: 12px 16px !important; border-radius: 6px 6px 0 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; display: flex !important; align-items: center !important; justify-content: space-between !important; flex-shrink: 0 !important; width: 100% !important; box-sizing: border-box !important;">
         <div style="display: flex !important; align-items: center !important; gap: 8px !important;">
           <span class="material-symbols-rounded" style="font-size: 20px !important; font-weight: 900 !important; color: #ffffff !important;">cloud_upload</span>
           <span id="uploadBuktiTitle" style="font-size: 14px !important; font-weight: 900 !important; color: #ffffff !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">UPLOAD BUKTI PERMINTAAN</span>
@@ -2201,14 +2200,22 @@ SUPABASE_SECRET_KEY=..." style="width: 100% !important; height: 110px !important
       <div class="artemisBodyPopup" style="padding: 16px !important; background: #ffffff !important; color: #0f172a !important; display: flex !important; flex-direction: column !important; gap: 12px !important; box-sizing: border-box !important; width: 100% !important;">
         <input type="hidden" id="uploadBuktiNoSurat">
         <p id="uploadBuktiSubTitle" style="font-size: 11.5px !important; font-weight: 700 !important; color: #0284c7 !important; margin: 0 0 4px 0 !important; line-height: 1.4 !important; text-transform: uppercase !important;">UNGGAH FOTO / DOKUMEN BUKTI PERMINTAAN:</p>
-        
+
+        <!-- Dynamic Info Alert Banner -->
+        <div style="background: #eff6ff !important; border: 1px solid #bfdbfe !important; border-radius: 6px !important; padding: 8px 12px !important; margin-bottom: 2px !important; display: flex !important; align-items: center !important; gap: 8px !important;">
+          <span class="material-symbols-rounded" style="color: #0284c7 !important; font-size: 18px !important; flex-shrink: 0 !important;">info</span>
+          <div style="font-size: 11.5px !important; color: #1e40af !important; font-weight: 700 !important; line-height: 1.35 !important;">
+            Bukti 1 lembar dapat berupa Foto (JPG/PNG). Jika lebih dari 1 lembar, wajib digabung ke dalam 1 file PDF.
+          </div>
+        </div>
+
         <input type="file" id="uploadBuktiFileInput" accept="image/jpeg, image/jpg, image/png, image/*, application/pdf, .pdf" style="display: none;" onchange="handleBuktiPermintaanSelect(event)">
 
         <div id="uploadBuktiPasteBox" tabindex="0" onclick="pilihFileBuktiWithCheck();" title="PASTE DI SINI / KLIK UNTUK UPLOAD" style="margin-bottom: 4px !important; padding: 6px 12px !important; border: 2px dashed #0284c7 !important; border-radius: 6px !important; background: #f0f9ff !important; text-align: center !important; cursor: pointer !important; transition: all 0.2s ease !important; outline: none !important; box-sizing: border-box !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; gap: 10px !important;">
           <button type="button" onclick="event.stopPropagation(); pilihFileBuktiWithCheck();" class="btn-primary" style="height: 30px !important; padding: 0 14px !important; font-size: 11px !important; font-weight: 800 !important; display: inline-flex !important; align-items: center !important; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none !important; border-radius: 4px !important; cursor: pointer !important; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2) !important; white-space: nowrap !important;">
-            PILIH FOTO BUKTI
+            PILIH BUKTI
           </button>
-          <span style="font-size: 11px !important; color: #475569 !important; font-weight: 600 !important; text-align: left !important;">(Klik untuk memilih bukti, atau tempel screenshot dengan <strong>Ctrl+V</strong>)</span>
+          <span style="font-size: 11px !important; color: #475569 !important; font-weight: 600 !important; text-align: left !important;">(Klik untuk memilih file foto/PDF 1 lembar, atau tempel screenshot dengan <strong>Ctrl+V</strong>)</span>
         </div>
 
         <div id="uploadBuktiPreviewGrid" style="display: flex !important; flex-wrap: wrap !important; gap: 8px !important; max-height: 180px !important; overflow-y: auto !important; padding: 8px !important; background: #f8fafc !important; border-radius: 6px !important; border: 1px solid #cbd5e1 !important; box-sizing: border-box !important;">
