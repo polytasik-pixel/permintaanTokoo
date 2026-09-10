@@ -33,8 +33,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
   <!-- Master Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260910_SILENCE_CONSOLE_LOGS">
-  <script src="app.js?v=20260910_SILENCE_CONSOLE_LOGS"></script>
+  <link rel="stylesheet" href="styles.css?v=20260910_SILENCE_GEMINI_AND_AUTOFILL_LOGS">
+  <script src="app.js?v=20260910_SILENCE_GEMINI_AND_AUTOFILL_LOGS"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -94,8 +94,8 @@
 
     function simpanGeminiApiKeyDariModal() {
       if (!isGeminiKeyAdminAllowed()) {
-        if (typeof showNotif === 'function') showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!', 'warning');
-        else alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!');
+        if (typeof showNotif === 'function') showNotif('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!', 'warning');
+        else alert('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!');
         return;
       }
       var input = document.getElementById('inputGeminiApiKeyVal') || document.getElementById('inputGeminiApiKeyVal_inlineScript');
@@ -118,8 +118,8 @@
 
     function hapusGeminiApiKeyPermanen() {
       if (!isGeminiKeyAdminAllowed()) {
-        if (typeof showNotif === 'function') showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!', 'warning');
-        else alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!');
+        if (typeof showNotif === 'function') showNotif('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!', 'warning');
+        else alert('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!');
         return;
       }
       localStorage.removeItem('gemini_api_key');
@@ -134,8 +134,8 @@
 
     function aturGeminiApiKey() {
       if (!isGeminiKeyAdminAllowed()) {
-        if (typeof showNotif === 'function') showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!', 'warning');
-        else alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah API Key Gemini!');
+        if (typeof showNotif === 'function') showNotif('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!', 'warning');
+        else alert('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!');
         return;
       }
       if (typeof bukaAkun === 'function') bukaAkun();
@@ -981,8 +981,8 @@
           <span style="display: flex; align-items: center; gap: 10px;">
             <span class="material-symbols-rounded" style="font-size: 24px;">account_circle</span> PROFIL SAYA & PENGATURAN AKUN
           </span>
-          <button type="button" onclick="showPage('dashboardPage')" class="btn" style="height: 34px; padding: 0 14px; font-size: 12px; background: rgba(255,255,255,0.2) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3) !important; border-radius: 6px;">
-            <span class="material-symbols-rounded" style="font-size: 18px;">arrow_back</span> KEMBALI KE DASHBOARD
+          <button type="button" onclick="showPage('dashboardPage')" title="Tutup / Kembali ke Dashboard" style="background: rgba(255, 255, 255, 0.2) !important; border: none !important; color: #ffffff !important; font-size: 22px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; padding: 0; line-height: 1; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+            <span class="material-symbols-rounded" style="font-size: 22px; font-weight: 800;">close</span>
           </button>
         </div>
 

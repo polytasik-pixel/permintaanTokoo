@@ -20907,7 +20907,7 @@ window.extractFirstValidJSON = extractFirstValidJSON;
 
 function applyParsedDataToForm(parsedData) {
   if (!parsedData) return false;
-  console.log('[AUTO-FILL]: Mengisi kolom detail barang dari dokumen...', parsedData);
+  // console.log('[AUTO-FILL]: Mengisi kolom detail barang dari dokumen...', parsedData);
 
   // 1. Tentukan Jenis Permintaan (DEFAULT atau DUS) berdasarkan apakah ada nomor seri dus
   const rawItems = Array.isArray(parsedData.items) ? parsedData.items : (Array.isArray(parsedData) ? parsedData : []);
@@ -21283,9 +21283,9 @@ window.isGeminiKeyAdminAllowed = isGeminiKeyAdminAllowed;
 function aturGeminiApiKey() {
   if (!isGeminiKeyAdminAllowed()) {
     if (typeof showNotif === 'function') {
-      showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!', 'warning');
+      showNotif('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!', 'warning');
     } else {
-      alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!');
+      alert('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!');
     }
     return;
   }
@@ -21380,7 +21380,7 @@ async function autoSyncGeminiKeyToSupabase(force = false) {
   // HANYA ADMIN DAN SERVICE TSM YANG BERHAK MEMPERBARUI KUNCI GEMINI TERPUSAT DI SUPABASE
   const isAllowed = isGeminiKeyAdminAllowed();
   if (!isAllowed) {
-    console.log('[GEMINI AI] Non-admin / non-Service TSM user key saved locally only.');
+    // console.log('[GEMINI AI] Non-admin / non-Service TSM user key saved locally only.');
     return false;
   }
 
@@ -21441,9 +21441,9 @@ setTimeout(() => {
 function simpanGeminiApiKeyDariModal() {
   if (!isGeminiKeyAdminAllowed()) {
     if (typeof showNotif === 'function') {
-      showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!', 'warning');
+      showNotif('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!', 'warning');
     } else {
-      alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!');
+      alert('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!');
     }
     return;
   }
@@ -21477,9 +21477,9 @@ window.simpanGeminiApiKeyDariModal = simpanGeminiApiKeyDariModal;
 function hapusGeminiApiKeyPermanen() {
   if (!isGeminiKeyAdminAllowed()) {
     if (typeof showNotif === 'function') {
-      showNotif('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!', 'warning');
+      showNotif('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!', 'warning');
     } else {
-      alert('Hanya Admin dan Service TSM yang diperbolehkan mengonfigurasi / mengunggah Gemini API Key!');
+      alert('Anda tidak memiliki hak akses untuk mengonfigurasi / mengunggah API Key Gemini!');
     }
     return;
   }
@@ -21696,7 +21696,7 @@ Format JSON wajib persis seperti berikut:
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${apiKey}`;
 
       try {
-        console.log(`[GEMINI AI]: Mengirim dokumen PDF ke model ${mod}...`);
+        // console.log(`[GEMINI AI]: Mengirim dokumen PDF ke model ${mod}...`);
         const res = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -21745,7 +21745,7 @@ await new Promise(r => setTimeout(r, 400));
 
     // JIKA PENGIRIMAN FILE PDF ASLI BELUM BERHASIL, COBA RENDER HALAMAN PDF SEBAGAI GAMBAR KE GEMINI VISION
     if (!response || !rawText) {
-      console.log('[GEMINI AI]: Mengonversi halaman PDF menjadi gambar untuk diproses Gemini Vision...');
+      // console.log('[GEMINI AI]: Mengonversi halaman PDF menjadi gambar untuk diproses Gemini Vision...');
       await ensurePdfJsLoaded();
       if (typeof pdfjsLib !== 'undefined') {
         try {
@@ -21779,7 +21779,7 @@ await new Promise(r => setTimeout(r, 400));
               if (response && rawText) break;
               const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${apiKey}`;
               try {
-                console.log(`[GEMINI VISION]: Mengirim render PDF ke model ${mod}...`);
+                // console.log(`[GEMINI VISION]: Mengirim render PDF ke model ${mod}...`);
                 const vRes = await fetch(apiUrl, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -21931,7 +21931,7 @@ Format JSON wajib persis seperti berikut:
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${apiKey}`;
 
       try {
-        console.log(`[GEMINI VISION AI]: Mengirim gambar ke Google Gemini model ${mod}...`);
+        // console.log(`[GEMINI VISION AI]: Mengirim gambar ke Google Gemini model ${mod}...`);
         const res = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
