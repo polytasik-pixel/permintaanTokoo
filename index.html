@@ -33,8 +33,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
   <!-- Master Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260910_MARIMBA_DEFAULT_SOUND_AKUN_SETTINGS">
-  <script src="app.js?v=20260910_MARIMBA_DEFAULT_SOUND_AKUN_SETTINGS"></script>
+  <link rel="stylesheet" href="styles.css?v=20260910_10_NOTIFICATION_SOUND_PRESETS">
+  <script src="app.js?v=20260910_10_NOTIFICATION_SOUND_PRESETS"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -1113,24 +1113,19 @@
 
           <!-- KUMPULAN TOMBOL AKSI PROFIL (GRID TOMBOL BERWARNA & SEIMBANG) -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; width: 100%;">
-            <!-- TOMBOL SIMPAN -->
-            <button type="button" onclick="simpanAkun()" class="btn" style="height: 42px; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);">
+            <!-- 1. TOMBOL SIMPAN PROFIL -->
+            <button type="button" onclick="simpanAkun()" class="btn" style="height: 42px; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);">
               <span class="material-symbols-rounded" style="font-size: 20px;">save</span> SIMPAN PROFIL
             </button>
             
-            <!-- TOMBOL LOGOUT SEMUA PERANGKAT -->
-            <button type="button" onclick="logoutSemuaPerangkat()" class="btn" style="height: 42px; background: linear-gradient(135deg, #ef4444, #dc2626) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);">
-              <span class="material-symbols-rounded" style="font-size: 20px;">phonelink_off</span> LOGOUT PERANGKAT
-            </button>
-
-            <!-- TOMBOL PURGE CACHE GLOBAL (HANYA UNTUK SUPERADMIN) -->
-            <button id="btnGlobalClearCacheAdmin" type="button" onclick="pushGlobalClearCacheAdmin()" class="btn" style="display: none; height: 42px; background: linear-gradient(135deg, #f59e0b, #d97706) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);">
+            <!-- 2. TOMBOL BERSIH CACHE GLOBAL (DITUKAR KEPOSISI KE-2) -->
+            <button type="button" onclick="hapusPenyimpananLokalAkun()" class="btn" style="height: 42px; background: linear-gradient(135deg, #f59e0b, #d97706) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);">
               <span class="material-symbols-rounded" style="font-size: 20px;">cleaning_services</span> BERSIH CACHE GLOBAL
             </button>
 
-            <!-- TOMBOL BATAL / KEMBALI -->
-            <button type="button" onclick="tutupAkun()" class="btn" style="height: 42px; background: #e2e8f0 !important; color: #334155 !important; font-weight: 700; font-size: 13px; border-radius: 8px; border: 1px solid #cbd5e1 !important;">
-              <span class="material-symbols-rounded" style="font-size: 20px;">arrow_back</span> KEMBALI
+            <!-- 3. TOMBOL LOGOUT PERANGKAT (DITUKAR KEPOSISI KE-3) -->
+            <button type="button" onclick="logoutSemuaPerangkat()" class="btn" style="height: 42px; background: linear-gradient(135deg, #ef4444, #dc2626) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);">
+              <span class="material-symbols-rounded" style="font-size: 20px;">phonelink_off</span> LOGOUT PERANGKAT
             </button>
           </div>
 

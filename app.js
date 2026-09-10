@@ -8667,10 +8667,24 @@ function getAudioContext() {
 
 if (typeof window !== 'undefined') {
   const unlockAudioEngine = function() {
-    const ctx = getAudioContext();
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
+    try {
+      const ctx = getAudioContext();
+      if (ctx) {
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            if (ctx.state === 'running') {
+              ['click', 'touchstart', 'mousedown', 'keydown', 'pointerdown', 'focus'].forEach(evt => {
+                window.removeEventListener(evt, unlockAudioEngine, { capture: true });
+              });
+            }
+          }).catch(() => {});
+        } else if (ctx.state === 'running') {
+          ['click', 'touchstart', 'mousedown', 'keydown', 'pointerdown', 'focus'].forEach(evt => {
+            window.removeEventListener(evt, unlockAudioEngine, { capture: true });
+          });
+        }
+      }
+    } catch(e) {}
   };
 
   ['click', 'touchstart', 'mousedown', 'keydown', 'pointerdown', 'focus'].forEach(evt => {
@@ -8731,7 +8745,7 @@ function playSoundToneByName(toneName = 'marimba') {
     const lower = String(toneName || '').toLowerCase();
 
     if (lower === 'bell' || lower === 'lonceng') {
-      // 2. Lonceng Klasik (Warm Bell G5 784Hz -> C6 1046Hz)
+      // 3. Lonceng Klasik (Warm Bell G5 784Hz -> C6 1046Hz)
       [783.99, 1046.50].forEach((freq, idx) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -8748,7 +8762,7 @@ function playSoundToneByName(toneName = 'marimba') {
       return true;
     } 
     else if (lower === 'crystal') {
-      // Crystal Chime (C6 1046.50Hz -> G6 1567.98Hz)
+      // 2. Crystal Chime (C6 1046.50Hz -> G6 1567.98Hz)
       [
         { f: 1046.50, t: 0, d: 0.25, v: 0.14 },
         { f: 1567.98, t: 0.07, d: 0.35, v: 0.16 }
@@ -8797,6 +8811,91 @@ function playSoundToneByName(toneName = 'marimba') {
         gain.connect(ctx.destination);
         osc.start(now + (idx * 0.06));
         osc.stop(now + (idx * 0.06) + 0.2);
+      });
+      return true;
+    }
+    else if (lower === 'harpsichord' || lower === 'arpeggio') {
+      // 6. Klassik Arpeggio (C5 523Hz -> E5 659Hz -> G5 784Hz -> C6 1046Hz)
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + (idx * 0.06));
+        gain.gain.setValueAtTime(0, now + (idx * 0.06));
+        gain.gain.linearRampToValueAtTime(0.2, now + (idx * 0.06) + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (idx * 0.06) + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + (idx * 0.06));
+        osc.stop(now + (idx * 0.06) + 0.35);
+      });
+      return true;
+    }
+    else if (lower === 'beam' || lower === 'chirp') {
+      // 7. Sci-Fi Beam (A5 880Hz -> E6 1318Hz -> A6 1760Hz)
+      [880.00, 1318.51, 1760.00].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + (idx * 0.05));
+        gain.gain.setValueAtTime(0, now + (idx * 0.05));
+        gain.gain.linearRampToValueAtTime(0.16, now + (idx * 0.05) + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (idx * 0.05) + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + (idx * 0.05));
+        osc.stop(now + (idx * 0.05) + 0.18);
+      });
+      return true;
+    }
+    else if (lower === 'xylophone') {
+      // 8. Xylophone Cascade (G5 784Hz -> B5 988Hz -> D6 1175Hz)
+      [783.99, 987.77, 1174.66].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + (idx * 0.07));
+        gain.gain.setValueAtTime(0, now + (idx * 0.07));
+        gain.gain.linearRampToValueAtTime(0.24, now + (idx * 0.07) + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (idx * 0.07) + 0.22);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + (idx * 0.07));
+        osc.stop(now + (idx * 0.07) + 0.22);
+      });
+      return true;
+    }
+    else if (lower === 'flute') {
+      // 9. Gentle Flute (D5 587Hz -> A5 880Hz)
+      [587.33, 880.00].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + (idx * 0.14));
+        gain.gain.setValueAtTime(0, now + (idx * 0.14));
+        gain.gain.linearRampToValueAtTime(0.18, now + (idx * 0.14) + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (idx * 0.14) + 0.45);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + (idx * 0.14));
+        osc.stop(now + (idx * 0.14) + 0.45);
+      });
+      return true;
+    }
+    else if (lower === 'starlight' || lower === 'glockenspiel') {
+      // 10. Starlight Glockenspiel (F6 1397Hz -> A6 1760Hz -> C7 2093Hz)
+      [1396.91, 1760.00, 2093.00].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + (idx * 0.09));
+        gain.gain.setValueAtTime(0, now + (idx * 0.09));
+        gain.gain.linearRampToValueAtTime(0.15, now + (idx * 0.09) + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (idx * 0.09) + 0.4);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + (idx * 0.09));
+        osc.stop(now + (idx * 0.09) + 0.4);
       });
       return true;
     }
@@ -8890,12 +8989,10 @@ function playNotificationSound(type = 'info') {
         audioEl.play().catch(() => {});
       } catch (e) {}
     }
-  } catch(e) {
-    console.warn('[SOUND NOTIF NOTICE]:', e);
-  }
+  } catch(e) {}
 }
 
-// UI HANDLER UNTUK PILIHAN NADA NOTIFIKASI
+// UI HANDLER UNTUK 10 PILIHAN NADA NOTIFIKASI
 const LIST_NADA_NOTIF_PRESETS = [
   {
     key: 'marimba',
@@ -8931,6 +9028,41 @@ const LIST_NADA_NOTIF_PRESETS = [
     icon: 'graphic_eq',
     badge: 'TECH',
     desc: 'Pulsasi nada sintesis ganda presisi tinggi bergaya futuristik.'
+  },
+  {
+    key: 'harpsichord',
+    name: 'Klassik Arpeggio (Kecapi 4-Nada)',
+    icon: 'piano',
+    badge: 'HARMONIC',
+    desc: 'Alunan arpeggio kecapi klasik 4 nada yang anggun & indah (C5 ➔ E5 ➔ G5 ➔ C6).'
+  },
+  {
+    key: 'beam',
+    name: 'Sci-Fi Beam (Chirp Modern)',
+    icon: 'sensors',
+    badge: 'SCI-FI',
+    desc: 'Sinyal chirp digital masa depan yang tajam & jelas (A5 ➔ E6 ➔ A6).'
+  },
+  {
+    key: 'xylophone',
+    name: 'Xylophone Cascade (Rentetan Kayu)',
+    icon: 'auto_awesome',
+    badge: 'PLAYFUL',
+    desc: 'Lompatan 3 nada xilofon bertenaga & riang (G5 ➔ B5 ➔ D6).'
+  },
+  {
+    key: 'flute',
+    name: 'Gentle Flute (Gema Seruling)',
+    icon: 'air',
+    badge: 'CALM',
+    desc: 'Dual-harmonic nada seruling yang sangat tenang & lembut (D5 ➔ A5).'
+  },
+  {
+    key: 'starlight',
+    name: 'Starlight Glockenspiel (Bintang Kejora)',
+    icon: 'star',
+    badge: 'SPARKLE',
+    desc: 'Kilau 3 lonceng besi glockenspiel tinggi bak bintang kejora (F6 ➔ A6 ➔ C7).'
   }
 ];
 
