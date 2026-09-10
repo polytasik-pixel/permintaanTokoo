@@ -33,8 +33,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
   <!-- Master Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260910_PROTECT_ADMIN_LOGOUT_DEVICE_ISOLATION">
-  <script src="app.js?v=20260910_PROTECT_ADMIN_LOGOUT_DEVICE_ISOLATION"></script>
+  <link rel="stylesheet" href="styles.css?v=20260910_CLEAN_DONE_INDUK_CONFIRM_TEXT">
+  <script src="app.js?v=20260910_CLEAN_DONE_INDUK_CONFIRM_TEXT"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -1147,7 +1147,10 @@
       <div id="notifListBody" style="max-height: 420px; overflow-y: auto; padding: 16px; background: #ffffff;"></div>
       
       <!-- Footer -->
-      <div style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+      <div style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 8px;">
+        <button id="btnMarkAllNotifRead" type="button" onclick="markAllNotifAsRead()" class="btn-primary" style="font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #0284c7; color: #ffffff; border: none; padding: 0 14px; cursor: pointer; box-shadow: 0 2px 6px rgba(2,132,199,0.3); display: inline-flex; align-items: center; gap: 6px;">
+          <span class="material-symbols-rounded" style="font-size: 17px;">done_all</span> TANDAI SUDAH DIBACA
+        </button>
         <button id="btnHapusSemuaNotifSystem" type="button" onclick="hapusSemuaNotifFirebaseDanLokal()" class="btn-danger" style="display: none; font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #ef4444; color: #ffffff; border: none; padding: 0 16px; cursor: pointer; box-shadow: 0 2px 6px rgba(239,68,68,0.25);">HAPUS SEMUA</button>
         <button type="button" onclick="tutupNotificationModal()" class="btn-secondary" style="font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; padding: 0 18px; cursor: pointer; margin-left: auto;">TUTUP</button>
       </div>

@@ -2096,7 +2096,7 @@ function updateNotifBellCounter() {
     return !n.readBy.includes(currentUser ? currentUser.id : '') && !n.readBy.includes(currentUser ? currentUser.username : '');
   }).length;
 
-  const displayCount = unreadCount > 0 ? unreadCount : (userNotifs.length > 0 ? userNotifs.length : 0);
+  const displayCount = unreadCount;
 
   if (displayCount > 0) {
     badgeEl.textContent = displayCount > 99 ? '99+' : displayCount;
@@ -2106,7 +2106,10 @@ function updateNotifBellCounter() {
     badgeEl.style.setProperty('align-items', 'center', 'important');
     badgeEl.style.setProperty('justify-content', 'center', 'important');
   } else {
+    badgeEl.textContent = '0';
     badgeEl.style.setProperty('display', 'none', 'important');
+    badgeEl.style.setProperty('visibility', 'hidden', 'important');
+    badgeEl.style.setProperty('opacity', '0', 'important');
   }
 }
 window.updateNotifBellCounter = updateNotifBellCounter;
@@ -2467,6 +2470,7 @@ function markAllNotifAsRead(silent = false) {
   // Notifikasi dikelola secara lokal & Firebase (tidak dikirim ke Supabase)
 
   updateNotifBellCounter();
+  if (typeof updateGlobalDeviceAppBadge === 'function') updateGlobalDeviceAppBadge();
   loadNotificationList();
 
   if (!silent && typeof showNotif === 'function') {
@@ -3005,6 +3009,8 @@ window.getDbRealtime = getDbRealtime;
 let unsubscribeFirestoreChat = null;
 let unsubscribeFirestoreNotif = null;
 
+let _prevChatSnapshotIds = null;
+
 function startFirebaseRealtimeChatListener() {
   const fs = typeof getDbFirestore === 'function' ? getDbFirestore() : (typeof dbFirestore !== 'undefined' ? dbFirestore : null);
   if (!fs) return;
@@ -3028,15 +3034,36 @@ function startFirebaseRealtimeChatListener() {
           if (typeof refreshActiveChatUI === 'function') refreshActiveChatUI();
           if (typeof cekUnreadNotif === 'function') cekUnreadNotif();
           if (typeof updateNotifBellCounter === 'function') updateNotifBellCounter();
-    if (typeof updateGlobalDeviceAppBadge === 'function') updateGlobalDeviceAppBadge();
+          if (typeof updateGlobalDeviceAppBadge === 'function') updateGlobalDeviceAppBadge();
           return;
         }
 
         const remoteChats = [];
+        let hasNewIncomingChat = false;
+
         snapshot.forEach(doc => {
           const data = doc.data();
-          if (data && data.id) remoteChats.push(data);
+          if (data && data.id) {
+            remoteChats.push(data);
+            if (_prevChatSnapshotIds !== null && !_prevChatSnapshotIds.has(data.id)) {
+              const currentUsr = currentUser ? (currentUser.username || currentUser.id || '') : '';
+              if (data.senderUsername !== currentUsr && data.senderId !== currentUsr) {
+                hasNewIncomingChat = true;
+              }
+            }
+          }
         });
+
+        _prevChatSnapshotIds = new Set(remoteChats.map(c => c.id));
+
+        if (hasNewIncomingChat) {
+          if (typeof playNotificationSound === 'function') {
+            playNotificationSound('chat');
+          }
+          if (typeof updateGlobalDeviceAppBadge === 'function') {
+            updateGlobalDeviceAppBadge();
+          }
+        }
 
         // Mirror remote chats directly to local device cache (no ghost messages kept)
         appStorage.setItem(CHAT_DB_KEY, JSON.stringify(remoteChats));
@@ -3074,7 +3101,7 @@ function startFirebaseRealtimeChatListener() {
         if (typeof refreshActiveChatUI === 'function') refreshActiveChatUI();
         if (typeof cekUnreadNotif === 'function') cekUnreadNotif();
         if (typeof updateNotifBellCounter === 'function') updateNotifBellCounter();
-    if (typeof updateGlobalDeviceAppBadge === 'function') updateGlobalDeviceAppBadge();
+        if (typeof updateGlobalDeviceAppBadge === 'function') updateGlobalDeviceAppBadge();
         if (typeof renderChatBoxUser === 'function') renderChatBoxUser();
         if (typeof renderChatBoxAdmin === 'function') renderChatBoxAdmin();
       }, err => {
@@ -3089,6 +3116,8 @@ function startFirebaseRealtimeChatListener() {
   }
 }
 window.startFirebaseRealtimeChatListener = startFirebaseRealtimeChatListener;
+
+let _prevNotifSnapshotIds = null;
 
 function startFirebaseRealtimeNotifListener() {
   const fs = typeof getDbFirestore === 'function' ? getDbFirestore() : (typeof dbFirestore !== 'undefined' ? dbFirestore : null);
@@ -3109,7 +3138,7 @@ function startFirebaseRealtimeNotifListener() {
           try { localStorage.setItem(NOTIFICATIONS_DB_KEY, JSON.stringify(emptyPayload)); } catch(e) {}
           if (typeof loadNotificationList === 'function') loadNotificationList();
           if (typeof updateNotifBellCounter === 'function') updateNotifBellCounter();
-    if (typeof updateGlobalDeviceAppBadge === 'function') updateGlobalDeviceAppBadge();
+          if (typeof updateGlobalDeviceAppBadge === 'function') updateGlobalDeviceAppBadge();
           if (typeof updateNotifBadgeCount === 'function') updateNotifBadgeCount();
           return;
         }
@@ -3125,6 +3154,8 @@ function startFirebaseRealtimeNotifListener() {
         }
 
         const remoteNotifs = [];
+        let hasNewIncomingNotif = false;
+
         snapshot.forEach(doc => {
           const data = doc.data();
           if (data && data.id) {
@@ -3133,8 +3164,18 @@ function startFirebaseRealtimeNotifListener() {
             const mergedReadBy = Array.from(new Set([...locReadBy, ...remReadBy]));
             data.readBy = mergedReadBy;
             remoteNotifs.push(data);
+
+            if (_prevNotifSnapshotIds !== null && !_prevNotifSnapshotIds.has(data.id)) {
+              hasNewIncomingNotif = true;
+            }
           }
         });
+
+        _prevNotifSnapshotIds = new Set(remoteNotifs.map(n => n.id));
+
+        if (hasNewIncomingNotif && typeof playNotificationSound === 'function') {
+          playNotificationSound('lonceng');
+        }
 
         // Mirror directly to local storage
         appStorage.setItem(NOTIFICATIONS_DB_KEY, JSON.stringify(remoteNotifs));
@@ -3142,7 +3183,7 @@ function startFirebaseRealtimeNotifListener() {
 
         if (typeof loadNotificationList === 'function') loadNotificationList();
         if (typeof updateNotifBellCounter === 'function') updateNotifBellCounter();
-    if (typeof updateGlobalDeviceAppBadge === 'function') updateGlobalDeviceAppBadge();
+        if (typeof updateGlobalDeviceAppBadge === 'function') updateGlobalDeviceAppBadge();
         if (typeof updateNotifBadgeCount === 'function') updateNotifBadgeCount();
       }, err => {
         if (unsubscribeFirestoreNotif) {
@@ -7084,9 +7125,13 @@ window.loadRememberedCredentials = loadRememberedCredentials;
 function autoLogin() {
   if (!currentUser) {
     try {
-      const savedSession = (typeof appStorage !== 'undefined' && appStorage) ? appStorage.getItem(SESSION_KEY) : null ||
-        (typeof localStorage !== 'undefined' ? localStorage.getItem(SESSION_KEY) : null) ||
-        (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(SESSION_KEY) : null);
+      let savedSession = (typeof sessionStorage !== 'undefined') ? sessionStorage.getItem(SESSION_KEY) : null;
+      if (!savedSession) {
+        savedSession = (typeof appStorage !== 'undefined' && appStorage) ? appStorage.getItem(SESSION_KEY) : null;
+      }
+      if (!savedSession) {
+        savedSession = (typeof localStorage !== 'undefined') ? localStorage.getItem(SESSION_KEY) : null;
+      }
       if (savedSession) {
         currentUser = JSON.parse(savedSession);
       }
@@ -8573,6 +8618,7 @@ function shouldRowBlinkRed(r) {
 // =============================================================================
 let _audioCtx = null;
 let _lastSoundPlayedTime = 0;
+const FALLBACK_CRYSTAL_CHIME_B64 = "data:audio/wav;base64,UklGRmAGvwbeBq0GMQZwBXQESwMDAq4AW/8b/v38DfxY++X6t/rP+iz7xfuT/Ij9mP60/8oAzgGxAmcD5wMqBC0E7wN1A8YC6gHvAOL/0f7M/eL8H/yP+zz7Kvtb+9D7gvxr/X/+sP/wADACXgNtBEwF8QVSBmgGMgaxBekE4wOqAkwB2v9i/vn8rfuO+qv5Dvm++L/4Evmy+Zn6vPsN/X3++/91AdsCHAQrBfoFgga9BqoGSwalBcEErANzAiYB1/+T/mv9bfyl+xr70/rS+hT7lftN/DH9Nf5J/14AZgFUAhkDrQMGBCIE/gOcAwMDOwJPAUwAQf87/kn9evzZ+2/7RPtb+7T7Tfwd/Rz+Pv9zAK4B3gL0A+EEmgUSBkQGKwbIBR0FMgQQA8UBYADx/oj9NvwL+xb6Yvn3+Nv4D/mR+Vv6ZPug/P/9c//pAFICnAO5BJ0FPQaTBp0GWgbPBQUFBQTcApoBTwAL/9390vz4+1j7+fre+gb7b/sQ/OL81/3i/vT//gD0AcYCawPaAw0EAgS5AzcDhAKpAbEArf+o/rL92Pwn/Kr7aPtl+6T7IfzZ/MP90/78/y8BXwJ7A3MEPQXLBRYGGQbTBUUFdgRtAzYC4AB6/xT+v/yL+4b6vfk5+QH5F/l7+Sj6F/s8/Ir98f5hAMoBGwNEBDoF8AVgBoUGXgbvBT4FVAQ+AwkCxQCD/0/+Ov1R/J37J/vz+gL7Uvvd+5r8gP2A/o3/lwCSAW8CJAOmA/AD/APMA2IDxAL6AREBFAAU/xv+Of17/Oz7k/t4+537Afyg/HP9cP6L/7YA4gEBAwME2wR9BeAF/QXUBWMFrgS/A54CWAH+/57+SP0M/Pr6HvqD+TD5Kvlw+QH61Prh+xz9df7d/0MBmALMA9EEnAUkBmMGWAYFBm4FmwSYA3ICNwH4/8L+pf2u/On7XfsS+wj7P/uy+1v8L/0j/ij/MAAvARUC2AJsA8oD7gPWA4MD+gJEAmoBeAB8/4P+nP3S/DP8x/uV+6H76/tx/C39Fv4i/0EAaQGIApEDdQQoBaEF2AXKBXUF3AQGBPwCyQF7ACP/zv2O/HH7hfrV+Wn5R/lx+eT5nPqR+7f8AP5e/78AFgJSA2UEQgXgBTgGSAYQBpMF2QTqA9QCpQFqADX/Ev4Q/Tr8m/s5+xb7NfuR+yT85vzL/cf+zP/LALkBhwIrA50D1wPWA5oDKAOGArwB1gDi/+v+//0t/YD8Afy5+6373/tM/PD8xf2//tT/8wARAh4DDATPBFwFqgW2BXwF/wRDBFADMQLyAKT/U/4Q/er78Pot+qr5bvl7+dL5b/pK+1r8kv3k/j8AlQHWAvQD4gSUBQUGLwYSBq8FDQU0BDADDQLaAKb/f/50/ZH83/to+y77NPt5+/b7pPx6/Wv+av9pAFsBMwLlAmkDtwPNA6kDTQO/AgcCLgFCAFD/Y/6K/dD8Qvzm+8P73Psx/L78ff1l/mv/gQCcAasCoQNxBBAFdAWZBXoFFwV2BJsDkAJiAR4A1P6R/WX8X/uK+vL5nfmQ+cv5TPoO+wf8LP1w/sP/FgFaAoEDfQRDBcoFDAYJBsEFOAV1BIQDbwJFARUA7f7b/ev8Kvye+077Pftq+9D7a/ww/RT+DP8HAPwA2wGaAi8DkQO8A64DaAPvAkoCgAGeALL/xv7o/ST9h/wZ/OH74/sf/JX8Pv0T/gr/FQAqATkCNQMQBL4ENwVzBW0FJQWeBNsD5wLKAZMAUf8Q/uD80Pvt+kH61fmu+c75NPrc+r37zvwC/kv/mQDfAQwDFATrBIcF4QX3BckFWQWtBNADywKsAYIAW/9D/kr9efzb+3b7Tvtk+7T7Ofzt/MP9sf6p/50AggFMAu8CYwOiA6sDewMXA4UCywH2ABAAJ/9G/nv90fxT/Af88vsX/HrefQ=";
 
 function getAudioContext() {
   if (!_audioCtx) {
@@ -8588,26 +8634,119 @@ function getAudioContext() {
 }
 
 if (typeof window !== 'undefined') {
-  window.addEventListener('click', function unlockAudioOnFirstClick() {
-    getAudioContext();
-  }, { once: false });
-  window.addEventListener('touchstart', function unlockAudioOnFirstTouch() {
-    getAudioContext();
-  }, { once: false });
+  const unlockAudioEngine = function() {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+  };
+
+  ['click', 'touchstart', 'mousedown', 'keydown', 'pointerdown', 'focus'].forEach(evt => {
+    window.addEventListener(evt, unlockAudioEngine, { capture: true, passive: true });
+  });
 }
 
 function isSoundEnabled() {
-  return false;
+  return true;
 }
 
 function toggleAppSound() {
-  if (typeof showPopupNotif === 'function') showPopupNotif('🔇 SUARA NOTIFIKASI DIMATIKAN');
+  if (typeof showNotif === 'function') showNotif('🔔 SUARA NOTIFIKASI AKTIF', 'info');
 }
 window.toggleAppSound = toggleAppSound;
 
-function playNotificationSound(type = 'pending_alert') {
-  // Suara dihilangkan sepenuhnya pada semua login sesuai permintaan user
-  return;
+function playNotificationSound(type = 'info') {
+  try {
+    const lowerType = String(type || '').toLowerCase();
+
+    // HANYA BUNYI JIKA: LONCENG NOTIFIKASI ATAU PESAN CHAT (BUNYI POPUP CARD DIHILANGKAN)
+    const isAllowedSound = 
+      lowerType.includes('chat') || 
+      lowerType.includes('pesan') || 
+      lowerType.includes('lonceng') || 
+      lowerType.includes('notif_lonceng') || 
+      lowerType.includes('notif_realtime');
+
+    if (!isAllowedSound) {
+      return; // SUARA DIHILANGKAN UNTUK SEMUA POPUP NOTIFIKASI & DIALOG
+    }
+
+    const ctx = getAudioContext();
+    let playedWebAudio = false;
+
+    if (ctx) {
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+
+      if (ctx.state === 'running') {
+        const now = ctx.currentTime;
+        if (lowerType.includes('error') || lowerType.includes('salah') || lowerType.includes('gagal') || lowerType.includes('danger')) {
+          [370, 311].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + (idx * 0.08));
+            gain.gain.setValueAtTime(0, now + (idx * 0.08));
+            gain.gain.linearRampToValueAtTime(0.18, now + (idx * 0.08) + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.08) + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + (idx * 0.08));
+            osc.stop(now + (idx * 0.08) + 0.35);
+          });
+          playedWebAudio = true;
+        } else if (lowerType.includes('warning') || lowerType.includes('peringatan')) {
+          [739.99, 880].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + (idx * 0.1));
+            gain.gain.setValueAtTime(0, now + (idx * 0.1));
+            gain.gain.linearRampToValueAtTime(0.15, now + (idx * 0.1) + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.1) + 0.3);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + (idx * 0.1));
+            osc.stop(now + (idx * 0.1) + 0.3);
+          });
+          playedWebAudio = true;
+        } else {
+          const notes = [
+            { f: 1046.50, t: 0, d: 0.25, v: 0.12 },
+            { f: 1567.98, t: 0.07, d: 0.3, v: 0.15 }
+          ];
+          notes.forEach(n => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(n.f, now + n.t);
+            gain.gain.setValueAtTime(0, now + n.t);
+            gain.gain.linearRampToValueAtTime(n.v, now + n.t + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + n.t + n.d);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + n.t);
+            osc.stop(now + n.t + n.d);
+          });
+          playedWebAudio = true;
+        }
+      }
+    }
+
+    // FALLBACK HTML5 AUDIO ELEMENT JIKA WEB AUDIO ENGINE SUSPENDED/BLOCKED BROWSER LOKAL
+    if (!playedWebAudio && FALLBACK_CRYSTAL_CHIME_B64) {
+      try {
+        const audioEl = new Audio(FALLBACK_CRYSTAL_CHIME_B64);
+        audioEl.volume = 0.5;
+        audioEl.play().catch(e => {
+          console.info('ℹ️ [AUDIO NOTICE]: Autoplay audio lokal memerlukan 1x klik/interaksi layar.', e);
+        });
+      } catch (e) {}
+    }
+  } catch(e) {
+    console.warn('[SOUND NOTIF NOTICE]:', e);
+  }
 }
 window.playNotificationSound = playNotificationSound;
 
@@ -10754,6 +10893,9 @@ let tempArtemisPhotos = [];
 function doneService(noSurat) {
   if (!noSurat) return;
   window._activeDonePartialId = null; // Reset partial breakdown DONE flag for main request
+  if (typeof isItemModifiedMap !== 'undefined' && isItemModifiedMap) {
+    isItemModifiedMap[noSurat] = false;
+  }
   const requests = getRequestsFromDB();
   const req = requests.find(r => r && (r.noSurat === noSurat || String(r.noSurat) === String(noSurat) || r.id === noSurat));
   if (!req) {
@@ -10763,25 +10905,96 @@ function doneService(noSurat) {
 
   // CHECK UN-DONE PARTIAL BREAKDOWNS FIRST
   const partialsCheck = typeof getPartialBreakdownsFromDB === 'function' ? getPartialBreakdownsFromDB(noSurat) : [];
-  if (Array.isArray(partialsCheck) && partialsCheck.length > 0) {
-    const unDonePartials = partialsCheck.filter(p => p && p.status !== 'DONE' && p.status !== 'REJECT');
-    if (unDonePartials.length > 0) {
-      const pids = unDonePartials.map(p => p.partial_id || p.partialId).join(', ');
+  const hasBreakdownSubmissions = Array.isArray(partialsCheck) && partialsCheck.length > 0;
+
+  if (hasBreakdownSubmissions) {
+    const pendingPartials = partialsCheck.filter(p => p && p.status !== 'DONE' && p.status !== 'REJECT');
+    if (pendingPartials.length > 0) {
+      const pids = pendingPartials.map(p => p.partial_id || p.partialId).join(', ');
       if (typeof showNotif === 'function') {
         showNotif(`TIDAK DAPAT SET DONE INDUK! MASIH ADA SURAT PARSIAL (${pids}) YANG BELUM BERSTATUS DONE.`, 'warning');
       }
       return;
     }
-  }
 
-  // VALIDASI KETAT BRAKDOWN PARSIAL TERGANTUNG
-  if (typeof isRequestReadyForDone === 'function' && !isRequestReadyForDone(req)) {
-    if (typeof showNotif === 'function') {
-      showNotif('TIDAK DAPAT MENYELESAIKAN (DONE)! MASIH TERDAPAT BARANG DENGAN SISA QTY YANG BELUM DIBREAKDOWN / BELUM DITANDAI "TIDAK DIPENUHI".', 'warning');
+    // CEK SISA QTY ITEM YANG BELUM DIBREAKDOWN KECUALI DITANDAI "TIDAK DIPENUHI"
+    const unfulfilledItems = req.items ? req.items.filter((it, idx) => {
+      const remQty = typeof calcItemRemainingQty === 'function' ? calcItemRemainingQty(req, idx) : 0;
+      const unfulfilled = typeof isItemUnfulfilled === 'function' ? isItemUnfulfilled(it) : false;
+      return remQty > 0 && !unfulfilled;
+    }) : [];
+
+    if (unfulfilledItems.length > 0) {
+      if (typeof showNotif === 'function') {
+        showNotif(`TIDAK DAPAT SET DONE INDUK! MASIH ADA SISA QTY ITEM YANG BELUM DIBREAKDOWN (KECUALI JIKA SISA ITEM SUDAH DITANDAI 'TIDAK DIPENUHI').`, 'warning');
+      }
+      return;
     }
+
+    // JIKA ADA SURAT PARSIAL: FOTO TIDAK DIBUTUHKAN LAGI! LANGSUNG KONFIRMASI VIA POPUP CONFIRM
+    showConfirm(
+      `SELESAIKAN PERMINTAAN INDUK #${noSurat}?`,
+      () => {
+        try {
+          const allReqs = getRequestsFromDB();
+          const targetNo = String(noSurat).trim().toUpperCase();
+          const mainIdx = allReqs.findIndex(r => r && (
+            String(r.noSurat || '').trim().toUpperCase() === targetNo ||
+            String(r.id || '').trim().toUpperCase() === targetNo
+          ));
+
+          if (mainIdx !== -1) {
+            allReqs[mainIdx].status = 'DONE';
+            
+            if (Array.isArray(allReqs[mainIdx].items)) {
+              allReqs[mainIdx].items.forEach(item => {
+                const unfulfilled = typeof isItemUnfulfilled === 'function' ? isItemUnfulfilled(item) : false;
+                if (unfulfilled) {
+                  item.statusPart = 'TIDAK DIPENUHI';
+                  item.keteranganPart = 'TIDAK DIPENUHI';
+                  item.updatePart = 'TIDAK DIPENUHI';
+                } else if (!item.statusPart || item.statusPart === 'PENDING') {
+                  item.statusPart = 'SUDAH DISERAHKAN';
+                  item.keteranganPart = 'SUDAH DISERAHKAN';
+                  item.updatePart = 'SUDAH DISERAHKAN';
+                }
+              });
+            }
+
+            if (!allReqs[mainIdx].log) allReqs[mainIdx].log = [];
+            allReqs[mainIdx].log.push({
+              action: 'DONE_INDUK_PARSIAL_LENGKAP',
+              user: currentUser ? (currentUser.fullName || currentUser.username) : 'SERVICE',
+              notes: `SELESAI DONE INDUK (PARSIAL SUDAH DILENGKAPI)`,
+              time: `${getFormattedDateDDMMYYYY()} ${new Date().toLocaleTimeString('id-ID')}`
+            });
+
+            saveRequestsToDB(allReqs, allReqs[mainIdx], 'UPDATE');
+            if (typeof safeSupabaseUpsertPermintaan === 'function') {
+              safeSupabaseUpsertPermintaan(allReqs[mainIdx]);
+            }
+
+            showNotif(`PERMINTAAN INDUK #${noSurat} BERHASIL SELESAI (DONE)!`, 'success');
+            if (typeof loadRiwayat === 'function') loadRiwayat();
+            if (typeof loadDashboard === 'function') loadDashboard();
+            if (typeof loadMasterDbTable === 'function' && document.getElementById('masterDbTableBody')) {
+              loadMasterDbTable();
+            }
+            lihatDetail(noSurat);
+          }
+        } catch (err) {
+          console.error("Error setting done induk parsial:", err);
+          showNotif('GAGAL MENYELESAIKAN PERMINTAAN INDUK', 'danger');
+        }
+      },
+      null,
+      'YA, SELESAIKAN (SET DONE)',
+      'BATAL'
+    );
     return;
   }
 
+  // JIKA TIDAK ADA SURAT PARSIAL: WAJIB UPLOAD FOTO PROSES ARTEMIS VIA MODAL
   const artemisNoSurat = document.getElementById('artemisNoSurat');
   if (artemisNoSurat) artemisNoSurat.value = noSurat;
   const inputKet = document.getElementById('inputKetPartArtemis');
@@ -10790,20 +11003,11 @@ function doneService(noSurat) {
   const artemisSubTitle = document.getElementById('artemisSubTitle');
   const pasteBox = document.getElementById('artemisPasteBox');
   const previewGrid = document.getElementById('artemisPhotoPreviewGrid');
-  const hasPartials = Array.isArray(partialsCheck) && partialsCheck.length > 0;
 
-  if (hasPartials) {
-    if (pasteBox) pasteBox.style.display = 'none';
-    if (previewGrid) previewGrid.style.display = 'none';
-    if (artemisSubTitle) {
-      artemisSubTitle.textContent = `KONFIRMASI PENYELESAIKAN SURAT INDUK #${noSurat} (FOTO BUKTI SUDAH DISERAHKAN DI SURAT PARSIAL):`;
-    }
-  } else {
-    if (pasteBox) pasteBox.style.display = 'block';
-    if (previewGrid) previewGrid.style.display = 'flex';
-    if (artemisSubTitle) {
-      artemisSubTitle.textContent = `UPLOAD FOTO BUKTI PROSES ARTEMIS UNTUK MENYELESAIKAN PERMINTAAN #${noSurat}:`;
-    }
+  if (pasteBox) pasteBox.style.display = 'block';
+  if (previewGrid) previewGrid.style.display = 'flex';
+  if (artemisSubTitle) {
+    artemisSubTitle.textContent = `UPLOAD FOTO BUKTI PROSES ARTEMIS UNTUK MENYELESAIKAN PERMINTAAN #${noSurat}:`;
   }
 
   const titleEl = document.getElementById('artemisTitle');
@@ -10983,15 +11187,16 @@ function prosesSimpanDoneDenganBuktiArtemis() {
     return;
   }
 
+  // WAJIB UPLOAD FOTO BUKTI PROSES ARTEMIS UNTUK SEMUA PROSES DONE (SELESAIKAN)
+  if (!Array.isArray(tempArtemisPhotos) || tempArtemisPhotos.length === 0) {
+    showNotif('TIDAK ADA FOTO BUKTI PROSES ARTEMIS YANG DIUPLOAD! WAJIB MENGUNGGAH FOTO BUKTI UNTUK PROSES DONE.', 'warning');
+    return;
+  }
+
   const partialId = window._activeDonePartialId;
 
   // JIKA DONE ADALAH UNTUK CARD SURAT JALAN PARSIAL (BREAKDOWN CARD)
   if (partialId) {
-    if (!Array.isArray(tempArtemisPhotos) || tempArtemisPhotos.length === 0) {
-      showNotif('TIDAK ADA FOTO BUKTI PROSES ARTEMIS YANG DIUPLOAD!', 'warning');
-      return;
-    }
-
     showConfirm(`SELESAIKAN SURAT JALAN PARSIAL #${noSurat}-${partialId} DAN SIMPAN BUKTI FOTO?`, () => {
       try {
         const partials = getPartialBreakdownsFromDB(noSurat);
@@ -11013,14 +11218,34 @@ function prosesSimpanDoneDenganBuktiArtemis() {
           const requests = getRequestsFromDB();
           const targetNo = String(noSurat).trim().toUpperCase();
           const mainIdx = requests.findIndex(r => r && String(r.noSurat || '').trim().toUpperCase() === targetNo);
-          if (mainIdx !== -1 && Array.isArray(partials[pIdx].items)) {
-            partials[pIdx].items.forEach(pItem => {
-              const itemIdx = pItem.itemIdx;
-              if (itemIdx >= 0 && itemIdx < requests[mainIdx].items.length) {
-                requests[mainIdx].items[itemIdx].statusPart = 'SUDAH DISERAHKAN';
-                requests[mainIdx].items[itemIdx].keteranganPart = 'SUDAH DISERAHKAN';
-              }
-            });
+          if (mainIdx !== -1) {
+            if (Array.isArray(partials[pIdx].items)) {
+              partials[pIdx].items.forEach(pItem => {
+                const itemIdx = pItem.itemIdx;
+                if (itemIdx >= 0 && itemIdx < requests[mainIdx].items.length) {
+                  requests[mainIdx].items[itemIdx].statusPart = 'SUDAH DISERAHKAN';
+                  requests[mainIdx].items[itemIdx].keteranganPart = 'SUDAH DISERAHKAN';
+                }
+              });
+            }
+
+            // OTOMATIS JADIKAN DONE INDUK JIKA SEMUA PARSIAL DONE DAN TIDAK ADA SISA ITEM UNFULFILLED
+            const updatedPartials = getPartialBreakdownsFromDB(noSurat);
+            const unDonePartials = updatedPartials.filter(p => p && p.status !== 'DONE' && p.status !== 'REJECT');
+            const unfulfilledItems = requests[mainIdx].items ? requests[mainIdx].items.filter((it, idx) => {
+              const remQty = calcItemRemainingQty(requests[mainIdx], idx);
+              const unfulfilled = isItemUnfulfilled(it);
+              return remQty > 0 && !unfulfilled;
+            }) : [];
+
+            if (unDonePartials.length === 0 && unfulfilledItems.length === 0) {
+              requests[mainIdx].status = 'DONE';
+              if (!Array.isArray(requests[mainIdx].artemisPhotos)) requests[mainIdx].artemisPhotos = [];
+              requests[mainIdx].artemisPhotos = [...requests[mainIdx].artemisPhotos, ...newPhotos];
+              if (!Array.isArray(requests[mainIdx].photos)) requests[mainIdx].photos = [];
+              requests[mainIdx].photos = [...requests[mainIdx].photos, ...newPhotos];
+            }
+
             saveRequestsToDB(requests);
             if (typeof safeSupabaseUpsertPermintaan === 'function') safeSupabaseUpsertPermintaan(requests[mainIdx]);
           }
@@ -11054,12 +11279,26 @@ function prosesSimpanDoneDenganBuktiArtemis() {
       showNotif(`GAGAL SET DONE INDUK! MASIH ADA SURAT PARSIAL (${pids}) YANG BELUM BERSTATUS DONE.`, 'warning');
       return;
     }
-    // UPLOAD FOTO INDUK TIDAK WAJIB KARENA SUDAH MEMILIKI SURAT JALAN PARSIAL!
-  } else {
-    // TRANSAKSI BIASA (TIDAK ADA BREAKDOWN): UPLOAD FOTO PROSES WAJIB!
-    if (!Array.isArray(tempArtemisPhotos) || tempArtemisPhotos.length === 0) {
-      showNotif('TIDAK ADA FOTO BUKTI PROSES ARTEMIS YANG DIUPLOAD!', 'warning');
-      return;
+
+    // 2. CEK APAKAH MASIH ADA SISA QTY ITEM YANG BELUM DIBREAKDOWN DAN BELUM DITANDAI "TIDAK DIPENUHI"
+    const requests = getRequestsFromDB();
+    const targetNo = String(noSurat).trim().toUpperCase();
+    const mainReq = requests.find(r => r && (
+      String(r.noSurat || '').trim().toUpperCase() === targetNo ||
+      String(r.id || '').trim().toUpperCase() === targetNo
+    ));
+
+    if (mainReq && Array.isArray(mainReq.items)) {
+      const unfulfilledItems = mainReq.items.filter((it, idx) => {
+        const remQty = typeof calcItemRemainingQty === 'function' ? calcItemRemainingQty(mainReq, idx) : 0;
+        const unfulfilled = typeof isItemUnfulfilled === 'function' ? isItemUnfulfilled(it) : false;
+        return remQty > 0 && !unfulfilled;
+      });
+
+      if (unfulfilledItems.length > 0) {
+        showNotif(`GAGAL SET DONE INDUK! MASIH ADA SISA QTY ITEM YANG BELUM DIBREAKDOWN (KECUALI JIKA SISA ITEM SUDAH DITANDAI 'TIDAK DIPENUHI').`, 'warning');
+        return;
+      }
     }
   }
 
@@ -11781,10 +12020,10 @@ function hapusBarisItemDetailAdmin(noSurat, itemIndex) {
         time: `${getFormattedDateDDMMYYYY()} ${new Date().toLocaleTimeString('id-ID')}`
       });
 
-      saveRequestsToDB(requests);
+      saveRequestsToDB(requests, requests[idx], 'UPDATE');
       isItemModifiedMap[noSurat] = true;
 
-      showNotif(`ITEM DITANDAI TIDAK DIPENUHI. KLIK 'SIMPAN PERUBAHAN' UNTUK MENYIMPAN.`, 'warning');
+      // Re-render views immediately without blocking overlay modal
       lihatDetail(noSurat);
     });
   }
@@ -11820,10 +12059,10 @@ function undoBarisItemDetailAdmin(noSurat, itemIndex) {
       time: `${getFormattedDateDDMMYYYY()} ${new Date().toLocaleTimeString('id-ID')}`
     });
 
-    saveRequestsToDB(requests);
+    saveRequestsToDB(requests, requests[idx], 'UPDATE');
     isItemModifiedMap[noSurat] = true;
 
-    showNotif(`BATALKAN STATUS TIDAK DIPENUHI PADA ITEM '${targetItemName}'. KLIK 'SIMPAN PERUBAHAN'.`, 'info');
+    // Re-render views immediately without blocking overlay modal
     lihatDetail(noSurat);
   }
 }
@@ -19945,6 +20184,8 @@ function showNotif(msg, type = 'info') {
   if (notifCard) {
     notifCard.style.setProperty('z-index', '2147483647', 'important');
   }
+
+  // Sound for popup cards disabled per user requirement (sound only for bell notif & chat)
 }
 
 function closePopup() {
@@ -22514,14 +22755,17 @@ function updateGlobalDeviceAppBadge() {
     }
 
     const grandTotalUnread = unreadNotifCount + unreadChatCount;
+    const baseTitle = 'Permintaan Toko';
 
     if (grandTotalUnread > 0) {
+      document.title = `🔴 (${grandTotalUnread}) ${baseTitle}`;
       if (navigator.setAppBadge) {
         navigator.setAppBadge(grandTotalUnread).catch(() => {});
       } else if (navigator.setExperimentalAppBadge) {
         navigator.setExperimentalAppBadge(grandTotalUnread).catch(() => {});
       }
     } else {
+      document.title = baseTitle;
       if (navigator.clearAppBadge) {
         navigator.clearAppBadge().catch(() => {});
       } else if (navigator.clearExperimentalAppBadge) {
@@ -22779,10 +23023,12 @@ await rtdb.ref('partial_breakdowns/' + nsKey).set(partials || []).catch(() => {}
         if (delErr) console.warn('[SUPABASE DELETE BREAKDOWN ERROR]:', delErr);
       } else {
         const rowsMap = new Map();
+        const validIds = [];
         partials.forEach(p => {
           if (p) {
             const pId = p.partial_id || p.partialId || 'P1';
             const rowId = p.id || `${nsKey}_${pId}`;
+            validIds.push(rowId);
             rowsMap.set(rowId, {
               id: rowId,
               no_surat_induk: noSurat,
@@ -22798,6 +23044,19 @@ await rtdb.ref('partial_breakdowns/' + nsKey).set(partials || []).catch(() => {}
             });
           }
         });
+
+        // KUNCI UTAMA: HAPUS BARIS DELETED / OBSOLETE DARI SUPABASE DATABASE
+        if (validIds.length > 0) {
+          const inClause = `(${validIds.map(id => `"${id}"`).join(',')})`;
+          const { error: delObsoleteErr } = await supabase
+            .from('breakdown_parsial')
+            .delete()
+            .eq('no_surat_induk', noSurat)
+            .not('id', 'in', inClause);
+          if (delObsoleteErr) {
+            console.warn('[SUPABASE DELETE OBSOLETE PARTIAL ERROR]:', delObsoleteErr);
+          }
+        }
 
         const rows = Array.from(rowsMap.values());
         if (rows.length > 0) {
@@ -22957,6 +23216,22 @@ function calcItemRemainingQty(req, itemIdx) {
 }
 window.calcItemRemainingQty = calcItemRemainingQty;
 
+function isItemUnfulfilled(it) {
+  if (!it) return false;
+  return !!(
+    it.unfulfilled ||
+    it.isUnfulfilled ||
+    it.batal ||
+    String(it.status || '').toUpperCase().includes('TIDAK DIPENUHI') ||
+    String(it.statusPart || '').toUpperCase().includes('TIDAK DIPENUHI') ||
+    String(it.keteranganPart || '').toUpperCase().includes('TIDAK DIPENUHI') ||
+    String(it.updatePart || '').toUpperCase().includes('TIDAK DIPENUHI') ||
+    String(it.keterangan || '').toUpperCase().includes('TIDAK DIPENUHI') ||
+    String(it.status || '').toUpperCase().includes('TIDAK BISA DIPENUHI')
+  );
+}
+window.isItemUnfulfilled = isItemUnfulfilled;
+
 function isRequestReadyForDone(req) {
   if (!req || !Array.isArray(req.items) || req.items.length === 0) return true;
   const partials = getPartialBreakdownsFromDB(req.noSurat);
@@ -22968,15 +23243,15 @@ function isRequestReadyForDone(req) {
   }
 
   // Jika TERDAPAT breakdown:
-  // 1. Pastikan semua breakdown parsial sudah DONE / REJECT (tidak ada yang PENDING/APPROVE gantung)
-  const unDonePartials = partials.filter(p => p && p.status !== 'DONE' && p.status !== 'REJECT');
-  if (unDonePartials.length > 0) return false;
+  // 1. Pastikan tidak ada breakdown parsial yang masih PENDING (menunggu approval DM)
+  const pendingPartials = partials.filter(p => p && p.status === 'PENDING');
+  if (pendingPartials.length > 0) return false;
 
   // 2. Pastikan tidak ada sisa Qty yang belum dibreakdown kecuali jika ditandai "TIDAK DIPENUHI"
   const unfulfilledItems = req.items.filter((it, idx) => {
     const remQty = calcItemRemainingQty(req, idx);
-    const isUnfulfilled = it.isUnfulfilled || String(it.keterangan || '').toUpperCase() === 'TIDAK DIPENUHI' || String(it.keteranganPart || '').toUpperCase() === 'TIDAK DIPENUHI';
-    return remQty > 0 && !isUnfulfilled;
+    const unfulfilled = isItemUnfulfilled(it);
+    return remQty > 0 && !unfulfilled;
   });
 
   return unfulfilledItems.length === 0;
@@ -23079,7 +23354,7 @@ function bukaModalBuatParsial(noSurat) {
   if (Array.isArray(req.items)) {
     req.items.forEach((it, idx) => {
       const remQty = calcItemRemainingQty(req, idx);
-      const isUnfulfilled = it.isUnfulfilled || String(it.keterangan || '').toUpperCase() === 'TIDAK DIPENUHI' || String(it.keteranganPart || '').toUpperCase() === 'TIDAK DIPENUHI';
+      const isUnfulfilled = isItemUnfulfilled(it);
       
       if (remQty > 0 && !isUnfulfilled) {
         eligibleItems.push({
@@ -23817,7 +24092,7 @@ async function prosesKirimApproveBreakdownDM(noSurat, partialId) {
       let allComplete = true;
       req.items.forEach((it, idx) => {
         const rem = calcItemRemainingQty(req, idx);
-        const isUnfulfilled = it.isUnfulfilled || String(it.keterangan || '').toUpperCase() === 'TIDAK DIPENUHI';
+        const isUnfulfilled = isItemUnfulfilled(it);
         if (rem > 0 && !isUnfulfilled) allComplete = false;
       });
 
@@ -24041,10 +24316,23 @@ async function batalSuratParsial(noSurat, partialId) {
   showConfirm(`YAKIN INGIN MEMBATALKAN & MENGHAPUS PENGAJUAN PARSIAL ${partialId}?`, async function() {
     tampilkanLoadingProses('MOHON TUNGGU...');
     try {
+      const nsKey = String(noSurat).replace(/[\/\.]/g, '_');
+      const targetRowId = targetP ? (targetP.id || `${nsKey}_${partialId}`) : `${nsKey}_${partialId}`;
+
+      // DIRECT SUPABASE DELETE SO DELETION IS IMMEDIATELY PERSISTED IN CLOUD DATABASE
+      if (typeof supabase !== 'undefined' && supabase) {
+        try {
+          await supabase.from('breakdown_parsial').delete().eq('id', targetRowId);
+          await supabase.from('breakdown_parsial').delete().eq('no_surat_induk', noSurat).eq('partial_id', partialId);
+        } catch(delErr) {
+          console.warn('[SUPABASE DIRECT DELETE PARSIAL ERROR]:', delErr);
+        }
+      }
+
       let updatedPartials = getPartialBreakdownsFromDB(noSurat);
-      updatedPartials = updatedPartials.filter(p => p && (p.partial_id !== partialId && p.partialId !== partialId && !p.id.endsWith(`_${partialId}`)));
+      updatedPartials = updatedPartials.filter(p => p && (p.partial_id !== partialId && p.partialId !== partialId && !String(p.id).endsWith(`_${partialId}`)));
       savePartialBreakdownsToDB(updatedPartials, noSurat);
-      pushPartialBreakdownsToCloud(updatedPartials, noSurat);
+      await pushPartialBreakdownsToCloud(updatedPartials, noSurat);
 
       const reqs = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
       const rIdx = reqs.findIndex(r => r && (r.noSurat === noSurat || String(r.noSurat).trim().toUpperCase() === String(noSurat).trim().toUpperCase()));
