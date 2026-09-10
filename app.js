@@ -8215,6 +8215,16 @@ function pindahHalaman(pageId, pushHistory = true) {
     target.style.setProperty('display', (pageId === 'dashboardPage' || pageId === 'loginPage' || pageId === 'masterDbPage' || pageId === 'riwayatPage') ? 'flex' : 'block', 'important');
   }
 
+  const loginUsernameEl = document.getElementById('username');
+  const loginPasswordEl = document.getElementById('password');
+  if (pageId === 'loginPage') {
+    if (loginUsernameEl) loginUsernameEl.disabled = false;
+    if (loginPasswordEl) loginPasswordEl.disabled = false;
+  } else {
+    if (loginUsernameEl) loginUsernameEl.disabled = true;
+    if (loginPasswordEl) loginPasswordEl.disabled = true;
+  }
+
   if (typeof aturTampilanLonceng === 'function') {
     aturTampilanLonceng(pageId);
   }
