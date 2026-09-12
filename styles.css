@@ -294,18 +294,24 @@ html, body {
 }
 
 .topbar-user-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.07) !important;
-  padding: 4px 10px 4px 5px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  padding: 4px 10px 4px 5px !important;
   border-radius: 6px !important;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  cursor: pointer !important;
+  transition: background 0.2s, transform 0.2s !important;
+  width: auto !important;
+  max-width: none !important;
+  flex-shrink: 0 !important;
 }
 
 .topbar-user-badge:hover {
-  background: rgba(255, 255, 255, 0.16) !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  background-color: rgba(255, 255, 255, 0.28) !important;
 }
 
 .user-avatar {
@@ -753,8 +759,8 @@ tbody tr:last-child td {
   right: 0;
   bottom: 0;
   background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 2000;
   display: none;
   align-items: center;
@@ -879,8 +885,8 @@ tbody tr:last-child td {
   height: 100vh !important;
   height: 100dvh !important;
   background: radial-gradient(circle at center, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.95)) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 21474836470 !important;
   display: none;
   align-items: center !important;
@@ -976,7 +982,7 @@ tbody tr:last-child td {
 
 /* Modal Header Close Buttons */
 .modalHeader button, .modalKeyHeader button, .modalCloseBtn {
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   color: #ffffff !important;
   width: 30px !important;
@@ -993,7 +999,7 @@ tbody tr:last-child td {
 }
 
 .modalHeader button:hover, .modalKeyHeader button:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   transform: scale(1.08) !important;
 }
 
@@ -1055,7 +1061,7 @@ tbody tr:last-child td {
 
 /* ALL CLOSE 'X' BUTTONS MUST BE WHITE */
 .modalHeader button, .modalKeyHeader button, .popupClose, .modalCloseBtn, button.popupClose, button[title*="TUTUP"], button[title*="Tutup"] {
-  background: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
   width: 32px !important;
@@ -1075,7 +1081,7 @@ tbody tr:last-child td {
 }
 
 .modalHeader button:hover, .modalKeyHeader button:hover, .popupClose:hover, .modalCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
   transform: scale(1.08) !important;
 }
@@ -1136,9 +1142,9 @@ button:hover, .btn:hover, .btn-secondary:hover, .btnCari:hover, .btnSimpan:hover
   width: 100vw !important;
   height: 100vh !important;
   height: 100dvh !important;
-  background: rgba(15, 23, 42, 0.88) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 21474836470 !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -1206,7 +1212,7 @@ button:hover, .btn:hover, .btn-secondary:hover, .btnCari:hover, .btnSimpan:hover
    ========================================================================== */
 
 .modalHeader button, .modalKeyHeader button, .popupClose, .modalCloseBtn, button.popupClose, button[title*="TUTUP"], button[title*="Tutup"] {
-  background: transparent !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   border: none !important;
   color: #ffffff !important;
   width: 32px !important;
@@ -1226,7 +1232,7 @@ button:hover, .btn:hover, .btn-secondary:hover, .btnCari:hover, .btnSimpan:hover
 }
 
 .modalHeader button:hover, .modalKeyHeader button:hover, .popupClose:hover, .modalCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
   transform: none !important;
 }
@@ -1620,7 +1626,7 @@ button:hover, .btn:hover, .btn-secondary:hover, .btnCari:hover, .btnSimpan:hover
   font-size: 12.5px !important;
   font-weight: 600 !important;
   color: #0f172a !important;
-  background: transparent !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   box-sizing: border-box !important;
   margin: 0 !important;
   border-radius: 0 !important;
@@ -2617,9 +2623,9 @@ button[onclick*="bukaModalPdfModels"]:hover {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(15, 23, 42, 0.65) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 21474836470 !important;
   justify-content: center !important;
   align-items: center !important;
@@ -2687,9 +2693,9 @@ button[onclick*="bukaModalPdfModels"]:hover {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(15, 23, 42, 0.7) !important;
-  backdrop-filter: blur(5px) !important;
-  -webkit-backdrop-filter: blur(5px) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 2147483647 !important;
   justify-content: center !important;
   align-items: center !important;
@@ -2763,9 +2769,9 @@ button[onclick*="bukaModalPdfModels"]:hover {
   bottom: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(15, 23, 42, 0.75) !important;
-  backdrop-filter: blur(6px) !important;
-  -webkit-backdrop-filter: blur(6px) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 2147483647 !important;
   justify-content: center !important;
   align-items: center !important;
@@ -2853,9 +2859,9 @@ div#popupNotif {
   bottom: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(15, 23, 42, 0.75) !important;
-  backdrop-filter: blur(6px) !important;
-  -webkit-backdrop-filter: blur(6px) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 2147483647 !important;
   justify-content: center !important;
   align-items: center !important;
@@ -2945,9 +2951,9 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
   bottom: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(15, 23, 42, 0.8) !important;
-  backdrop-filter: blur(6px) !important;
-  -webkit-backdrop-filter: blur(6px) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 2147483647 !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -3429,34 +3435,55 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 }
 
 
-/* ACTIVE LOADING OVERLAYS (NO BOX BACKGROUND, SIMPLE ANIMATED DOTS) */
-#miniCenterLoading {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  background: rgba(15, 23, 42, 0.5) !important;
+/* ACTIVE LOADING OVERLAYS (COMPACT POPUP WITH CANCEL BUTTON, FRONTMOST Z-INDEX 2147483647) */
+#miniCenterLoading:not(.show):not([style*="display: flex"]):not([style*="display:flex"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 #miniCenterLoading.show,
-#miniCenterLoading[style*="display: flex"] {
+#miniCenterLoading[style*="display: flex"],
+#miniCenterLoading[style*="display:flex"] {
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: auto !important;
-  z-index: 2147483600 !important;
+  z-index: 2147483647 !important;
+  position: fixed !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  background-color: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-#miniCenterLoading .miniSpinnerBox {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
+#miniCenterLoadingCard,
+#miniCenterLoading > div {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #000000 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.25) !important;
+  width: auto !important;
+  min-width: 220px !important;
+  max-width: 90vw !important;
+  padding: 5mm 18px !important;
+  gap: 5mm !important;
 }
 
 #miniCenterLoadingText {
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.5px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+  letter-spacing: 0.3px !important;
+}
+
+#miniCenterLoadingSubtext {
+  color: #64748b !important;
 }
 
 @keyframes dotPulse {
@@ -3487,9 +3514,9 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
   width: 100vw !important;
   height: 100vh !important;
   height: 100dvh !important;
-  background: rgba(0, 0, 0, 0.92) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 2147483647 !important;
   display: none;
   flex-direction: column !important;
@@ -3508,7 +3535,7 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 }
 
 .viewer-btn {
-  background: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   border: none !important;
   color: #ffffff !important;
   width: 34px !important;
@@ -3524,7 +3551,7 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 }
 
 .viewer-btn:hover {
-  background: rgba(255, 255, 255, 0.28) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   transform: scale(1.08) !important;
 }
 
@@ -3780,6 +3807,7 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
   width: 100%;
   padding: 14px 14px 14px 10px !important;
   background: transparent !important;
+  background-color: transparent !important;
   border: none !important;
   outline: none !important;
   color: #0f172a !important;
@@ -3798,6 +3826,7 @@ div#popupEditStatusPart > div.popupBox > .modalFooter {
 
 #togglePasswordBtn {
   background: transparent !important;
+  background-color: transparent !important;
   border: none !important;
   color: #64748b !important;
   padding-right: 14px !important;
@@ -4505,7 +4534,7 @@ div.popupOverlay > div.popupBox {
 
 /* TRANSPARENT NOTIFICATION BELL WITH YELLOW ICON AND BADGE */
 #btnNotifBell {
-  background: transparent !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   border: none !important;
   box-shadow: none !important;
   padding: 4px !important;
@@ -4516,7 +4545,7 @@ div.popupOverlay > div.popupBox {
 }
 
 #btnNotifBell:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   transform: scale(1.1) !important;
 }
 
@@ -4532,7 +4561,7 @@ div.popupOverlay > div.popupBox {
 }
 
 #btnNotifBell {
-  background: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
   padding: 4px 8px !important;
@@ -4543,7 +4572,7 @@ div.popupOverlay > div.popupBox {
 }
 
 #btnNotifBell:hover {
-  background: rgba(255, 255, 255, 0.28) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   transform: scale(1.05) !important;
 }
 
@@ -4629,15 +4658,15 @@ div.popupOverlay > div.popupBox {
   width: 100vw !important;
   height: 100vh !important;
   height: 100dvh !important;
-  background: rgba(0, 0, 0, 0.85) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   z-index: 2147483640 !important;
   justify-content: center !important;
   align-items: center !important;
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: auto !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 #popupUserManagementModal > div,
@@ -4659,15 +4688,15 @@ div.popupOverlay > div.popupBox {
   width: 100vw !important;
   height: 100vh !important;
   height: 100dvh !important;
-  background: rgba(0, 0, 0, 0.85) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   z-index: 2147483645 !important;
   justify-content: center !important;
   align-items: center !important;
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: auto !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 #popupUserForm > div,
@@ -4719,7 +4748,7 @@ div.popupOverlay > div.popupBox {
   right: 0px !important;
   width: 32px !important;
   height: 32px !important;
-  background: transparent !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #0284c7 !important;
   border: none !important;
   border-radius: 5px !important;
@@ -4734,7 +4763,7 @@ div.popupOverlay > div.popupBox {
 
 .btnTutupUserModal:hover,
 #popupUserManagementModal .btnTutupUserModal:hover {
-  background: transparent !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   transform: scale(1.15) !important;
 }
 
@@ -4859,9 +4888,10 @@ div.popupOverlay > div.popupBox {
 
 #popupTambahToko select,
 #popupTambahToko input {
-  background: var(--input-bg, var(--bg-body)) !important;
-  color: var(--input-text, var(--text-main)) !important;
-  border: 1px solid var(--border-color) !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
   border-radius: 6px !important;
 }
 
@@ -5012,9 +5042,10 @@ div.popupOverlay > div.popupBox {
 }
 
 #popupUserManagementModal .userManagementToolbar input {
-  background: var(--input-bg, var(--bg-body)) !important;
-  color: var(--input-text, var(--text-main)) !important;
-  border: 1px solid var(--border-color) !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
   border-radius: 6px !important;
 }
 
@@ -5128,20 +5159,10 @@ thead th,
 .btnHeaderRefresh,
 #btnRefreshDetailV2,
 #btnSimpan,
-#btnSubmitReject,
-.btnOkNotif,
 .userManagementToolbar .btnTambahBarang,
 button[onclick*="bukaModalTambahToko"],
 button[onclick*="tambahRow"],
-button[onclick*="simpanData"],
-button[onclick*="simpanFonteToken"],
-button[onclick*="simpanNamaDM"],
-button[onclick*="downloadSemuaFotoZipAdmin"],
-button[onclick*="toggleFeaturePhotoAdmin"],
-button[onclick*="hapusSemuaChatAdmin"],
-button[onclick*="hapusSemuaNotifFirebaseDanLokal"],
-button[onclick*="bukaModalSetupSupabaseKeys"],
-button[onclick*="prosesReject"] {
+button[onclick*="simpanData"] {
   background: linear-gradient(135deg, #0284c7, #0369a1) !important;
   background-color: #0284c7 !important;
   color: #ffffff !important;
@@ -5149,27 +5170,37 @@ button[onclick*="prosesReject"] {
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.28) !important;
 }
 
+#btnSubmitReject,
+button[onclick*="prosesReject"],
+button[onclick*="prosesForwardService"] {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
+  font-weight: 700 !important;
+}
+
 .btn-primary:hover,
 .btnPrimary:hover,
 .btnTambahBarang:hover,
 .btnPrintHeader:hover,
 #btnSimpan:hover,
-#btnSubmitReject:hover,
-.btnOkNotif:hover,
 button[onclick*="bukaModalTambahToko"]:hover,
 button[onclick*="tambahRow"]:hover,
-button[onclick*="simpanData"]:hover,
-button[onclick*="simpanFonteToken"]:hover,
-button[onclick*="simpanNamaDM"]:hover,
-button[onclick*="downloadSemuaFotoZipAdmin"]:hover,
-button[onclick*="toggleFeaturePhotoAdmin"]:hover,
-button[onclick*="hapusSemuaChatAdmin"]:hover,
-button[onclick*="hapusSemuaNotifFirebaseDanLokal"]:hover,
-button[onclick*="bukaModalSetupSupabaseKeys"]:hover,
-button[onclick*="prosesReject"]:hover {
+button[onclick*="simpanData"]:hover {
   background: linear-gradient(135deg, #0369a1, #075985) !important;
   background-color: #0369a1 !important;
   box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4) !important;
+}
+
+#btnSubmitReject:hover,
+button[onclick*="prosesReject"]:hover,
+button[onclick*="prosesForwardService"]:hover {
+  background: #cbd5e1 !important;
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  border: 1px solid #000000 !important;
 }
 
 
@@ -5362,7 +5393,7 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
 
 #popupTambahToko .popupHeader .popupClose,
 #popupTambahToko .popupHeader button {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   background-color: rgba(255, 255, 255, 0.2) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
@@ -5370,7 +5401,7 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
 
 #popupTambahToko .popupHeader .popupClose:hover,
 #popupTambahToko .popupHeader button:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
 }
 
@@ -5405,7 +5436,7 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
 
 .userManagementHeader .btnTutupUserModal,
 #popupUserManagementModal .btnTutupUserModal {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   background-color: rgba(255, 255, 255, 0.2) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
@@ -5413,7 +5444,7 @@ button[onclick*="bukaModalSetupSupabaseKeys"] {
 
 .userManagementHeader .btnTutupUserModal:hover,
 #popupUserManagementModal .btnTutupUserModal:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
 }
 
@@ -5888,16 +5919,29 @@ body.dark-mode {
   z-index: 2147483647 !important;
 }
 
-.rejectHeaderPopup {
-  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-  background-color: #0284c7 !important;
+.rejectHeaderPopup,
+.artemisHeaderPopup,
+#confirmBoxCard > div:first-child,
+#popupNotifCard > div:first-child,
+#popupForwardService .modalHeader,
+#rejectOverlay .rejectHeaderPopup,
+#artemisOverlay .artemisHeaderPopup {
+  background: #0172ad !important;
+  background-color: #0172ad !important;
+  background-image: none !important;
   color: #ffffff !important;
+  border-bottom: none !important;
+  border: none !important;
 }
 
 .rejectHeaderPopup *,
 .rejectHeaderPopup span,
 .rejectHeaderPopup h4,
-.rejectHeaderPopup button {
+.rejectHeaderPopup button,
+.artemisHeaderPopup *,
+#confirmBoxCard > div:first-child *,
+#popupNotifCard > div:first-child *,
+#popupForwardService .modalHeader * {
   color: #ffffff !important;
 }
 
@@ -5905,7 +5949,7 @@ body.dark-mode {
 .rejectHeaderPopup .btnRejectCloseX,
 .rejectHeaderPopup .btnHeaderCloseX,
 .rejectHeaderPopup .popupClose {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   background-color: rgba(255, 255, 255, 0.2) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
@@ -5916,7 +5960,7 @@ body.dark-mode {
 .rejectHeaderPopup .btnRejectCloseX:hover,
 .rejectHeaderPopup .btnHeaderCloseX:hover,
 .rejectHeaderPopup .popupClose:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
 }
 
@@ -5995,9 +6039,9 @@ body.dark-mode {
 .popupOverlay, .modalBackdrop, .modal-overlay {
   position: fixed !important;
   inset: 0 !important;
-  background: rgba(15, 23, 42, 0.65) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 999999 !important;
   display: none !important;
   align-items: center !important;
@@ -6059,7 +6103,7 @@ body.dark-mode {
 .modalHeader button, .popupHeader button, .rejectHeaderPopup button, 
 .userManagementHeader button, .chatHeader button,
 .modalHeader .close-btn, .popupHeader .close-btn, .modalHeader .btnClose {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
   border: none !important;
   border-radius: 6px !important;
@@ -6080,7 +6124,7 @@ body.dark-mode {
 
 .modalHeader button:hover, .popupHeader button:hover, .rejectHeaderPopup button:hover, 
 .userManagementHeader button:hover, .chatHeader button:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
   transform: scale(1.05);
 }
@@ -6393,8 +6437,8 @@ button#btnHapusCariToko,
 button#btnHapusCariTokoModal,
 div#wrapperCariToko button#btnHapusCariToko,
 .popupBox button#btnHapusCariTokoModal {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  background-color: rgba(0, 0, 0, 0.82) !important;
   background-image: none !important;
   border: none !important;
   border-radius: 0 !important;
@@ -6430,8 +6474,8 @@ button#btnHapusCariTokoModal:hover,
 div#wrapperCariToko button#btnHapusCariToko:hover,
 .popupBox button#btnHapusCariTokoModal:hover {
   color: #ef4444 !important;
-  background: transparent !important;
-  background-color: transparent !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  background-color: rgba(0, 0, 0, 0.82) !important;
   background-image: none !important;
   box-shadow: none !important;
   border: none !important;
@@ -6461,10 +6505,11 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 /* ==========================================================================
    FULL SCREEN POPUP DETAIL PERMINTAAN & SINGLE TABLE AUTO FIT WITH WRAP TEXT
    ========================================================================== */
-#popupDetailBarangV2:not(.mode-b),
 #popupDetailBarangV2.show:not(.mode-b),
-#popupDetailBarangV2.popupOverlay:not(.mode-b),
-#popupDetailBarangV2[style*="display"]:not(.mode-b) {
+#popupDetailBarangV2[style*="display: flex"]:not(.mode-b),
+#popupDetailBarangV2[style*="display:flex"]:not(.mode-b),
+#popupDetailBarangV2[style*="display: block"]:not(.mode-b),
+#popupDetailBarangV2[style*="display:block"]:not(.mode-b) {
   display: flex !important;
   position: fixed !important;
   top: 0 !important;
@@ -6482,10 +6527,11 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
   background: #f8fafc !important;
 }
 
-#popupDetailBarangV2:not(.mode-b) .popupBox,
-#popupDetailBarangV2:not(.mode-b) > div,
 #popupDetailBarangV2.show:not(.mode-b) .popupBox,
-#popupDetailBarangV2[style*="display"]:not(.mode-b) .popupBox {
+#popupDetailBarangV2[style*="display: flex"]:not(.mode-b) .popupBox,
+#popupDetailBarangV2[style*="display:flex"]:not(.mode-b) .popupBox,
+#popupDetailBarangV2[style*="display: block"]:not(.mode-b) .popupBox,
+#popupDetailBarangV2[style*="display:block"]:not(.mode-b) .popupBox {
   width: 100vw !important;
   max-width: 100vw !important;
   min-width: 100vw !important;
@@ -6822,13 +6868,21 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 /* =============================================================================
    FINAL UNIFIED STYLING FOR ARTEMIS DONE & UPLOAD BUKTI POPUPS
    ============================================================================= */
-#artemisOverlay .popupBox,
-#uploadBuktiPermintaanOverlay .artemisBoxPopup {
+#artemisOverlay .popupBox {
   background: #ffffff !important;
   color: #0f172a !important;
   border-radius: 6px !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.3) !important;
+  overflow: hidden !important;
+}
+
+#uploadBuktiPermintaanOverlay .artemisBoxPopup {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-radius: 4px !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important;
   overflow: hidden !important;
 }
 
@@ -6847,11 +6901,11 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 }
 
 #uploadBuktiPermintaanOverlay .artemisHeaderPopup {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
-  background-color: #1d4ed8 !important;
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
   color: #ffffff !important;
-  border-radius: 6px 6px 0 0 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 4px 4px 0 0 !important;
+  border-bottom: 1.5px solid #0369a1 !important;
 }
 
 #uploadBuktiPermintaanOverlay .artemisHeaderPopup span,
@@ -6863,16 +6917,24 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 
 #uploadBuktiPermintaanOverlay .artemisHeaderPopup .btnHeaderCloseX,
 #uploadBuktiPermintaanOverlay .artemisHeaderPopup button {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   background-color: rgba(255, 255, 255, 0.2) !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+  font-weight: 900 !important;
+}
+
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup .btnHeaderCloseX:hover,
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup button:hover {
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
 }
 
 #uploadBuktiPermintaanOverlay .artemisHeaderPopup .btnHeaderCloseX:hover,
 #uploadBuktiPermintaanOverlay .artemisHeaderPopup button:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
-  color: #ffffff !important;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
 }
 
 #popupSecurityPinHapusLokal .popupBox > div:first-child {
@@ -6891,7 +6953,7 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 
 #popupSecurityPinHapusLokal .popupBox > div:first-child button,
 #popupSecurityPinHapusLokal .popupBox > div:first-child .btnHeaderCloseX {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   background-color: rgba(255, 255, 255, 0.2) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
@@ -6899,7 +6961,7 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 
 #popupSecurityPinHapusLokal .popupBox > div:first-child button:hover,
 #popupSecurityPinHapusLokal .popupBox > div:first-child .btnHeaderCloseX:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
 }
 
@@ -6933,7 +6995,7 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 #confirmBoxCard > div:first-child button,
 #confirmOverlay .confirmBoxCard > div:first-child button,
 #pdfModal .popupHeader .popupClose {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   background-color: rgba(255, 255, 255, 0.2) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
@@ -6946,7 +7008,7 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 #confirmBoxCard > div:first-child button:hover,
 #confirmOverlay .confirmBoxCard > div:first-child button:hover,
 #pdfModal .popupHeader .popupClose:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
 }
 
@@ -6957,9 +7019,9 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
 }
 
 #uploadBuktiPreviewGrid {
-  background: #f8fafc !important;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 6px !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  border: none !important;
+  border-radius: 0 !important;
 }
 
 /* =============================================================================
@@ -7087,6 +7149,10 @@ div#wrapperCariToko button#btnHapusCariToko:hover,
   user-select: none !important;
   vertical-align: middle !important;
   background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 34px !important;
+  box-shadow: none !important;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -7460,7 +7526,7 @@ button[onclick*="simpanData"]:hover {
 }
 
 #popupBantuan .chatClose {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
   border-radius: 5px !important;
 }
@@ -7472,8 +7538,8 @@ button[onclick*="simpanData"]:hover {
 #togglePasswordBtn,
 #loginForm #togglePasswordBtn,
 .input-group #togglePasswordBtn {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+  background-color: rgba(0, 0, 0, 0.82) !important;
   border: none !important;
   color: #000000 !important;
   box-shadow: none !important;
@@ -7663,7 +7729,7 @@ button[onclick*="simpanData"]:hover {
 }
 
 #popupBantuan .chatClose {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   color: #ffffff !important;
   border-radius: 5px !important;
   width: 32px !important;
@@ -7717,7 +7783,7 @@ button[onclick*="simpanData"]:hover {
   min-height: 36px !important;
   padding: 0 !important;
   border-radius: 5px !important;
-  background: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(0, 0, 0, 0.82) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
   align-items: center !important;
@@ -8031,7 +8097,7 @@ canvas#canvasTTDModal,
 
 /* MODE A (DEFAULT FULLSCREEN OVERLAY) */
 #popupDetailBarangV2.mode-a,
-#popupDetailBarangV2:not(.mode-b),
+#popupDetailBarangV2.show:not(.mode-b),
 #popupDetail.mode-a,
 #pdfModal.mode-a {
   position: fixed !important;
@@ -8353,8 +8419,9 @@ body:not(.sidebar-open) #pdfModal.mode-b {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  background: rgba(255, 255, 255, 0.07) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
   padding: 4px 10px 4px 5px !important;
   border-radius: 6px !important;
   cursor: pointer !important;
@@ -8365,7 +8432,8 @@ body:not(.sidebar-open) #pdfModal.mode-b {
 }
 
 .topbar-user-badge:hover {
-  background: rgba(255, 255, 255, 0.16) !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  background-color: rgba(255, 255, 255, 0.28) !important;
 }
 
 .user-avatar,
@@ -8837,6 +8905,7 @@ th.sortable-th .th-sort-wrapper {
   padding: 0 !important;
   border: none !important;
   background: transparent !important;
+  background-color: transparent !important;
   box-shadow: none !important;
   transform: none !important;
   transition: none !important;
@@ -8853,6 +8922,7 @@ th.sortable-th .sort-icon {
   padding: 0 !important;
   border: none !important;
   background: transparent !important;
+  background-color: transparent !important;
   transform: none !important;
   transition: none !important;
   opacity: 0.6 !important;
@@ -8866,6 +8936,1469 @@ th.sortable-th.active-sort .sort-icon {
   color: #0284c7 !important;
   font-weight: 800 !important;
   transform: none !important;
+}
+
+/* NO BLUR & NO DARKENING BACKDROP FOR UPLOAD BUKTI PERMINTAAN OVERLAY */
+#uploadBuktiPermintaanOverlay {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+}
+
+
+
+
+/* ABSOLUTE GLOBAL OVERRIDE: NO BACKDROP BLUR ANYWHERE WHEN POPUPS OR OVERLAYS OPEN */
+.popupOverlay,
+.modal-overlay,
+.modal,
+.popupBox,
+#uploadBuktiPermintaanOverlay,
+div.popupOverlay,
+div#uploadBuktiPermintaanOverlay,
+#artemisOverlay,
+#rejectOverlay,
+#confirmOverlay,
+#popupNotif {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* NO SHADOW / FLAT DESIGN OVERRIDE FOR ALL POPUPS & CARDS & BUTTONS */
+#uploadBuktiPermintaanOverlay,
+#uploadBuktiPermintaanOverlay *,
+#artemisOverlay,
+#artemisOverlay *,
+#confirmOverlay,
+#confirmOverlay *,
+#rejectOverlay,
+#rejectOverlay *,
+#popupNotif,
+#popupNotif *,
+#popupEditKeteranganPartSingle,
+#popupEditKeteranganPartSingle *,
+.artemisBoxPopup,
+.confirmBoxCard,
+.rejectBoxPopup,
+.popupNotifCard {
+  box-shadow: none !important;
+}
+
+#uploadBuktiPermintaanOverlay .artemisBoxPopup,
+#artemisOverlay .artemisBoxPopup,
+#artemisOverlay .popupBox,
+#confirmOverlay .confirmBoxCard,
+#rejectOverlay .rejectBoxPopup,
+#popupNotif .popupNotifCard,
+#popupEditKeteranganPartSingle .artemisBoxPopup,
+#popupEditKeteranganPartSingle .popupBox {
+  border: 1px solid #000000 !important;
+  border-radius: 4px !important;
+}
+
+
+/* BUTTONS WITH 1PX SOLID BLACK BORDER */
+.btnBatal,
+.btnOkNotif,
+.popupOverlay .btnBatal,
+.popupOverlay .btnOkNotif,
+.popupOverlay .btn-secondary,
+.popupOverlay .btn-primary,
+#uploadBuktiPermintaanOverlay .btnBatal,
+#uploadBuktiPermintaanOverlay .btnOkNotif,
+#artemisOverlay .btnBatal,
+#artemisOverlay .btnOkNotif,
+#confirmOverlay .btnBatal,
+#confirmOverlay .btnOkNotif,
+#rejectOverlay .btnBatal,
+#rejectOverlay .btnOkNotif,
+#popupNotif .btnOkNotif,
+.artemisBoxPopup button.btnBatal,
+.artemisBoxPopup button.btnOkNotif {
+  border: 1px solid #000000 !important;
+}
+
+
+/* =============================================================================
+   HAK AKSES & USER MANAGEMENT BUTTONS: LIGHT GREY (#e2e8f0), BLACK TEXT, BLACK BORDER, FOCUS RING
+   ============================================================================= */
+/* UNIFORM LIGHT GREY BUTTON STYLING FOR ALL 20 TARGET ACTION BUTTONS & USER MANAGEMENT BUTTONS */
+#userManagementPage button,
+#popupUserManagementModal button,
+#popupUserForm button,
+#popupTambahToko button,
+.userManagementToolbar button,
+.userManagementContainer button,
+#userManagementPage .btnDownload,
+#userManagementPage .btnTambahBarang,
+#popupUserManagementModal .btnDownload,
+#popupUserManagementModal .btnTambahBarang,
+#popupUserForm .btnDownload,
+#popupUserForm .btnTambahBarang,
+button[onclick*="bukaUserModal"],
+button[onclick*="logoutSemuaPerangkatUserByAdmin"],
+button[onclick*="simpanUserData"],
+button[onclick*="simpanPengaturanHakAksesForwardAdmin"],
+button[onclick*="simpanPengaturanHakAksesUploadBuktiAdmin"],
+button[onclick*="simpanPengaturanHakAksesCetakPdfAdmin"],
+button[onclick*="simpanPengaturanHakAksesExcelAdmin"],
+button[onclick*="bukaModalSetupSupabaseKeys"],
+button[onclick*="hapusSemuaNotifFirebaseDanLokal"],
+button[onclick*="hapusSemuaChatAdmin"],
+button[onclick*="downloadSemuaFotoZipAdmin"],
+button[onclick*="hapusSemuaFotoBiasa"],
+button[onclick*="simpanNamaDM"],
+button[onclick*="simpanFonteToken"],
+button[onclick*="tesKoneksiFonteToken"],
+button[onclick*="simpanTTD"],
+button[onclick*="simpanGeminiApiKeyDariModal"],
+button[onclick*="bukaModalPilihNadaNotif"],
+button[onclick*="simpanAkun"],
+button[onclick*="bukaPopupUserManagement"],
+button[onclick*="tutupUserModal"],
+button[onclick*="tutupPopupUserManagement"] {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  background-image: none !important;
+  color: #0f172a !important;
+  border: 1px solid #000000 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  font-weight: 700 !important;
+  transition: all 0.15s ease !important;
+}
+
+#userManagementPage button *,
+#popupUserManagementModal button *,
+#popupUserForm button *,
+#popupTambahToko button *,
+.userManagementToolbar button *,
+.userManagementContainer button *,
+button[onclick*="bukaUserModal"] *,
+button[onclick*="logoutSemuaPerangkatUserByAdmin"] *,
+button[onclick*="simpanUserData"] *,
+button[onclick*="simpanPengaturanHakAksesForwardAdmin"] *,
+button[onclick*="simpanPengaturanHakAksesUploadBuktiAdmin"] *,
+button[onclick*="simpanPengaturanHakAksesCetakPdfAdmin"] *,
+button[onclick*="simpanPengaturanHakAksesExcelAdmin"] *,
+button[onclick*="bukaModalSetupSupabaseKeys"] *,
+button[onclick*="hapusSemuaNotifFirebaseDanLokal"] *,
+button[onclick*="hapusSemuaChatAdmin"] *,
+button[onclick*="downloadSemuaFotoZipAdmin"] *,
+button[onclick*="hapusSemuaFotoBiasa"] *,
+button[onclick*="simpanNamaDM"] *,
+button[onclick*="simpanFonteToken"] *,
+button[onclick*="tesKoneksiFonteToken"] *,
+button[onclick*="simpanTTD"] *,
+button[onclick*="simpanGeminiApiKeyDariModal"] *,
+button[onclick*="bukaModalPilihNadaNotif"] *,
+button[onclick*="simpanAkun"] * {
+  color: #0f172a !important;
+}
+
+#userManagementPage button:hover,
+#popupUserManagementModal button:hover,
+#popupUserForm button:hover,
+#popupTambahToko button:hover,
+.userManagementToolbar button:hover,
+.userManagementContainer button:hover,
+button[onclick*="simpanFonteToken"]:hover,
+button[onclick*="tesKoneksiFonteToken"]:hover,
+button[onclick*="simpanNamaDM"]:hover,
+button[onclick*="downloadSemuaFotoZipAdmin"]:hover,
+button[onclick*="hapusSemuaFotoBiasa"]:hover,
+button[onclick*="hapusSemuaChatAdmin"]:hover,
+button[onclick*="hapusSemuaNotifFirebaseDanLokal"]:hover,
+button[onclick*="bukaModalSetupSupabaseKeys"]:hover,
+button[onclick*="simpanPengaturanHakAksesExcelAdmin"]:hover,
+button[onclick*="simpanPengaturanHakAksesCetakPdfAdmin"]:hover,
+button[onclick*="simpanPengaturanHakAksesForwardAdmin"]:hover,
+button[onclick*="simpanPengaturanHakAksesUploadBuktiAdmin"]:hover,
+button[onclick*="simpanTTD"]:hover,
+button[onclick*="simpanGeminiApiKeyDariModal"]:hover,
+button[onclick*="bukaModalPilihNadaNotif"]:hover,
+button[onclick*="simpanAkun"]:hover,
+button[onclick*="bukaUserModal"]:hover,
+button[onclick*="logoutSemuaPerangkatUserByAdmin"]:hover,
+button[onclick*="simpanUserData"]:hover {
+  background: #cbd5e1 !important;
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  border: 1px solid #000000 !important;
+}
+
+#userManagementPage button:focus,
+#userManagementPage button:focus-visible,
+#popupUserManagementModal button:focus,
+#popupUserManagementModal button:focus-visible,
+#popupUserForm button:focus,
+#popupUserForm button:focus-visible,
+#popupTambahToko button:focus,
+#popupTambahToko button:focus-visible,
+.userManagementToolbar button:focus,
+.userManagementContainer button:focus,
+button[onclick*="simpanFonteToken"]:focus,
+button[onclick*="tesKoneksiFonteToken"]:focus,
+button[onclick*="simpanNamaDM"]:focus,
+button[onclick*="downloadSemuaFotoZipAdmin"]:focus,
+button[onclick*="hapusSemuaFotoBiasa"]:focus,
+button[onclick*="hapusSemuaChatAdmin"]:focus,
+button[onclick*="hapusSemuaNotifFirebaseDanLokal"]:focus,
+button[onclick*="bukaModalSetupSupabaseKeys"]:focus,
+button[onclick*="simpanPengaturanHakAksesExcelAdmin"]:focus,
+button[onclick*="simpanPengaturanHakAksesCetakPdfAdmin"]:focus,
+button[onclick*="simpanPengaturanHakAksesForwardAdmin"]:focus,
+button[onclick*="simpanPengaturanHakAksesUploadBuktiAdmin"]:focus,
+button[onclick*="simpanTTD"]:focus,
+button[onclick*="simpanGeminiApiKeyDariModal"]:focus,
+button[onclick*="bukaModalPilihNadaNotif"]:focus,
+button[onclick*="simpanAkun"]:focus,
+button[onclick*="bukaUserModal"]:focus,
+button[onclick*="logoutSemuaPerangkatUserByAdmin"]:focus,
+button[onclick*="simpanUserData"]:focus {
+  outline: 2px solid #000000 !important;
+  outline-offset: 1px !important;
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+
+/* ==========================================================================
+   GLOBAL POPUP BACKDROP OVERLAY - TRANSLUCENT SOFT WHITE FROSTED BACKDROP
+   ========================================================================== */
+.popupOverlay,
+.modalBackdrop,
+.modal-backdrop,
+.modal-overlay,
+.swal2-container,
+#confirmOverlay,
+#rejectOverlay,
+#artemisOverlay,
+#loadingProsesOverlay,
+#modalPilihanCetakPdf,
+#pdfModal,
+#popupUserManagementModal,
+#popupUserForm,
+#popupNotif,
+#popupNotifList,
+#modalSetupSupabaseKeys,
+#excelTemplateOverlay,
+#uploadBuktiPermintaanOverlay,
+#scannerModal,
+#popupTambahToko,
+#popupBantuan,
+#popupAkun,
+#modalPilihNadaNotif,
+#modalGeminiApiKey,
+#modalRejectBreakdown,
+#modalRejectParsial,
+#popupEditKeteranganPartSingle,
+#popupEditStatusPart,
+#modalDetailParsialSub,
+#modalBuatParsial,
+#modalRiwayatParsialList,
+#modalArtemisParsial,
+#popupDoneParsial,
+#popupUbahStatusAdminModal,
+#popupSecurityPinHapusLokal,
+#popupPdfModelsModal,
+#chatBroadcastModal {
+  background: rgba(0, 0, 0, 0.82) !important;
+  background-color: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ==========================================================================
+   POPUP UPLOAD BUKTI ARTEMIS (DONE) & UPLOAD BUKTI PERMINTAAN - ALL BODY TEXT BLACK (EXCEPT HEADER)
+   ========================================================================== */
+#artemisOverlay .artemisBodyPopup,
+#uploadBuktiPermintaanOverlay .artemisBodyPopup,
+#artemisOverlay .artemisBodyPopup p,
+#artemisOverlay .artemisBodyPopup label,
+#artemisOverlay .artemisBodyPopup span,
+#artemisOverlay .artemisBodyPopup div,
+#artemisOverlay .artemisBodyPopup input,
+#artemisOverlay .artemisBodyPopup textarea,
+#artemisOverlay .artemisBodyPopup button,
+#artemisOverlay .artemisBodyPopup i,
+#uploadBuktiPermintaanOverlay .artemisBodyPopup p,
+#uploadBuktiPermintaanOverlay .artemisBodyPopup label,
+#uploadBuktiPermintaanOverlay .artemisBodyPopup span,
+#uploadBuktiPermintaanOverlay .artemisBodyPopup div,
+#uploadBuktiPermintaanOverlay .artemisBodyPopup input,
+#uploadBuktiPermintaanOverlay .artemisBodyPopup textarea,
+#uploadBuktiPermintaanOverlay .artemisBodyPopup button,
+#uploadBuktiPermintaanOverlay .artemisBodyPopup i {
+  color: #000000 !important;
+}
+
+#artemisOverlay .artemisHeaderPopup,
+#artemisOverlay .artemisHeaderPopup *,
+#artemisOverlay #artemisTitle,
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup,
+#uploadBuktiPermintaanOverlay .artemisHeaderPopup *,
+#uploadBuktiPermintaanOverlay #uploadBuktiTitle {
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   UBAH STATUS ADMIN MODAL & USER MANAGEMENT ACTION BUTTON ICONS
+   ========================================================================== */
+#popupUbahStatusAdminModal .modalHeader {
+  background: #0172ad !important;
+  background-color: #0172ad !important;
+  background-image: none !important;
+  border-bottom: none !important;
+}
+
+#popupUbahStatusAdminModal .modalHeader span,
+#popupUbahStatusAdminModal .modalHeader h3,
+#popupUbahStatusAdminModal .modalHeader div {
+  font-weight: 400 !important;
+  color: #ffffff !important;
+}
+
+button[onclick*="simpanUbahStatusAdmin"] {
+  height: 36px !important;
+  padding: 0 20px !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  border: 1px solid #000000 !important;
+}
+
+button[onclick*="paksaLogoutUserByAdmin"] .material-symbols-rounded,
+button[onclick*="bukaUserModal"] .material-symbols-rounded,
+button[onclick*="hapusUser"] .material-symbols-rounded,
+button[onclick*="paksaLogoutUserByAdmin"] i,
+button[onclick*="bukaUserModal"] i,
+button[onclick*="hapusUser"] i,
+.btnForceLogout .material-symbols-rounded,
+.btnEdit .material-symbols-rounded,
+.btnDelete .material-symbols-rounded {
+  color: #ffffff !important;
+}
+
+/* RED BUTTONS WITH WHITE TEXT FOR HAPUS MULTI USER & HAPUS MULTI MASTER DB */
+#btnHapusMultiMasterDb,
+#btnHapusMultiUserModal,
+#btnHapusMultiUser,
+button[onclick*="hapusMultiUser"],
+button[onclick*="hapusMultiMasterDb"] {
+  background: #dc2626 !important;
+  background-color: #dc2626 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border: 1px solid #991b1b !important;
+  border-radius: 4px !important;
+}
+
+#btnHapusMultiMasterDb *,
+#btnHapusMultiUserModal *,
+#btnHapusMultiUser *,
+button[onclick*="hapusMultiUser"] *,
+button[onclick*="hapusMultiMasterDb"] * {
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   POPUP TAMBAH TOKO, SIMPAN TOKO BARU, TOKO ACTION ICONS & FOCUS STATES
+   ========================================================================== */
+#popupTambahToko > div {
+  border: 1px solid #000000 !important;
+  outline: none !important;
+  border-radius: 4px !important;
+}
+
+#popupTambahToko div[style*="background: #0284c7"],
+#popupTambahToko div[style*="background: #0172ad"],
+#popupTambahToko .modalHeader {
+  background: #0172ad !important;
+  background-color: #0172ad !important;
+  background-image: none !important;
+  border-bottom: none !important;
+}
+
+#popupTambahToko h3,
+#popupTambahToko h3 * {
+  font-weight: 400 !important;
+  color: #ffffff !important;
+}
+
+button[onclick*="simpanTokoBaru"],
+#btnSimpanTokoBaru {
+  background: #16a34a !important;
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+  border-radius: 4px !important;
+  font-weight: 800 !important;
+}
+
+button[onclick*="simpanTokoBaru"] *,
+#btnSimpanTokoBaru * {
+  color: #ffffff !important;
+}
+
+button[onclick*="editTokoCustom"] .material-symbols-rounded,
+button[onclick*="hapusTokoCustom"] .material-symbols-rounded,
+button[onclick*="editTokoCustom"] i,
+button[onclick*="hapusTokoCustom"] i {
+  color: #ffffff !important;
+}
+
+/* GLOBAL BUTTON & ELEMENT FOCUS STATES */
+button:focus,
+button:focus-visible,
+.btnIcon:focus,
+.btnIcon:focus-visible,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #000000 !important;
+  outline-offset: 1px !important;
+}
+
+button[onclick*="bukaModalTambahToko"] {
+  border: 1px solid #000000 !important;
+  border-radius: 4px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button[onclick*="bukaModalTambahToko"]:focus,
+button[onclick*="bukaModalTambahToko"]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* RED BUTTONS WITH WHITE TEXT FOR HAPUS MULTI USER & HAPUS MULTI MASTER DB */
+#btnHapusMultiMasterDb,
+#btnHapusMultiUserModal,
+#btnHapusMultiUser,
+button[id="btnHapusMultiUserModal"],
+button[id="btnHapusMultiUser"],
+button[id="btnHapusMultiMasterDb"],
+button[onclick*="hapusMultiUser"],
+button[onclick*="hapusMultiMasterDb"] {
+  background: #dc2626 !important;
+  background-color: #dc2626 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border: 1px solid #991b1b !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+#btnHapusMultiMasterDb *,
+#btnHapusMultiUserModal *,
+#btnHapusMultiUser *,
+button[id="btnHapusMultiUserModal"] *,
+button[id="btnHapusMultiUser"] *,
+button[id="btnHapusMultiMasterDb"] *,
+button[onclick*="hapusMultiUser"] *,
+button[onclick*="hapusMultiMasterDb"] * {
+  color: #ffffff !important;
+}
+
+/* HIGH-SPECIFICITY OVERRIDES FOR DARK BACKDROP AND RED BUTTONS */
+html body .modalBackdrop,
+html body .popupOverlay:not(#popupDetailBarangV2):not(#popupDetail),
+html body .loadingOverlay,
+html body div.modalBackdrop,
+html body div.popupOverlay:not(#popupDetailBarangV2):not(#popupDetail),
+html body #popupUserManagementModal,
+html body #popupUserForm,
+html body #popupTambahToko,
+html body #popupUbahStatusAdminModal,
+html body #artemisOverlay,
+html body #uploadBuktiPermintaanOverlay,
+html body #confirmOverlay,
+html body #rejectOverlay,
+html body #popupNotifList,
+html body #modalPilihNadaNotif,
+html body #popupForwardService,
+html body #pdfModal,
+html body #modalPdfDokumenViewer,
+html body #chatBroadcastModal {
+  background: rgba(0, 0, 0, 0.82) !important;
+  background-color: rgba(0, 0, 0, 0.82) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html body #btnHapusMultiUserModal,
+html body #btnHapusMultiUser,
+html body #btnHapusMultiMasterDb,
+html body button#btnHapusMultiUserModal,
+html body button#btnHapusMultiUser,
+html body button#btnHapusMultiMasterDb,
+html body button[onclick*="hapusMultiUser"],
+html body button[onclick*="hapusMultiMasterDb"] {
+  background: #dc2626 !important;
+  background-color: #dc2626 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border: 1px solid #991b1b !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+html body #btnHapusMultiUserModal *,
+html body #btnHapusMultiUser *,
+html body #btnHapusMultiMasterDb *,
+html body button#btnHapusMultiUserModal *,
+html body button#btnHapusMultiUser *,
+html body button#btnHapusMultiMasterDb *,
+html body button[onclick*="hapusMultiUser"] *,
+html body button[onclick*="hapusMultiMasterDb"] * {
+  color: #ffffff !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =============================================================================
+   ABSOLUTE GLOBAL RULE: NO BLACK BOXES BEHIND TABLE HEADER TEXT
+   ============================================================================= */
+html body th *,
+html body thead th *,
+html body th .th-sort-wrapper,
+html body th .th-sort-wrapper *,
+html body th .sort-icon,
+html body th span,
+html body th label,
+html body th div,
+html body th p,
+html body th button,
+html body .sortable-th *,
+html body .historyTable th *,
+html body .detailTableV2 th * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .popupOverlay:not(#popupDetailBarangV2):not(#popupDetail),
+html body .modalBackdrop,
+html body .modal-backdrop,
+html body .modal-overlay,
+html body .swal2-container {
+  background: rgba(0, 0, 0, 0.82) !important;
+  background-color: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* =============================================================================
+   EXPLICIT WHITE TEXT & SLATE GREY BOX FOR MODAL SEARCH INPUTS
+   ============================================================================= */
+
+/* 1. BUTTON SIMPAN TOKO BARU (#btnSimpanTokoBaru / simpanTokoBaru):
+      SOLID GREEN (#16a34a) WITH WHITE TEXT & WHITE ICON IN BOTH TAMBAH AND EDIT MODES */
+html body #btnSimpanTokoBaru,
+html body button[onclick*="simpanTokoBaru"],
+html body #popupTambahToko #btnSimpanTokoBaru {
+  background: #16a34a !important;
+  background-color: #16a34a !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  border: 1px solid #000000 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+html body #btnSimpanTokoBaru *,
+html body button[onclick*="simpanTokoBaru"] *,
+html body #popupTambahToko #btnSimpanTokoBaru * {
+  color: #ffffff !important;
+}
+
+/* 2. SEARCH INPUT BOXES (#searchUserModalInput & #cariTokoModalInput):
+      SLATE GREY BOX (#334155), WHITE TEXT (#ffffff) WITH HIGH CONTRAST */
+html body #searchUserModalInput,
+html body #cariTokoModalInput,
+html body input[oninput*="filterTabelUserModal"],
+html body input[oninput*="filterDaftarTokoModal"],
+html body #popupUserManagementModal .userManagementToolbar input,
+html body #popupTambahToko input[oninput*="filterDaftarTokoModal"] {
+  background: #334155 !important;
+  background-color: #334155 !important;
+  color: #ffffff !important;
+  border: 1px solid #475569 !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+html body #searchUserModalInput::placeholder,
+html body #cariTokoModalInput::placeholder,
+html body input[oninput*="filterTabelUserModal"]::placeholder,
+html body input[oninput*="filterDaftarTokoModal"]::placeholder {
+  color: rgba(255, 255, 255, 0.75) !important;
+  opacity: 1 !important;
+}
+
+/* 3. PASSWORD EYE TOGGLE BUTTON (#togglePasswordBtn / togglePasswordVisibility):
+      TRANSPARENT LIGHT BACKGROUND - NEVER BLACK */
+html body #togglePasswordBtn,
+html body #loginForm #togglePasswordBtn,
+html body .input-group #togglePasswordBtn,
+html body button[onclick*="togglePasswordVisibility"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html body #togglePasswordIcon,
+html body #togglePasswordBtn span,
+html body #togglePasswordBtn .material-symbols-rounded,
+html body #loginForm #togglePasswordIcon,
+html body .input-group #togglePasswordIcon,
+html body button[onclick*="togglePasswordVisibility"] span,
+html body button[onclick*="togglePasswordVisibility"] .material-symbols-rounded {
+  color: #64748b !important;
+}
+
+html body #togglePasswordBtn:hover #togglePasswordIcon,
+html body button[onclick*="togglePasswordVisibility"]:hover span {
+  color: #0284c7 !important;
+}
+
+/* 4. LOGIN FORM INPUTS (USERNAME & PASSWORD) - NEVER BLACK */
+html body .login-card .input-group input,
+html body #username,
+html body #password {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #0f172a !important;
+}
+
+/* 5. SOFT 90-DEGREE CORNERS (SUDUT 90 DERAJAT TAPI TIDAK LANCIP: BORDER-RADIUS 4PX) FOR POPUPS, CARDS, HEADERS & BUTTONS */
+html body #modalPilihanCetakPdfCard,
+html body #modalPilihanCetakPdf .modal-card,
+html body .popupCard,
+html body .modalCard,
+html body .popup-card,
+html body .modal-card {
+  border-radius: 4px !important;
+}
+
+html body #modalPilihanCetakPdfCard > div:first-child,
+html body .popupHeader,
+html body .modalHeader,
+html body .modal-header {
+  border-radius: 4px 4px 0 0 !important;
+}
+
+html body #modalPilihanCetakPdfCard button,
+html body #modalPilihanCetakPdf button,
+html body .popup-card button,
+html body .modal-card button {
+  border-radius: 4px !important;
+}
+
+/* 6. MODAL PILIH NADA NOTIFIKASI (#modalPilihNadaNotif):
+      - HEADER: SOLID BLUE (#0284c7), NO GRADIENT
+      - UNBOLD ALL TEXT (FONT-WEIGHT: 400)
+      - TOMBOL TUTUP (onclick="tutupModalPilihNadaNotif()"): ABU (#e2e8f0), TEKS DARK (#0f172a), GARIS HITAM (#000000) */
+html body #modalPilihNadaNotif .popupBox > div:first-child,
+html body #modalPilihNadaNotif .popupHeader,
+html body #modalPilihNadaNotif .modal-header {
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-radius: 4px 4px 0 0 !important;
+}
+
+html body #modalPilihNadaNotif,
+html body #modalPilihNadaNotif *,
+html body #modalPilihNadaNotif .popupBox *,
+html body #modalPilihNadaNotif header *,
+html body #modalPilihNadaNotif span,
+html body #modalPilihNadaNotif div,
+html body #modalPilihNadaNotif p,
+html body #modalPilihNadaNotif button {
+  font-weight: 400 !important;
+}
+
+html body #modalPilihNadaNotif button[onclick*="tutupModalPilihNadaNotif"] {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  background-image: none !important;
+  color: #0f172a !important;
+  border: 1px solid #000000 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-weight: 800 !important;
+  border-radius: 4px !important;
+}
+
+html body #modalPilihNadaNotif button[onclick*="tutupModalPilihNadaNotif"] * {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+/* 7. ABSOLUTE RULE FOR ALL SAVE BUTTONS (TOMBOL SIMPAN):
+      TEXT MUST ALWAYS BE BOLD (FONT-WEIGHT: 800 !IMPORTANT) */
+html body #btnSimpan,
+html body #btnSimpanTokoBaru,
+html body #btnSimpanUserModal,
+html body button[onclick*="simpan"],
+html body button[onclick*="Simpan"],
+html body button[id*="simpan"],
+html body button[id*="Simpan"],
+html body .btn-simpan,
+html body button.btn-simpan {
+  font-weight: 800 !important;
+}
+
+html body #btnSimpan *,
+html body #btnSimpanTokoBaru *,
+html body #btnSimpanUserModal *,
+html body button[onclick*="simpan"] *,
+html body button[onclick*="Simpan"] *,
+html body button[id*="simpan"] *,
+html body button[id*="Simpan"] *,
+html body .btn-simpan *,
+html body button.btn-simpan * {
+  font-weight: 800 !important;
+}
+
+/* 8. DUAL SUPABASE SETUP POPUP (#modalSetupSupabaseKeys):
+      - HEADER: SOLID BLUE (#0284c7), UNBOLD TITLE
+      - BUTTONS: GREY (#e2e8f0), TEKS BOLD (#0f172a, FONT-WEIGHT: 800), GARIS HITAM PINGGIR (#000000)
+      - CORNERS: SOFT 90-DEGREE (BORDER-RADIUS: 4PX) */
+html body #modalSetupSupabaseKeys .popupBox,
+html body #modalSetupSupabaseKeys div {
+  border-radius: 4px !important;
+}
+
+html body #modalSetupSupabaseKeys .popupBox > div:first-child {
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-radius: 4px 4px 0 0 !important;
+}
+
+html body #modalSetupSupabaseKeys .popupBox > div:first-child span,
+html body #modalSetupSupabaseKeys .popupBox > div:first-child h3,
+html body #modalSetupSupabaseKeys .popupBox > div:first-child h4 {
+  font-weight: 400 !important;
+  color: #ffffff !important;
+}
+
+html body #modalSetupSupabaseKeys button[onclick*="simpanSupabase1Data"],
+html body #modalSetupSupabaseKeys button[onclick*="simpanSupabase2File"] {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  background-image: none !important;
+  color: #0f172a !important;
+  border: 1px solid #000000 !important;
+  font-weight: 800 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+html body #modalSetupSupabaseKeys button[onclick*="simpanSupabase1Data"] *,
+html body #modalSetupSupabaseKeys button[onclick*="simpanSupabase2File"] * {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+/* ABSOLUTE OVERRIDE: REMOVE ANY BOX/BORDER AROUND .switch-toggle TOGGLE BUTTON */
+html body .switch-toggle,
+html body label.switch-toggle {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 34px !important;
+}
+
+html body .switch-toggle input[type="checkbox"],
+html body #toggleApprovalParsialSwitch {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* KEYFRAMES SPIN FOR LOADING ICON */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* SEARCH STORE INPUT TEXT COLOR WHITE OVERRIDE */
+#cariTokoModalInput,
+html body #cariTokoModalInput,
+html body input#cariTokoModalInput {
+  color: #ffffff !important;
+  background: #334155 !important;
+  background-color: #334155 !important;
+  border: 1px solid #475569 !important;
+  font-weight: 700 !important;
+}
+
+#cariTokoModalInput::placeholder,
+html body #cariTokoModalInput::placeholder {
+  color: rgba(255, 255, 255, 0.75) !important;
+  opacity: 1 !important;
+}
+
+/* POPUP SECURITY PIN HAPUS LOKAL STYLING OVERRIDE */
+#popupSecurityPinHapusLokal .rejectBoxPopup,
+#popupSecurityPinHapusLokal .popupBox {
+  width: min(420px, 92vw) !important;
+  max-width: 92vw !important;
+  border-radius: 4px !important;
+}
+
+#popupSecurityPinHapusLokal .rejectHeaderPopup,
+#popupSecurityPinHapusLokal .popupHeader,
+#popupSecurityPinHapusLokal > div > div:first-child {
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 4px 4px 0 0 !important;
+}
+
+#popupSecurityPinHapusLokal .rejectHeaderPopup *,
+#popupSecurityPinHapusLokal .rejectHeaderPopup span,
+#popupSecurityPinHapusLokal .rejectHeaderPopup h3,
+#popupSecurityPinHapusLokal .rejectHeaderPopup p {
+  font-weight: 400 !important;
+  color: #ffffff !important;
+}
+
+#popupSecurityPinHapusLokal .rejectBodyPopup p,
+#popupSecurityPinHapusLokal input#inputPinHapusLokal,
+#popupSecurityPinHapusLokal #pinHapusLokalError {
+  font-weight: 400 !important;
+}
+
+#popupSecurityPinHapusLokal input#inputPinHapusLokal {
+  border-radius: 4px !important;
+}
+
+#popupSecurityPinHapusLokal .btnBatal,
+#popupSecurityPinHapusLokal .btnOkNotif,
+#popupSecurityPinHapusLokal button.btnBatal,
+#popupSecurityPinHapusLokal button.btnOkNotif {
+  flex: 1 1 0% !important;
+  width: auto !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  border: 1px solid #000000 !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#popupSecurityPinHapusLokal .btnBatal,
+#popupSecurityPinHapusLokal button.btnBatal {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+#popupSecurityPinHapusLokal .btnOkNotif,
+#popupSecurityPinHapusLokal button.btnOkNotif,
+#popupSecurityPinHapusLokal button[onclick*="verifikasiDanEksekusiHapusLokal"] {
+}
+
+html body #modalPilihNadaNotif button[onclick*="tutupModalPilihNadaNotif"] {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  background-image: none !important;
+  color: #0f172a !important;
+  border: 1px solid #000000 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-weight: 800 !important;
+  border-radius: 4px !important;
+}
+
+html body #modalPilihNadaNotif button[onclick*="tutupModalPilihNadaNotif"] * {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+/* 7. ABSOLUTE RULE FOR ALL SAVE BUTTONS (TOMBOL SIMPAN):
+      TEXT MUST ALWAYS BE BOLD (FONT-WEIGHT: 800 !IMPORTANT) */
+html body #btnSimpan,
+html body #btnSimpanTokoBaru,
+html body #btnSimpanUserModal,
+html body button[onclick*="simpan"],
+html body button[onclick*="Simpan"],
+html body button[id*="simpan"],
+html body button[id*="Simpan"],
+html body .btn-simpan,
+html body button.btn-simpan {
+  font-weight: 800 !important;
+}
+
+html body #btnSimpan *,
+html body #btnSimpanTokoBaru *,
+html body #btnSimpanUserModal *,
+html body button[onclick*="simpan"] *,
+html body button[onclick*="Simpan"] *,
+html body button[id*="simpan"] *,
+html body button[id*="Simpan"] *,
+html body .btn-simpan *,
+html body button.btn-simpan * {
+  font-weight: 800 !important;
+}
+
+/* 8. DUAL SUPABASE SETUP POPUP (#modalSetupSupabaseKeys):
+      - HEADER: SOLID BLUE (#0284c7), UNBOLD TITLE
+      - BUTTONS: GREY (#e2e8f0), TEKS BOLD (#0f172a, FONT-WEIGHT: 800), GARIS HITAM PINGGIR (#000000)
+      - CORNERS: SOFT 90-DEGREE (BORDER-RADIUS: 4PX) */
+html body #modalSetupSupabaseKeys .popupBox,
+html body #modalSetupSupabaseKeys div {
+  border-radius: 4px !important;
+}
+
+html body #modalSetupSupabaseKeys .popupBox > div:first-child {
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-radius: 4px 4px 0 0 !important;
+}
+
+html body #modalSetupSupabaseKeys .popupBox > div:first-child span,
+html body #modalSetupSupabaseKeys .popupBox > div:first-child h3,
+html body #modalSetupSupabaseKeys .popupBox > div:first-child h4 {
+  font-weight: 400 !important;
+  color: #ffffff !important;
+}
+
+html body #modalSetupSupabaseKeys button[onclick*="simpanSupabase1Data"],
+html body #modalSetupSupabaseKeys button[onclick*="simpanSupabase2File"] {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  background-image: none !important;
+  color: #0f172a !important;
+  border: 1px solid #000000 !important;
+  font-weight: 800 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+html body #modalSetupSupabaseKeys button[onclick*="simpanSupabase1Data"] *,
+html body #modalSetupSupabaseKeys button[onclick*="simpanSupabase2File"] * {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+/* ABSOLUTE OVERRIDE: REMOVE ANY BOX/BORDER AROUND .switch-toggle TOGGLE BUTTON */
+html body .switch-toggle,
+html body label.switch-toggle {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 34px !important;
+}
+
+html body .switch-toggle input[type="checkbox"],
+html body #toggleApprovalParsialSwitch {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* KEYFRAMES SPIN FOR LOADING ICON */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* SEARCH STORE INPUT TEXT COLOR WHITE OVERRIDE */
+#cariTokoModalInput,
+html body #cariTokoModalInput,
+html body input#cariTokoModalInput {
+  color: #ffffff !important;
+  background: #334155 !important;
+  background-color: #334155 !important;
+  border: 1px solid #475569 !important;
+  font-weight: 700 !important;
+}
+
+#cariTokoModalInput::placeholder,
+html body #cariTokoModalInput::placeholder {
+  color: rgba(255, 255, 255, 0.75) !important;
+  opacity: 1 !important;
+}
+
+/* POPUP SECURITY PIN HAPUS LOKAL STYLING OVERRIDE */
+#popupSecurityPinHapusLokal .rejectBoxPopup,
+#popupSecurityPinHapusLokal .popupBox {
+  width: min(420px, 92vw) !important;
+  max-width: 92vw !important;
+  border-radius: 4px !important;
+}
+
+#popupSecurityPinHapusLokal .rejectHeaderPopup,
+#popupSecurityPinHapusLokal .popupHeader,
+#popupSecurityPinHapusLokal > div > div:first-child {
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 4px 4px 0 0 !important;
+}
+
+#popupSecurityPinHapusLokal .rejectHeaderPopup *,
+#popupSecurityPinHapusLokal .rejectHeaderPopup span,
+#popupSecurityPinHapusLokal .rejectHeaderPopup h3,
+#popupSecurityPinHapusLokal .rejectHeaderPopup p {
+  font-weight: 400 !important;
+  color: #ffffff !important;
+}
+
+#popupSecurityPinHapusLokal .rejectBodyPopup p,
+#popupSecurityPinHapusLokal input#inputPinHapusLokal,
+#popupSecurityPinHapusLokal #pinHapusLokalError {
+  font-weight: 400 !important;
+}
+
+#popupSecurityPinHapusLokal input#inputPinHapusLokal {
+  border-radius: 4px !important;
+}
+
+#popupSecurityPinHapusLokal .btnBatal,
+#popupSecurityPinHapusLokal .btnOkNotif,
+#popupSecurityPinHapusLokal button.btnBatal,
+#popupSecurityPinHapusLokal button.btnOkNotif {
+  flex: 1 1 0% !important;
+  width: auto !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  border: 1px solid #000000 !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#popupSecurityPinHapusLokal .btnBatal,
+#popupSecurityPinHapusLokal button.btnBatal {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+#popupSecurityPinHapusLokal .btnOkNotif,
+#popupSecurityPinHapusLokal button.btnOkNotif,
+#popupSecurityPinHapusLokal button[onclick*="verifikasiDanEksekusiHapusLokal"] {
+  background: #e2e8f0 !important;
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* ==========================================================================
+   BACKDROP POPUP DETAIL PERMINTAAN (#popupDetailBarangV2 & #popupDetail)
+   BACKDROP MENGGUNAKAN WARNA GELAP TRANSPARAN (RGBA(0,0,0,0.82)) SAMA SEPERTI POPUP GLOBAL LAINNYA.
+   ========================================================================== */
+html body #popupDetailBarangV2,
+html body #popupDetail,
+html body div#popupDetailBarangV2,
+html body div#popupDetail,
+html body .popupOverlay#popupDetailBarangV2,
+html body .popupOverlay#popupDetail,
+html body div.popupOverlay#popupDetailBarangV2,
+html body div.popupOverlay#popupDetail,
+html body #popupDetailBarangV2.mode-a,
+html body #popupDetail.mode-a,
+html body #popupDetailBarangV2.mode-b,
+html body #popupDetail.mode-b,
+html body #popupDetailBarangV2.show,
+html body #popupDetailBarangV2[style*="display"],
+html body #popupDetail[style*="display"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html body #popupDetailBarangV2 .popupBox,
+html body #popupDetail .popupBox,
+html body #popupDetailBarangV2 .modalBody,
+html body #popupDetailBarangV2 .popupCardBodyContainerV2,
+html body #popupDetailBarangV2 .tableCardV2,
+html body #popupDetailBarangV2 #detailBodyWrap {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  --bg-box: #ffffff !important;
+  --bg-card: #ffffff !important;
+  --bg-body: #ffffff !important;
+}
+
+/* 5MM VERTICAL PADDING AND GAP FOR LOADING POPUP CARD */
+html body #miniCenterLoadingCard,
+html body #miniCenterLoading > div,
+html body div#miniCenterLoadingCard {
+  padding-top: 5mm !important;
+  padding-bottom: 5mm !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+  gap: 5mm !important;
+}
+
+/* FULLSCREEN PAGE REFRESH BLACK OVERLAY (INSTANT SHOW & HIDE) */
+#pageRefreshTransitionOverlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: #000000 !important;
+  background-color: #000000 !important;
+  opacity: 1 !important;
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+  display: block !important;
+}
+
+/* ABSOLUTE FAILSAFE: PREVENT POPUP DETAIL PERMINTAAN FROM SHOWING WHEN HIDDEN OR NOT ACTIVE */
+html body #popupDetailBarangV2[style*="display: none"],
+html body #popupDetailBarangV2[style*="display:none"],
+html body #popupDetailBarangV2:not(.show):not([style*="display: flex"]):not([style*="display:flex"]):not([style*="display: block"]):not([style*="display:block"]),
+html body #popupDetail[style*="display: none"],
+html body #popupDetail[style*="display:none"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* FAILSAFE: DARK TRANSPARENT BACKDROP FOR LOADING POPUPS (MATCHING ALL OTHER POPUPS) */
+html body #miniCenterLoading,
+html body #loadingOverlay,
+html body div#miniCenterLoading,
+html body div#loadingOverlay {
+  background: rgba(0, 0, 0, 0.82) !important;
+  background-color: rgba(0, 0, 0, 0.82) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* POPUP OFFLINE / KONEKSI INTERNET TERPUTUS STYLING OVERRIDE (PRIORITAS FRONT LAYER & SOFT 90 DEGREE CORNERS) */
+#popupOfflineSafetyModal,
+html body #popupOfflineSafetyModal,
+html body div#popupOfflineSafetyModal {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2147483647 !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-sizing: border-box !important;
+}
+
+#popupOfflineSafetyModal > div {
+  border-radius: 4px !important;
+  border: 1px solid #000000 !important;
+  overflow: hidden !important;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important;
+}
+
+#popupOfflineSafetyModal > div > div:first-child {
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 4px 4px 0 0 !important;
+}
+
+#popupOfflineSafetyModal > div > div:first-child *,
+#popupOfflineSafetyModal > div > div:first-child span,
+#popupOfflineSafetyModal > div > div:first-child button {
+  font-weight: 400 !important;
+  color: #ffffff !important;
+}
+
+#popupOfflineSafetyModal button.btnBatal,
+#popupOfflineSafetyModal button.btnOkNotif {
+  border-radius: 4px !important;
+  border: 1px solid #000000 !important;
+  font-weight: 700 !important;
+}
+
+/* SOLID GREEN BUTTON FIX FOR BATCH SIMPAN KET PART */
+#btnBatchSimpanKetPart {
+  background: #16a34a !important;
+  background-color: #16a34a !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+  border: 1px solid #15803d !important;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3) !important;
+}
+
+#btnBatchSimpanKetPart:hover {
+  background: #15803d !important;
+  background-color: #15803d !important;
+  background-image: none !important;
+  color: #ffffff !important;
+}
+
+/* SIZING OVERRIDE: POPUP KONFIRMASI, LOADING, & CETAK PDF DIBUAT SAMA LEBAR UKURANNYA DENGAN POPUP NOTIFIKASI (WIDTH: MIN(420PX, 92VW)) */
+#miniCenterLoadingCard,
+#miniCenterLoading > div,
+div#miniCenterLoadingCard,
+#loadingOverlay > div,
+#loadingProsesOverlay > div,
+.loadingCard,
+.loadingBoxCard,
+#confirmBoxCard,
+.confirmBoxCard,
+#popupNotifCard,
+.popupNotifCard,
+#modalPilihanCetakPdfCard {
+  width: min(420px, 92vw) !important;
+  max-width: 92vw !important;
+  min-width: unset !important;
+  height: auto !important;
+  min-height: 140px !important;
+  padding: 16px 20px 14px 20px !important;
+  justify-content: space-between !important;
+  border-radius: 4px !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* TOMBOL BATAL POPUP LOADING (POJOK KANAN BAWAH, RAPI DI DALAM BORDER) */
+#btnBatalLoading,
+button#btnBatalLoading,
+div#miniCenterLoadingCard #btnBatalLoading {
+  width: auto !important;
+  min-width: 90px !important;
+  height: 30px !important;
+  padding: 0 16px !important;
+  align-self: flex-end !important;
+  margin-left: auto !important;
+  margin-top: 6px !important;
+  margin-bottom: 0 !important;
+  border-radius: 4px !important;
+  border: 1px solid #000000 !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+}
+
+/* TEKS POPUP LOADING DIBESARKAN & DITENGAHKAN */
+#miniCenterLoadingText,
+span#miniCenterLoadingText {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  word-break: break-word !important;
+  line-height: 1.3 !important;
+  text-align: center !important;
+}
+
+#miniCenterLoadingSubtext,
+span#miniCenterLoadingSubtext {
+  font-size: 12.5px !important;
+  color: #64748b !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+}
+
+/* GARIS HITAM DI PINGGIR SEMUA POPUP / MODAL / LOADING CARD (TIDAK BOLD) */
+#miniCenterLoadingCard,
+#miniCenterLoading > div,
+#loadingOverlay > div,
+#loadingProsesOverlay > div,
+#confirmBoxCard,
+#modalPilihanCetakPdfCard,
+.modal-content,
+.modal-card,
+.popup-card,
+.popupCard,
+.modal-dialog > div,
+.swal2-popup {
+  border: 1px solid #000000 !important;
+  outline: 1px solid #000000 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   POPUP LOGIN FOKUS, TOMBOL BIRU POLOS (TIDAK BELANG) & GARIS HITAM PINGGIR
+   ========================================================================== */
+#loginPage,
+html body #loginPage {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+}
+
+.login-card,
+html body .login-card,
+html body #loginPage .login-card {
+  width: min(420px, 92vw) !important;
+  max-width: 92vw !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #000000 !important;
+  outline: none !important;
+  border-radius: 4px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
+  -webkit-box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
+  box-sizing: border-box !important;
+}
+
+.login-glow-orb {
+  display: none !important;
+}
+
+.login-card .logo,
+html body .login-card .logo {
+  background: #0067a1 !important;
+  background-color: #0067a1 !important;
+  background-image: none !important;
+  border: 1px solid #000000 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+}
+
+#btnLogin,
+button#btnLogin,
+html body #btnLogin,
+html body .login-card .btn-primary,
+html body .login-card button[type="submit"] {
+  background: #0067a1 !important;
+  background-color: #0067a1 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: 1px solid #000000 !important;
+  outline: none !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  transition: background 0.2s ease !important;
+}
+
+#btnLogin:hover,
+button#btnLogin:hover,
+html body #btnLogin:hover,
+html body .login-card .btn-primary:hover,
+html body .login-card button[type="submit"]:hover {
+  background: #005585 !important;
+  background-color: #005585 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   MODAL PILIHAN CETAK PDF - SOFT 90 DEGREE CORNERS (4PX) & SOLID BLUE HEADER
+   ========================================================================== */
+#modalPilihanCetakPdf #modalPilihanCetakPdfCard,
+#modalPilihanCetakPdfCard,
+.modal-pilihan-cetak-card {
+  border-radius: 4px !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3) !important;
+  overflow: hidden !important;
+}
+
+#modalPilihanCetakPdf .modal-pilihan-cetak-header,
+.modal-pilihan-cetak-header {
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
+  background-image: none !important;
+  border-top-left-radius: 4px !important;
+  border-top-right-radius: 4px !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+#modalPilihanCetakPdf .modal-pilihan-cetak-header span,
+.modal-pilihan-cetak-header span {
+  font-weight: 400 !important;
+  font-size: 15px !important;
+  color: #ffffff !important;
+}
+
+.btn-pilihan-cetak {
+  border-radius: 4px !important;
+  border: 1px solid #e2e8f0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-pilihan-cetak:hover {
+  border-color: #0284c7 !important;
+  background-color: #f0f9ff !important;
 }
 
 
