@@ -11,6 +11,194 @@ function cleanCatatanExport(rawCatatan) {
 }
 window.cleanCatatanExport = cleanCatatanExport;
 
+
+// ==========================================
+// SYSTEM MAINTENANCE MODE REALTIME ENGINE (SUPABASE & MULTI-CLOUD)
+// ==========================================
+
+const MAINTENANCE_MODE_KEY = 'maintenance_mode_config_v1';
+window._isMaintenanceModeActive = false;
+window._maintenanceModeMessage = 'SISTEM SEDANG DALAM PEMELIHARAAN SEBENTAR. MOHON TUNGGU BEBERAPA SAAT.';
+window._adminMaintenanceBypassed = false;
+
+// 1. App Maintenance UI Renderer
+function applyMaintenanceModeUI(isMaintenance, message = '') {
+  window._isMaintenanceModeActive = !!isMaintenance;
+  if (message) window._maintenanceModeMessage = message;
+
+  const overlay = document.getElementById('maintenanceOverlay');
+  const msgEl = document.getElementById('maintenanceOverlayMessage');
+  const badgeEl = document.getElementById('maintenanceBadgeStatus');
+  const inputMsgEl = document.getElementById('inputMaintenanceMessage');
+
+  if (msgEl && window._maintenanceModeMessage) {
+    msgEl.textContent = window._maintenanceModeMessage;
+  }
+  if (inputMsgEl && window._maintenanceModeMessage && !inputMsgEl.value) {
+    inputMsgEl.value = window._maintenanceModeMessage;
+  }
+
+  // Update Admin Control Badge Status
+  if (badgeEl) {
+    if (window._isMaintenanceModeActive) {
+      badgeEl.innerHTML = 'STATUS: AKTIF (MAINTENANCE RUNNING)';
+      badgeEl.style.background = '#fef2f2';
+      badgeEl.style.color = '#dc2626';
+      badgeEl.style.border = '1px solid #fca5a5';
+    } else {
+      badgeEl.innerHTML = 'STATUS: NON-AKTIF (SISTEM NORMAL)';
+      badgeEl.style.background = '#f0fdf4';
+      badgeEl.style.color = '#16a34a';
+      badgeEl.style.border = '1px solid #86efac';
+    }
+  }
+
+  // Show or Hide Fullscreen Maintenance Overlay (KHUSUS ADMIN SAMA SEKALI TIDAK MUNCUL)
+  if (overlay) {
+    if (window._isMaintenanceModeActive) {
+      const isUserAdmin = typeof currentUser !== 'undefined' && currentUser && 
+        (String(currentUser.category || currentUser.kategori || currentUser.role || '').toUpperCase() === 'ADMIN' ||
+         String(currentUser.username || '').toUpperCase() === 'ADMIN');
+
+      if (isUserAdmin) {
+        // KHUSUS ADMIN: POPUP MAINTENANCE KELUAR/DISEMBUNYIKAN SECARA OTOMATIS
+        overlay.style.setProperty('display', 'none', 'important');
+      } else {
+        overlay.style.setProperty('z-index', '2147483647', 'important');
+        overlay.style.setProperty('display', 'flex', 'important');
+      }
+    } else {
+      overlay.style.setProperty('display', 'none', 'important');
+    }
+  }
+}
+window.applyMaintenanceModeUI = applyMaintenanceModeUI;
+
+// 2. Admin Save & Sync Maintenance Status (Supabase Upsert & Realtime Broadcast)
+async function simpanPengaturanMaintenance(enableStatus) {
+  const isEnable = !!enableStatus;
+  const inputMsg = document.getElementById('inputMaintenanceMessage');
+  const customMessage = inputMsg ? inputMsg.value.trim() : 'SISTEM SEDANG DALAM PEMELIHARAAN SEBENTAR. MOHON TUNGGU BEBERAPA SAAT.';
+
+  const payload = {
+    isMaintenance: isEnable,
+    message: customMessage || 'SISTEM SEDANG DALAM PEMELIHARAAN SEBENTAR. MOHON TUNGGU BEBERAPA SAAT.',
+    updatedAt: new Date().toISOString(),
+    by: typeof currentUser !== 'undefined' && currentUser ? (currentUser.username || 'ADMIN') : 'ADMIN'
+  };
+
+  const payloadStr = JSON.stringify(payload);
+  window._isMaintenanceModeActive = isEnable;
+  window._maintenanceModeMessage = payload.message;
+
+  // Local storage cache
+  try { localStorage.setItem(MAINTENANCE_MODE_KEY, payloadStr); } catch(e) {}
+
+  // Apply UI locally immediately
+  applyMaintenanceModeUI(isEnable, payload.message);
+
+  if (typeof showLoading === 'function') {
+    showLoading(isEnable ? 'MENGAKTIFKAN MAINTENANCE MODE (REALTIME)...' : 'MEMATIKAN MAINTENANCE MODE (REALTIME)...');
+  }
+
+  // A. Supabase Database Upsert & Broadcast
+  if (typeof supabase !== 'undefined' && supabase) {
+    try {
+      await supabase.from('app_settings').upsert([
+        { key: MAINTENANCE_MODE_KEY, value: payloadStr, updated_at: new Date().toISOString() }
+      ], { onConflict: 'key' });
+
+      if (typeof supabaseRealtimeChannel !== 'undefined' && supabaseRealtimeChannel) {
+        supabaseRealtimeChannel.send({
+          type: 'broadcast',
+          event: 'maintenance_mode_changed',
+          payload: payload
+        }).catch(() => {});
+      }
+    } catch(err) {
+      console.warn('[SUPABASE MAINTENANCE UPSERT ERROR]:', err);
+    }
+  }
+
+  // B. Firestore & RealtimeDB Cloud Backup Sync
+  try {
+    const dbFs = typeof getDbFirestore === 'function' ? getDbFirestore() : (typeof dbFirestore !== 'undefined' ? dbFirestore : null);
+    if (dbFs) {
+      dbFs.collection('app_settings').doc('config').set({
+        maintenance_mode_config: payloadStr,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(() => {});
+    }
+  } catch(e) {}
+
+  if (typeof hideLoading === 'function') hideLoading();
+  if (typeof showNotif === 'function') {
+    showNotif(isEnable ? 'MODE MAINTENANCE BERHASIL DIAKTIFKAN REALTIME!' : 'MODE MAINTENANCE BERHASIL DIMATIKAN (SISTEM NORMAL)!', isEnable ? 'warning' : 'success');
+  }
+}
+window.simpanPengaturanMaintenance = simpanPengaturanMaintenance;
+
+// 3. Load & Listen Maintenance Status from Cloud
+async function loadMaintenanceStatusFromCloud() {
+  // A. Immediate Synchronous Check from Local Storage (0ms render on page refresh)
+  try {
+    const localVal = localStorage.getItem(MAINTENANCE_MODE_KEY);
+    if (localVal) {
+      const parsed = JSON.parse(localVal);
+      if (parsed && typeof parsed.isMaintenance === 'boolean') {
+        applyMaintenanceModeUI(parsed.isMaintenance, parsed.message);
+      }
+    }
+  } catch(e) {}
+
+  // B. Cloud Sync Confirmation from Supabase
+  try {
+    if (typeof supabase !== 'undefined' && supabase) {
+      const { data, error } = await supabase.from('app_settings').select('value').eq('key', MAINTENANCE_MODE_KEY).maybeSingle();
+      if (data && data.value) {
+        const parsed = typeof data.value === 'object' ? data.value : JSON.parse(data.value);
+        if (parsed && typeof parsed.isMaintenance === 'boolean') {
+          applyMaintenanceModeUI(parsed.isMaintenance, parsed.message);
+          try { localStorage.setItem(MAINTENANCE_MODE_KEY, JSON.stringify(parsed)); } catch(e) {}
+          return;
+        }
+      }
+    }
+  } catch(e) {}
+}
+window.loadMaintenanceStatusFromCloud = loadMaintenanceStatusFromCloud;
+
+// 4. Admin Maintenance Control & Bypass Helpers
+function checkMaintenanceStatusManual() {
+  if (typeof showNotif === 'function') showNotif('MENGECEK STATUS MAINTENANCE CLOUD...', 'info');
+  loadMaintenanceStatusFromCloud().then(() => {
+    if (!window._isMaintenanceModeActive && typeof showNotif === 'function') {
+      showNotif('SISTEM SUDAH BERJALAN NORMAL!', 'success');
+    }
+  });
+}
+window.checkMaintenanceStatusManual = checkMaintenanceStatusManual;
+
+function bukaAdminMaintenanceControl() {
+  const isUserAdmin = typeof currentUser !== 'undefined' && currentUser && 
+    (String(currentUser.category || currentUser.kategori || currentUser.role || '').toUpperCase() === 'ADMIN' ||
+     String(currentUser.username || '').toUpperCase() === 'ADMIN');
+
+  if (isUserAdmin) {
+    window._adminMaintenanceBypassed = true;
+    const overlay = document.getElementById('maintenanceOverlay');
+    if (overlay) overlay.style.setProperty('display', 'none', 'important');
+    if (typeof showPage === 'function') showPage('userManagementPage');
+    if (typeof showNotif === 'function') showNotif('AKSES ADMIN: POPUP MAINTENANCE DISEMBUNYIKAN UNTUK PENGATURAN.', 'info');
+  } else {
+    if (typeof showNotif === 'function') showNotif('FITUR KELOLA HANYA UNTUK USER ADMIN!', 'warning');
+  }
+}
+window.bukaAdminMaintenanceControl = bukaAdminMaintenanceControl;
+
+
+
+
 function ensureUploadBuktiPermintaanModalInDOM() {
   let existing = document.getElementById('uploadBuktiPermintaanOverlay');
   if (existing) {
@@ -1547,6 +1735,7 @@ function reinitSupabaseClient(newUrl, newKey, newFileUrl = '', newFileKey = '') 
 
         } else if (typeof syncSupabaseRequestsToLocalCache === 'function') {
 
+          loadMaintenanceStatusFromCloud();
           syncSupabaseRequestsToLocalCache().catch(() => {});
 
         }
@@ -7789,6 +7978,29 @@ async function initSupabaseRealtimeEngine() {
     supabaseRealtimeChannel = supabase
 
       .channel('public_realtime_sync')
+      .on(
+        'broadcast',
+        { event: 'maintenance_mode_changed' },
+        (event) => {
+          if (event && event.payload) {
+            applyMaintenanceModeUI(event.payload.isMaintenance, event.payload.message);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'app_settings' },
+        async (payload) => {
+          if (payload && payload.new && payload.new.key === MAINTENANCE_MODE_KEY) {
+            try {
+              const val = typeof payload.new.value === 'object' ? payload.new.value : JSON.parse(payload.new.value);
+              if (val && typeof val.isMaintenance === 'boolean') {
+                applyMaintenanceModeUI(val.isMaintenance, val.message);
+              }
+            } catch(e) {}
+          }
+        }
+      )
 
       .on(
 
@@ -15175,6 +15387,7 @@ function autoLogin() {
       if (savedSession) {
 
         currentUser = JSON.parse(savedSession);
+      if (typeof applyMaintenanceModeUI === 'function') applyMaintenanceModeUI(window._isMaintenanceModeActive, window._maintenanceModeMessage);
 
       }
 
@@ -15425,6 +15638,7 @@ async function prosesLogin() {
     if (user) {
 
       currentUser = user;
+    if (typeof applyMaintenanceModeUI === 'function') applyMaintenanceModeUI(window._isMaintenanceModeActive, window._maintenanceModeMessage);
 
       const newMyToken = 'ST_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
 
@@ -52379,7 +52593,7 @@ function tampilkanModalOfflineSafety(customMessage = null) {
             Koneksi internet perangkat Anda terputus! Silakan periksa Wi-Fi / Data Seluler Anda.
           </p>
           <div style="display: flex !important; width: 100% !important; margin-top: 4px !important;">
-            <button type="button" class="btnOkNotif" onclick="if(navigator.onLine){tutupModalOfflineSafety();}else{tampilkanModalOfflineSafety('Masih terputus! Silakan periksa jaringan internet Anda.');}" style="width: 100% !important; height: 34px !important; min-height: 34px !important; border-radius: 4px !important; background: #e2e8f0 !important; background-color: #e2e8f0 !important; color: #0f172a !important; border: 1px solid #000000 !important; font-weight: 700 !important; font-size: 11.5px !important; cursor: pointer !important; box-sizing: border-box !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">COBA LAGI</button>
+            <button type="button" class="btnOkNotif" onclick="cekKoneksiInternetCloudActive(true)" style="width: 100% !important; height: 34px !important; min-height: 34px !important; border-radius: 4px !important; background: #e2e8f0 !important; background-color: #e2e8f0 !important; color: #0f172a !important; border: 1px solid #000000 !important; font-weight: 700 !important; font-size: 11.5px !important; cursor: pointer !important; box-sizing: border-box !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">COBA LAGI</button>
           </div>
         </div>
       </div>
@@ -52461,41 +52675,73 @@ window.eksekusiKeluarAplikasi = eksekusiKeluarAplikasi;
 
 
 
+// ACTIVE INTERNET & CLOUD CONNECTION HEARTBEAT CHECK (MENDETEKSI INTERNET MATI MESKIPUN WI-FI/LAN TERHUBUNG)
+async function cekKoneksiInternetCloudActive(isManualCheck = false) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    tampilkanModalOfflineSafety('Koneksi internet terputus! Wi-Fi / Data Seluler perangkat Anda mati.');
+    return false;
+  }
+
+  // Active Ping ke endpoint Supabase / CDN untuk memastikan internet benar-benar ada
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const targetUrl = (typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL) ? `${SUPABASE_URL}/rest/v1/` : 'https://www.google.com/favicon.ico';
+
+    const res = await fetch(targetUrl, {
+      method: 'HEAD',
+      mode: 'no-cors',
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    // Jika berhasil tersambung ke internet cloud
+    tutupModalOfflineSafety();
+    if (isManualCheck && typeof showNotif === 'function') {
+      showNotif('Koneksi internet telah kembali terhubung!', 'success');
+    }
+    return true;
+  } catch (err) {
+    // Jika LAN/Wi-Fi aktif TETAPI tidak ada akses internet / cloud timeout
+    tampilkanModalOfflineSafety('Wi-Fi / LAN terhubung, tetapi TIDAK ADA AKSES INTERNET! Silakan periksa koneksi ISP / router Anda.');
+    return false;
+  }
+}
+window.cekKoneksiInternetCloudActive = cekKoneksiInternetCloudActive;
+
 // Network online/offline event listeners & active periodic check
 if (typeof navigator !== 'undefined' && navigator.onLine === false) {
   setTimeout(() => {
-    tampilkanModalOfflineSafety('Koneksi internet perangkat Anda terputus! Silakan periksa Wi-Fi / Data Seluler Anda.');
+    tampilkanModalOfflineSafety('Koneksi internet terputus! Silakan periksa Wi-Fi / Data Seluler Anda.');
   }, 100);
 }
 
 window.addEventListener('offline', () => {
-  tampilkanModalOfflineSafety('Koneksi internet perangkat Anda terputus! Silakan periksa Wi-Fi / Data Seluler Anda.');
+  tampilkanModalOfflineSafety('Koneksi internet terputus! Wi-Fi / Data Seluler Anda mati.');
 });
 
 window.addEventListener('online', () => {
-  tutupModalOfflineSafety();
+  cekKoneksiInternetCloudActive();
   if (typeof syncSupabaseRequestsToLocalCache === 'function') {
     syncSupabaseRequestsToLocalCache();
   }
 });
 
-// Periodic Heartbeat Check every 2.5 seconds
+// Periodic Cloud Ping Heartbeat Check setiap 8 detik
 setInterval(() => {
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    tampilkanModalOfflineSafety('Koneksi internet perangkat Anda terputus! Silakan periksa Wi-Fi / Data Seluler Anda.');
-  }
-}, 2500);
+  cekKoneksiInternetCloudActive();
+}, 8000);
 
-// Global Unhandled Rejection for Network Fetch Failures
+// Global Unhandled Rejection for Network Fetch Failures (TETAP TAMPILKAN POPUP WALAUPUN NAVIGATOR.ONLINE = TRUE)
 window.addEventListener('unhandledrejection', (event) => {
   if (event && event.reason && (
     event.reason.message === 'Failed to fetch' || 
     event.reason.name === 'TypeError' ||
-    (event.reason.toString && event.reason.toString().includes('Failed to fetch'))
+    (event.reason.toString && event.reason.toString().includes('Failed to fetch')) ||
+    (event.reason.toString && event.reason.toString().includes('NetworkError'))
   )) {
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      tampilkanModalOfflineSafety('Koneksi internet terputus saat mengambil data! Silakan periksa jaringan Anda.');
-    }
+    tampilkanModalOfflineSafety('Koneksi internet terputus saat mengambil data! Silakan periksa jaringan Wi-Fi / LAN Anda.');
   }
 });
 
@@ -57543,3 +57789,7 @@ document.addEventListener('DOMContentLoaded', function() {
   observer.observe(document.body, { childList: true, subtree: true });
 });
 
+
+
+// Run maintenance status check immediately on script load
+try { loadMaintenanceStatusFromCloud(); } catch(e) {}
