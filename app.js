@@ -1,3 +1,16 @@
+// ==========================================
+// PURE CATATAN CLEANER UTILITY (LINE 1)
+// ==========================================
+function cleanCatatanExport(rawCatatan) {
+  if (!rawCatatan) return '-';
+  let str = String(rawCatatan).trim();
+  if (!str || str === '-') return '-';
+  // Strips any leading "DIHAPUS :", "DIHAPUS (xxx):", "DITOLAK :", "DITOLAK xxx:", "BATAL:", "CANCEL:", "REJECT:", "TOLAK:", "HAPUS:"
+  str = str.replace(/^(DIHAPUS|DITOLAK|BATAL|CANCEL|REJECT|REJECTED|TOLAK|HAPUS)\s*(\([^)]*\))?\s*:\s*/gi, '').trim();
+  return str || '-';
+}
+window.cleanCatatanExport = cleanCatatanExport;
+
 function ensureUploadBuktiPermintaanModalInDOM() {
   let existing = document.getElementById('uploadBuktiPermintaanOverlay');
   if (existing) {
@@ -18109,7 +18122,7 @@ function loadDashboard() {
       const itemsArr = Array.isArray(r.items) ? r.items : (typeof r.items === 'string' ? (JSON.parse(r.items || '[]')) : []);
       const countItem = itemsArr.length || (r.jumlahItem ? parseInt(r.jumlahItem) : 0);
       const jenisTxt = String(r.jenis || r.jenisPermintaan || 'DEFAULT').toUpperCase();
-      const ketTxt = String(r.catatan || r.keterangan || '-').trim();
+      const ketTxt = cleanCatatanExport(r.catatan || r.keterangan);
 
       tr.innerHTML = `
         <td style="padding: 10px 1mm; text-align: center; font-weight: 700; color: #0f172a; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap;">${areaCode || '-'}</td>
@@ -23125,7 +23138,7 @@ function filterRiwayat() {
       <td style="padding: 10px 14px; text-align: center; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0 !important;">${r.noSurat || '-'}</td>
       <td style="padding: 10px 14px; color: #1e293b; border-bottom: 1px solid #e2e8f0 !important;"><div class="namaTokoWrap" style="color: #1e293b; font-weight: 700; text-transform: uppercase;">${r.toko || '-'}</div></td>
       <td style="padding: 10px 14px; text-align: center; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${r.jenis || '-'}</td>
-      <td style="padding: 10px 14px; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${r.catatan || '-'}</td>
+<td style="padding: 10px 14px; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${cleanCatatanExport(r.catatan)}</td>
     `;
 
     tbody.appendChild(tr);
@@ -25290,7 +25303,7 @@ function prosesReject(roleType) {
 
     requests[idx].status = 'REJECT';
 
-    requests[idx].catatan = `DITOLAK ${roleType}: ${alasan}`;
+    requests[idx].catatan = (alasan || '').trim();
 
     if (!requests[idx].log) requests[idx].log = [];
 
@@ -25348,7 +25361,7 @@ function prosesReject(roleType) {
 
         status: 'REJECT',
 
-        catatan: `DITOLAK ${roleType}: ${alasan}`,
+        catatan: (alasan || '').trim(),
 
         updated_at: new Date().toISOString()
 
@@ -25752,7 +25765,7 @@ function hapusDataProses(noSurat, alasan) {
 
       currentReqs[idx].unfulfilled = true;
 
-      currentReqs[idx].catatan = `DIHAPUS (${uName}): ${alasan}`;
+      currentReqs[idx].catatan = (alasan || '').trim();
 
       if (Array.isArray(currentReqs[idx].items)) {
 
