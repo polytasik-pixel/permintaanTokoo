@@ -4068,8 +4068,8 @@ body:not(.sidebar-open) .app-main {
 }
 
 /* AUTO-FIT STATUS COLUMN (NO SQUEEZING / FEET ROOM) */
-.dashboardTable th:nth-child(4),
-.dashboardTable td:nth-child(4),
+.dashboardTable th:nth-child(5),
+.dashboardTable td:nth-child(5),
 .historyTable th:nth-child(3),
 .historyTable td:nth-child(3),
 .historyTable th.th-status-col,
@@ -4077,7 +4077,7 @@ body:not(.sidebar-open) .app-main {
   white-space: nowrap !important;
   width: auto !important;
   min-width: 140px !important;
-  text-align: left !important;
+  text-align: center !important;
 }
 
 .historyTable td:nth-child(3) *,
@@ -4132,11 +4132,11 @@ tr.empty-grid-row td {
   border-bottom: none !important;
 }
 
-/* PAGINATION CONTAINER - ALIGNED TO BOTTOM RIGHT BELOW TABLE */
+/* PAGINATION CONTAINER - ALIGNED TO BOTTOM LEFT / SPACE-BETWEEN BELOW TABLE */
 .table-pagination-container {
   display: flex !important;
   align-items: center !important;
-  justify-content: flex-end !important;
+  justify-content: space-between !important;
   gap: 16px !important;
   padding: 10px 16px !important;
   background: #ffffff !important;
@@ -10401,4 +10401,248 @@ html body .login-card button[type="submit"]:hover {
   background-color: #f0f9ff !important;
 }
 
+/* SOFT 90-DEGREE CORNERS (SUDUT 90 DERAJAT TAPI TIDAK LANCIP) FOR MODALS & CARDS */
+.modal-content,
+.modal-card,
+.popup-card,
+#modalPilihanCetakPdfCard {
+  border-radius: 4px !important;
+}
 
+#modalPilihanCetakPdfCard .modal-pilihan-cetak-header {
+  border-top-left-radius: 4px !important;
+  border-top-right-radius: 4px !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+/* PRES DAN PATEN UNTUK TABEL DASHBOARD 8 KOLOM */
+.dashboardTable th {
+  text-align: center !important;
+  padding-left: 5mm !important;
+  padding-right: 5mm !important;
+}
+
+.dashboardTable th .th-sort-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+
+.dashboardTable td {
+  padding-left: 5mm !important;
+  padding-right: 5mm !important;
+}
+
+/* AREA (col 1) & TANGGAL (col 2) - 1MM SPACE */
+.dashboardTable th:nth-child(1),
+.dashboardTable td:nth-child(1),
+.dashboardTable th:nth-child(2),
+.dashboardTable td:nth-child(2) {
+  width: 1% !important;
+  white-space: nowrap !important;
+  padding-left: 1mm !important;
+  padding-right: 1mm !important;
+}
+
+/* NO SURAT (col 3) - 5MM SPACE */
+.dashboardTable th:nth-child(3),
+.dashboardTable td:nth-child(3) {
+  width: 1% !important;
+  white-space: nowrap !important;
+  padding-left: 5mm !important;
+  padding-right: 5mm !important;
+}
+
+/* NAMA TOKO (col 4) - 5MM SPACE */
+.dashboardTable th:nth-child(4),
+.dashboardTable td:nth-child(4) {
+  width: 1% !important;
+  white-space: nowrap !important;
+  padding-left: 5mm !important;
+  padding-right: 5mm !important;
+}
+
+/* JENIS (col 5) - 5MM SPACE */
+.dashboardTable th:nth-child(5),
+.dashboardTable td:nth-child(5) {
+  width: 1% !important;
+  white-space: nowrap !important;
+  padding-left: 5mm !important;
+  padding-right: 5mm !important;
+  text-align: left !important;
+}
+
+/* JUMLAH ITEM (col 6) - 1MM SPACE */
+.dashboardTable th:nth-child(6),
+.dashboardTable td:nth-child(6) {
+  width: 1% !important;
+  white-space: nowrap !important;
+  padding-left: 1mm !important;
+  padding-right: 1mm !important;
+  text-align: left !important;
+}
+
+/* KETERANGAN (col 7) - 5MM SPACE */
+.dashboardTable th:nth-child(7),
+.dashboardTable td:nth-child(7) {
+  width: 1% !important;
+  white-space: nowrap !important;
+  padding-left: 5mm !important;
+  padding-right: 5mm !important;
+}
+
+/* STATUS (AUTO-FIT BADGE) */
+.dashboardTable th:nth-child(8),
+.dashboardTable td:nth-child(8) {
+  width: 1% !important;
+  white-space: nowrap !important;
+  min-width: 130px !important;
+  padding-left: 5mm !important;
+  padding-right: 5mm !important;
+  text-align: center !important;
+}
+
+/* SOFT 90 DEGREE CORNER (4px) ENFORCEMENT FOR POPUPS, CARDS, HEADERS, & BUTTONS */
+#modalPilihanCetakPdfCard,
+#modalPilihanCetakPdfCard > div:first-child,
+.pdf-print-option-btn,
+#modalPilihanCetakPdf button {
+  border-radius: 4px !important;
+}
+
+#modalPilihanCetakPdfCard > div:first-child {
+  background: #0284c7 !important;
+  border-top-left-radius: 4px !important;
+  border-top-right-radius: 4px !important;
+}
+
+#modalPilihanCetakPdfCard > div:first-child h3 {
+  font-weight: 400 !important;
+  color: #ffffff !important;
+}
+
+/* PENGATURAN BARIS (DROPDOWN & INFO HALAMAN) DI BAWAH KIRI TABEL */
+.table-pagination-container {
+  justify-content: space-between !important;
+}
+
+/* ==========================================================================
+   NO RED HOVER ON TABLE ROWS (POPUP DETAIL PERMINTAAN, DASHBOARD, & RIWAYAT)
+   HOVER STYLING IS STRICTLY SOFT LIGHT BLUE (#e0f2fe)
+   ========================================================================== */
+#popupDetailBarangV2 table tbody tr:hover,
+#popupDetailBarangV2 table tbody tr:hover td,
+#popupDetailBarang table tbody tr:hover,
+#popupDetailBarang table tbody tr:hover td,
+.detailTableV2 tbody tr:hover,
+.detailTableV2 tbody tr:hover td,
+#dashboardPage table.dashboardTable tbody tr:hover,
+#dashboardPage table.dashboardTable tbody tr:hover td,
+.dashboardTable tbody tr:hover,
+.dashboardTable tbody tr:hover td,
+#riwayatPage table.historyTable tbody tr:hover,
+#riwayatPage table.historyTable tbody tr:hover td,
+.historyTable tbody tr:hover,
+.historyTable tbody tr:hover td {
+  background-color: #e0f2fe !important;
+  background: #e0f2fe !important;
+  color: #0f172a !important;
+}
+
+
+
+
+
+
+
+
+
+/* OPSI TEMPLATE EXCEL (NORMAL & HOVER STATE TERANG & READABLE) */
+.btnExcelTemplateOption,
+html body #excelTemplateOverlay .btnExcelTemplateOption,
+html body #excelTemplateOverlay button.btnExcelTemplateOption {
+  width: 100% !important;
+  min-height: 64px !important;
+  padding: 16px 18px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  transition: all 0.15s ease-in-out !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  outline: none !important;
+}
+
+.btnExcelTemplateOption .btnTitle,
+html body #excelTemplateOverlay .btnExcelTemplateOption .btnTitle {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  display: block !important;
+  transition: color 0.15s ease !important;
+}
+
+.btnExcelTemplateOption .btnSubtext,
+html body #excelTemplateOverlay .btnExcelTemplateOption .btnSubtext {
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  display: block !important;
+  transition: color 0.15s ease !important;
+}
+
+.btnExcelTemplateOption .btnIconDownload,
+html body #excelTemplateOverlay .btnExcelTemplateOption .btnIconDownload {
+  color: #006ba5 !important;
+  font-size: 24px !important;
+  transition: transform 0.15s ease !important;
+}
+
+/* HOVER & FOCUS & ACTIVE STATE (TETAP TERANG, HIGHLIGHT SKY BLUE & TEKS BIRU REPO) */
+.btnExcelTemplateOption:hover,
+.btnExcelTemplateOption:focus,
+.btnExcelTemplateOption:active,
+html body #excelTemplateOverlay .btnExcelTemplateOption:hover,
+html body #excelTemplateOverlay .btnExcelTemplateOption:focus,
+html body #excelTemplateOverlay .btnExcelTemplateOption:active {
+  background: #f0f9ff !important;
+  background-color: #f0f9ff !important;
+  border-color: #006ba5 !important;
+  box-shadow: 0 3px 10px rgba(0, 107, 165, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btnExcelTemplateOption:hover .btnTitle,
+.btnExcelTemplateOption:focus .btnTitle,
+.btnExcelTemplateOption:active .btnTitle,
+html body #excelTemplateOverlay .btnExcelTemplateOption:hover .btnTitle,
+html body #excelTemplateOverlay .btnExcelTemplateOption:focus .btnTitle,
+html body #excelTemplateOverlay .btnExcelTemplateOption:active .btnTitle {
+  color: #006ba5 !important;
+}
+
+.btnExcelTemplateOption:hover .btnSubtext,
+.btnExcelTemplateOption:focus .btnSubtext,
+.btnExcelTemplateOption:active .btnSubtext,
+html body #excelTemplateOverlay .btnExcelTemplateOption:hover .btnSubtext,
+html body #excelTemplateOverlay .btnExcelTemplateOption:focus .btnSubtext,
+html body #excelTemplateOverlay .btnExcelTemplateOption:active .btnSubtext {
+  color: #0369a1 !important;
+}
+
+.btnExcelTemplateOption:hover .btnIconDownload,
+.btnExcelTemplateOption:focus .btnIconDownload,
+.btnExcelTemplateOption:active .btnIconDownload,
+html body #excelTemplateOverlay .btnExcelTemplateOption:hover .btnIconDownload,
+html body #excelTemplateOverlay .btnExcelTemplateOption:focus .btnIconDownload,
+html body #excelTemplateOverlay .btnExcelTemplateOption:active .btnIconDownload {
+  transform: scale(1.12) !important;
+}

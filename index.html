@@ -34,9 +34,9 @@
 
   <!-- Master Stylesheet -->
 
-  <link rel="stylesheet" href="styles.css?v=20260912_SOFT90DEG_PDF_CHOICE_V207">
+  <link rel="stylesheet" href="styles.css?v=20260914_EXCEL_TEMPLATE_TITLE_LEFT_LARGE_V242">
 
-  <script src="app.js?v=20260912_SOFT90DEG_PDF_CHOICE_V207"></script>
+  <script src="app.js?v=20260914_EXCEL_TEMPLATE_TITLE_LEFT_LARGE_V242"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -460,11 +460,11 @@
             <div class="statProgressBg"><div id="barDone" class="statProgressFill" style="width: 20%;"></div></div>
           </div>
 
-          <div class="cardStat batal" onclick="filterDashboardRecent('BATAL')" title="TAMPILKAN DATA BATAL DI DASHBOARD">
+          <div class="cardStat batal" onclick="filterDashboardRecent('BATAL')" title="TAMPILKAN DATA CANCEL DI DASHBOARD">
             <div class="cardTop">
               <div class="icon"><span class="material-symbols-rounded">block</span></div>
               <div class="cardText">
-                <div class="judul">BATAL</div>
+                <div class="judul">CANCEL</div>
                 <div id="batal" class="angka">0</div>
               </div>
             </div>
@@ -482,29 +482,42 @@
               <span class="material-symbols-rounded" style="color: #0284c7; font-size: 20px;">table_chart</span> 
               <span id="dashboardTableTitle">DATA PERMINTAAN</span>
             </h4>
+
             <form autocomplete="off" action="javascript:void(0);" onsubmit="return false;" style="margin: 0; padding: 0; display: flex; flex: 1; min-width: 260px; max-width: 400px; position: relative; align-items: center;">
               <span class="material-symbols-rounded" style="position: absolute; left: 10px; color: #94a3b8; font-size: 18px; pointer-events: none; z-index: 2;">search</span>
-              <input type="search" id="searchDashboard" name="search_dashboard_query_field_no_pw" role="searchbox" value="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" aria-autocomplete="none" placeholder="Cari semua kata kunci..." oninput="onDashboardSearchInput()" style="width: 100%; height: 36px; padding: 0 12px 0 34px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; color: #0f172a; outline: none; background: #f8fafc; transition: all 0.2s ease; box-sizing: border-box;">
+              <input type="search" id="searchDashboard" name="search_dashboard_query_field_no_pw" role="searchbox" value="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" aria-autocomplete="none" placeholder="Cari semua kata kunci..." oninput="onDashboardSearchInput()" style="width: 100%; height: 36px; padding: 0 12px 0 34px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; color: #0f172a; outline: none; background: #ffffff; transition: all 0.2s ease; box-sizing: border-box;">
             </form>
           </div>
           <span style="font-size: 11.5px; color: #64748b; font-weight: 700; white-space: nowrap;">KLIK BARIS UNTUK MELIHAT DETAIL PERMINTAAN</span>
         </div>
 
         <div class="tableWrap" style="width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0;">
-          <table class="dashboardTable" style="width: 100%; border-collapse: collapse; min-width: 600px;">
+          <table class="dashboardTable" style="width: 100%; border-collapse: collapse; min-width: 650px;">
             <thead>
               <tr style="background: #e2e8f0 !important; color: #0f172a !important; border-bottom: 2px solid #cbd5e1 !important;">
-                <th id="thDash_tanggal" class="sortable-th" onclick="sortTableDashboard('tanggal')" style="width: 18%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
-                  <div class="th-sort-wrapper"><span>TANGGAL</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_tanggal">unfold_more</span></div>
+                <th id="thDash_area" class="sortable-th" onclick="sortTableDashboard('area')" style="width: 1%; white-space: nowrap; text-align: center; padding: 10px 1mm; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper" style="display: flex; align-items: center; justify-content: center; width: 100%;"><span>AREA</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_area">unfold_more</span></div>
                 </th>
-                <th id="thDash_noSurat" class="sortable-th" onclick="sortTableDashboard('noSurat')" style="width: 32%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
-                  <div class="th-sort-wrapper"><span>NO SURAT</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_noSurat">unfold_more</span></div>
+                <th id="thDash_tanggal" class="sortable-th" onclick="sortTableDashboard('tanggal')" style="width: 1%; white-space: nowrap; text-align: center; padding: 10px 1mm; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper" style="display: flex; align-items: center; justify-content: center; width: 100%;"><span>TANGGAL</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_tanggal">unfold_more</span></div>
                 </th>
-                <th id="thDash_toko" class="sortable-th" onclick="sortTableDashboard('toko')" style="width: 30%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
-                  <div class="th-sort-wrapper"><span>NAMA TOKO</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_toko">unfold_more</span></div>
+                <th id="thDash_noSurat" class="sortable-th" onclick="sortTableDashboard('noSurat')" style="width: 1%; white-space: nowrap; text-align: center; padding: 10px 5mm; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper" style="display: flex; align-items: center; justify-content: center; width: 100%;"><span>NO SURAT</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_noSurat">unfold_more</span></div>
                 </th>
-                <th id="thDash_status" class="sortable-th" onclick="sortTableDashboard('status')" style="width: 20%; text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
-                  <div class="th-sort-wrapper"><span>STATUS</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_status">unfold_more</span></div>
+                <th id="thDash_toko" class="sortable-th" onclick="sortTableDashboard('toko')" style="width: 1%; white-space: nowrap; text-align: center; padding: 10px 5mm; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper" style="display: flex; align-items: center; justify-content: center; width: 100%;"><span>NAMA TOKO</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_toko">unfold_more</span></div>
+                </th>
+                <th id="thDash_jenis" class="sortable-th" onclick="sortTableDashboard('jenis')" style="width: 1%; white-space: nowrap; text-align: center; padding: 10px 5mm; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper" style="display: flex; align-items: center; justify-content: center; width: 100%;"><span>JENIS</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_jenis">unfold_more</span></div>
+                </th>
+                <th id="thDash_jumlahItem" class="sortable-th" onclick="sortTableDashboard('jumlahItem')" style="width: 1%; white-space: nowrap; text-align: center; padding: 10px 1mm; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper" style="display: flex; align-items: center; justify-content: center; width: 100%;"><span>JUMLAH ITEM</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_jumlahItem">unfold_more</span></div>
+                </th>
+                <th id="thDash_keterangan" class="sortable-th" onclick="sortTableDashboard('keterangan')" style="width: 1%; white-space: nowrap; text-align: center; padding: 10px 5mm; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper" style="display: flex; align-items: center; justify-content: center; width: 100%;"><span>KETERANGAN</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_keterangan">unfold_more</span></div>
+                </th>
+                <th id="thDash_status" class="sortable-th" onclick="sortTableDashboard('status')" style="width: 1%; white-space: nowrap; min-width: 130px; text-align: center; padding: 10px 5mm; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">
+                  <div class="th-sort-wrapper" style="display: flex; align-items: center; justify-content: center; width: 100%;"><span>STATUS</span><span class="material-symbols-rounded sort-icon" id="sortIconDash_status">unfold_more</span></div>
                 </th>
               </tr>
             </thead>
@@ -513,11 +526,26 @@
             </tbody>
           </table>
         </div>
-        <div id="dashboardPagination" class="table-pagination-container">
-          <span class="page-info">Halaman <strong id="dashPageNum">1</strong> dari <strong id="dashTotalPages">1</strong> (<span id="dashTotalCount">0</span> Data)</span>
-          <div class="page-btns">
-            <button type="button" class="page-btn" id="dashPrevBtn" onclick="changeDashboardPage(-1)" title="Halaman Sebelumnya" disabled><span class="material-symbols-rounded">chevron_left</span></button>
-            <button type="button" class="page-btn" id="dashNextBtn" onclick="changeDashboardPage(1)" title="Halaman Selanjutnya" disabled><span class="material-symbols-rounded">chevron_right</span></button>
+        <div id="dashboardPagination" class="table-pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; gap: 12px;">
+          <!-- DROPDOWN PILIHAN BARIS (SEBELAH KIRI BAWAH TABEL) -->
+          <div style="display: flex; align-items: center; gap: 6px; white-space: nowrap; background: #f8fafc; padding: 2px 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
+            <span class="material-symbols-rounded" style="font-size: 16px; color: #475569;">format_list_numbered</span>
+            <label for="selectRowsPerPage" style="font-size: 11.5px; font-weight: 700; color: #334155;">BARIS:</label>
+            <select id="selectRowsPerPage" onchange="onDashboardRowsPerPageChange(this.value)" style="height: 30px; padding: 0 6px; border: none; border-radius: 4px; font-size: 12px; font-weight: 700; color: #0f172a; background: transparent; cursor: pointer; outline: none;">
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+
+          <!-- KETERANGAN HALAMAN & TOMBOL NAVIGASI (SEBELAH KANAN BAWAH TABEL) -->
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span class="page-info" style="font-size: 12px; color: #475569; font-weight: 500;">Halaman <strong id="dashPageNum" style="color: #0f172a; font-weight: 700;">1</strong> dari <strong id="dashTotalPages" style="color: #0f172a; font-weight: 700;">1</strong> (<span id="dashTotalCount">0</span> Data)</span>
+            <div class="page-btns">
+              <button type="button" class="page-btn" id="dashPrevBtn" onclick="changeDashboardPage(-1)" title="Halaman Sebelumnya" disabled><span class="material-symbols-rounded">chevron_left</span></button>
+              <button type="button" class="page-btn" id="dashNextBtn" onclick="changeDashboardPage(1)" title="Halaman Selanjutnya" disabled><span class="material-symbols-rounded">chevron_right</span></button>
+            </div>
           </div>
         </div>
       </div>
@@ -691,11 +719,26 @@
             </tbody>
           </table>
         </div>
-        <div id="riwayatPagination" class="table-pagination-container">
-          <span class="page-info">Halaman <strong id="riwayatPageNum">1</strong> dari <strong id="riwayatTotalPages">1</strong> (<span id="riwayatTotalCount">0</span> Data)</span>
-          <div class="page-btns">
-            <button type="button" class="page-btn" id="riwayatPrevBtn" onclick="changeRiwayatPage(-1)" title="Halaman Sebelumnya" disabled><span class="material-symbols-rounded">chevron_left</span></button>
-            <button type="button" class="page-btn" id="riwayatNextBtn" onclick="changeRiwayatPage(1)" title="Halaman Selanjutnya" disabled><span class="material-symbols-rounded">chevron_right</span></button>
+        <div id="riwayatPagination" class="table-pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; gap: 12px;">
+          <!-- DROPDOWN PILIHAN BARIS (SEBELAH KIRI BAWAH TABEL RIWAYAT) -->
+          <div style="display: flex; align-items: center; gap: 6px; white-space: nowrap; background: #f8fafc; padding: 2px 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
+            <span class="material-symbols-rounded" style="font-size: 16px; color: #475569;">format_list_numbered</span>
+            <label for="selectRiwayatRowsPerPage" style="font-size: 11.5px; font-weight: 700; color: #334155;">BARIS:</label>
+            <select id="selectRiwayatRowsPerPage" onchange="onRiwayatRowsPerPageChange(this.value)" style="height: 30px; padding: 0 6px; border: none; border-radius: 4px; font-size: 12px; font-weight: 700; color: #0f172a; background: transparent; cursor: pointer; outline: none;">
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+
+          <!-- KETERANGAN HALAMAN & TOMBOL NAVIGASI (SEBELAH KANAN BAWAH TABEL RIWAYAT) -->
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span class="page-info" style="font-size: 12px; color: #475569; font-weight: 500;">Halaman <strong id="riwayatPageNum" style="color: #0f172a; font-weight: 700;">1</strong> dari <strong id="riwayatTotalPages" style="color: #0f172a; font-weight: 700;">1</strong> (<span id="riwayatTotalCount">0</span> Data)</span>
+            <div class="page-btns">
+              <button type="button" class="page-btn" id="riwayatPrevBtn" onclick="changeRiwayatPage(-1)" title="Halaman Sebelumnya" disabled><span class="material-symbols-rounded">chevron_left</span></button>
+              <button type="button" class="page-btn" id="riwayatNextBtn" onclick="changeRiwayatPage(1)" title="Halaman Selanjutnya" disabled><span class="material-symbols-rounded">chevron_right</span></button>
+            </div>
           </div>
         </div>
       </div>
@@ -1557,6 +1600,51 @@
   </div>
 
   <!-- POPUP CONFIRM OVERLAY -->
+    <!-- POPUP PILIH TEMPLATE EXCEL -->
+  <!-- POPUP PILIH TEMPLATE EXCEL -->
+  <!-- POPUP PILIH TEMPLATE EXCEL -->
+  <!-- POPUP PILIH TEMPLATE EXCEL -->
+  <div id="excelTemplateOverlay" class="popupOverlay" style="display: none; position: fixed !important; inset: 0 !important; background: rgba(0, 0, 0, 0.82) !important; background-color: rgba(0, 0, 0, 0.82) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important;">
+    <div class="confirmBoxCard" style="position: relative !important; width: min(440px, 90vw) !important; max-width: 90vw !important; height: auto !important; min-height: 0 !important; background: #ffffff !important; color: #0f172a !important; padding: 0 !important; border-radius: 4px !important; border: 1px solid #000000 !important; box-shadow: none !important; display: flex !important; flex-direction: column !important; margin: auto !important; box-sizing: border-box !important; overflow: hidden !important;">
+      
+      <!-- Header Modal (Biru Presisi #006ba5, Judul Diperbesar & Rata Kiri, Tanpa Tombol X) -->
+      <div style="height: 50px !important; min-height: 50px !important; background: #006ba5 !important; background-color: #006ba5 !important; color: #ffffff !important; display: flex !important; align-items: center !important; justify-content: flex-start !important; padding: 0 20px !important; border-bottom: 1px solid rgba(0, 0, 0, 0.15) !important; text-align: left !important;">
+        <h3 style="margin: 0 !important; font-size: 16px !important; font-weight: 700 !important; color: #ffffff !important; letter-spacing: 0.4px !important; text-transform: uppercase !important; text-align: left !important;">PILIH TEMPLATE EXCEL</h3>
+      </div>
+
+      <!-- Body Content Option Cards (Terang, Tidak Hitam/Gelap saat Hover) -->
+      <div style="padding: 22px 20px !important; background: #ffffff !important; color: #0f172a !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; gap: 14px !important; width: 100% !important;">
+        <p style="margin: 0 0 2px 0 !important; font-size: 12.5px !important; font-weight: 500 !important; color: #475569 !important; text-align: left !important;">Silakan pilih format template Excel yang ingin diunduh:</p>
+        
+        <!-- Opsi 1: Template Default -->
+        <button type="button" class="btnExcelTemplateOption" onclick="unduhTemplateExcelProses('DEFAULT'); closeExcelTemplateModal();">
+          <div style="display: flex !important; flex-direction: column !important; gap: 4px !important; text-align: left !important;">
+            <span class="btnTitle">1. TEMPLATE DEFAULT (STANDAR)</span>
+            <span class="btnSubtext">Kolom: TYPE, SERI, PERMINTAAN, ALASAN, QTY</span>
+          </div>
+          <span class="material-symbols-rounded btnIconDownload">download</span>
+        </button>
+
+        <!-- Opsi 2: Template Dus / Karton -->
+        <button type="button" class="btnExcelTemplateOption" onclick="unduhTemplateExcelProses('DUS'); closeExcelTemplateModal();">
+          <div style="display: flex !important; flex-direction: column !important; gap: 4px !important; text-align: left !important;">
+            <span class="btnTitle">2. TEMPLATE DUS / KARTON</span>
+            <span class="btnSubtext">Kolom: TYPE, SERI, PERMINTAAN, SN DUS, ALASAN, QTY</span>
+          </div>
+          <span class="material-symbols-rounded btnIconDownload">download</span>
+        </button>
+      </div>
+
+      <!-- Footer Modal -->
+      <div style="height: 52px !important; min-height: 52px !important; background: #ffffff !important; border-top: 1px solid #e2e8f0 !important; display: flex !important; justify-content: flex-end !important; align-items: center !important; padding: 0 16px !important; width: 100% !important; box-sizing: border-box !important;">
+        <button type="button" onclick="closeExcelTemplateModal()" style="height: 34px !important; padding: 0 18px !important; border-radius: 4px !important; background: #f1f5f9 !important; background-color: #f1f5f9 !important; color: #334155 !important; border: 1px solid #000000 !important; font-size: 12px !important; font-weight: 700 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">
+          <span>BATAL</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <div id="confirmOverlay" class="popupOverlay" style="background: rgba(0, 0, 0, 0.82) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; display: none !important; position: fixed !important; inset: 0 !important; z-index: 2147483600 !important; align-items: center !important; justify-content: center !important; padding: 16px !important; box-sizing: border-box !important;">
     <div id="confirmBoxCard" class="confirmBoxCard" style="position: relative !important; width: min(420px, 92vw) !important; max-width: 92vw !important; background: #ffffff !important; color: #0f172a !important; border-radius: 4px !important; border: 1px solid #000000 !important; box-shadow: none !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; margin: auto !important; box-sizing: border-box !important; font-family: inherit !important;">
       

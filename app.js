@@ -304,6 +304,22 @@ function changeRiwayatPage(delta) {
 
 window.changeRiwayatPage = changeRiwayatPage;
 
+function onRiwayatRowsPerPageChange(val) {
+
+  window._riwayatRowsPerPage = parseInt(val, 10) || 10;
+
+  window._riwayatCurrentPage = 1;
+
+  if (typeof filterRiwayat === 'function') {
+
+    filterRiwayat();
+
+  }
+
+}
+
+window.onRiwayatRowsPerPageChange = onRiwayatRowsPerPageChange;
+
 
 
 
@@ -17946,9 +17962,11 @@ function loadDashboard() {
 
 
 
-  window._lastDashboardData = data;
-
-
+  if (!data || !Array.isArray(data)) {
+    data = window._lastDashboardData || (typeof getAccessibleRequests === 'function' ? getAccessibleRequests() : []);
+  } else {
+    window._lastDashboardData = data;
+  }
 
   const lastDataContainer = document.getElementById('lastData');
 
@@ -17996,9 +18014,19 @@ function loadDashboard() {
 
       }
 
-      let valA = a[col] || '';
+      if (col === 'jumlahItem') {
 
-      let valB = b[col] || '';
+        const countA = Array.isArray(a.items) ? a.items.length : (a.jumlahItem ? parseInt(a.jumlahItem) : 0);
+
+        const countB = Array.isArray(b.items) ? b.items.length : (b.jumlahItem ? parseInt(b.jumlahItem) : 0);
+
+        return (countA - countB) * dir;
+
+      }
+
+      let valA = col === 'area' ? (a.area || (a.noSurat && a.noSurat.includes('/') ? a.noSurat.split('/')[1].split('-')[0] : '')) : (col === 'jenis' ? (a.jenis || a.jenisPermintaan || 'DEFAULT') : (col === 'keterangan' ? (a.catatan || a.keterangan || '') : (a[col] || '')));
+
+      let valB = col === 'area' ? (b.area || (b.noSurat && b.noSurat.includes('/') ? b.noSurat.split('/')[1].split('-')[0] : '')) : (col === 'jenis' ? (b.jenis || b.jenisPermintaan || 'DEFAULT') : (col === 'keterangan' ? (b.catatan || b.keterangan || '') : (b[col] || '')));
 
       if (typeof valA === 'string') valA = valA.toLowerCase();
 
@@ -18016,7 +18044,13 @@ function loadDashboard() {
 
   const totalCount = filteredData.length;
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / 12));
+  const rawRowsLimit = window._dashboardRowsPerPage || 10;
+
+  const isAllRows = (rawRowsLimit === 'ALL' || rawRowsLimit === 'all' || rawRowsLimit >= 999999);
+
+  const rowsPerPage = isAllRows ? Math.max(1, totalCount) : (parseInt(rawRowsLimit, 10) || 10);
+
+  const totalPages = isAllRows ? 1 : Math.max(1, Math.ceil(totalCount / rowsPerPage));
 
 
 
@@ -18026,9 +18060,9 @@ function loadDashboard() {
 
 
 
-  const startIndex = (window._dashboardCurrentPage - 1) * 12;
+  const startIndex = isAllRows ? 0 : (window._dashboardCurrentPage - 1) * rowsPerPage;
 
-  const pageData = filteredData.slice(startIndex, startIndex + 12);
+  const pageData = isAllRows ? filteredData : filteredData.slice(startIndex, startIndex + rowsPerPage);
 
 
 
@@ -18036,7 +18070,7 @@ function loadDashboard() {
 
     const msgTr = document.createElement('tr');
 
-    msgTr.innerHTML = `<td colspan="4" style="text-align:center; padding:12px; color:var(--text-muted); font-weight: 400 ;">TIDAK ADA DATA PERMINTAAN DENGAN STATUS ${dashboardFilterStatus}.</td>`;
+    msgTr.innerHTML = `<td colspan="8" style="text-align:center; padding:12px; color:var(--text-muted); font-weight: 400 ;">TIDAK ADA DATA PERMINTAAN DENGAN STATUS ${dashboardFilterStatus}.</td>`;
 
     lastDataContainer.appendChild(msgTr);
 
@@ -18052,11 +18086,40 @@ function loadDashboard() {
 
       tr.onclick = () => bukaDetailDariDashboard(r.noSurat);
 
+      let areaCode = (r.area && String(r.area).trim().toUpperCase() !== 'ALL') ? String(r.area).trim() : '';
+
+      if (!areaCode && r.noSurat && typeof r.noSurat === 'string' && r.noSurat.includes('/')) {
+
+        const parts = r.noSurat.split('/');
+
+        if (parts.length >= 2 && parts[1]) {
+
+          areaCode = parts[1].split('-')[0].trim();
+
+        }
+
+      }
+
+      if (!areaCode && r.area) {
+
+        areaCode = String(r.area).trim();
+
+      }
+
+      const itemsArr = Array.isArray(r.items) ? r.items : (typeof r.items === 'string' ? (JSON.parse(r.items || '[]')) : []);
+      const countItem = itemsArr.length || (r.jumlahItem ? parseInt(r.jumlahItem) : 0);
+      const jenisTxt = String(r.jenis || r.jenisPermintaan || 'DEFAULT').toUpperCase();
+      const ketTxt = String(r.catatan || r.keterangan || '-').trim();
+
       tr.innerHTML = `
-        <td style="padding: 10px 14px; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${r.tanggal || '-'}</td>
-        <td style="padding: 10px 14px; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0 !important;">${r.noSurat || '-'}</td>
-        <td style="padding: 10px 14px; color: #1e293b; border-bottom: 1px solid #e2e8f0 !important;"><div class="namaTokoWrap" style="color: #1e293b; font-weight: 700; text-transform: uppercase;">${r.toko || '-'}</div></td>
-        <td style="padding: 10px 14px; text-align: center; border-bottom: 1px solid #e2e8f0 !important;">${getBadgeStatusHTML(r)}</td>
+        <td style="padding: 10px 1mm; text-align: center; font-weight: 700; color: #0f172a; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap;">${areaCode || '-'}</td>
+        <td style="padding: 10px 1mm; text-align: center; color: #334155; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap;">${r.tanggal || '-'}</td>
+        <td style="padding: 10px 5mm; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap;">${r.noSurat || '-'}</td>
+        <td style="padding: 10px 5mm; color: #1e293b; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap;"><div class="namaTokoWrap" style="color: #1e293b; font-weight: 700; text-transform: uppercase; white-space: nowrap;" title="${r.toko || ''}">${r.toko || '-'}</div></td>
+        <td style="padding: 10px 5mm; text-align: left; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap;"><span style="font-weight: 400; color: #334155; font-size: 12px;">${jenisTxt}</span></td>
+        <td style="padding: 10px 1mm; text-align: left; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap;"><span style="font-weight: 400; color: #334155; font-size: 12px;">${countItem} Item</span></td>
+        <td style="padding: 10px 5mm; text-align: left; color: #475569; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap;"><div style="white-space: nowrap; color: #475569;" title="${ketTxt}">${ketTxt || '-'}</div></td>
+        <td style="padding: 10px 5mm; text-align: center; border-bottom: 1px solid #e2e8f0 !important; white-space: nowrap;">${getBadgeStatusHTML(r)}</td>
       `;
 
       lastDataContainer.appendChild(tr);
@@ -18098,6 +18161,32 @@ function loadDashboard() {
   updateDashboardSortIcons();
 
 }
+
+function onDashboardRowsPerPageChange(val) {
+  if (val === 'ALL' || val === 'all') {
+    window._dashboardRowsPerPage = 999999;
+  } else {
+    window._dashboardRowsPerPage = parseInt(val, 10) || 10;
+  }
+  window._dashboardCurrentPage = 1;
+  if (typeof loadDashboard === 'function') {
+    loadDashboard();
+  } else if (typeof renderDashboardTable === 'function') {
+    renderDashboardTable();
+  }
+}
+window.onDashboardRowsPerPageChange = onDashboardRowsPerPageChange;
+
+function changeDashboardPage(delta) {
+  if (!window._dashboardCurrentPage) window._dashboardCurrentPage = 1;
+  window._dashboardCurrentPage += delta;
+  if (typeof loadDashboard === 'function') {
+    loadDashboard();
+  } else if (typeof renderDashboardTable === 'function') {
+    renderDashboardTable();
+  }
+}
+window.changeDashboardPage = changeDashboardPage;
 
 
 
@@ -18179,7 +18268,7 @@ window.sortTableDashboard = sortTableDashboard;
 
 function updateDashboardSortIcons() {
 
-  const cols = ['tanggal', 'noSurat', 'toko', 'status'];
+  const cols = ['area', 'tanggal', 'noSurat', 'toko', 'jenis', 'jumlahItem', 'keterangan', 'status'];
 
   cols.forEach(c => {
 
@@ -22712,7 +22801,9 @@ function filterRiwayat() {
 
   const totalCount = data.length;
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / 12));
+  const riwayatRows = parseInt(window._riwayatRowsPerPage, 10) || 10;
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / riwayatRows));
 
 
 
@@ -22722,9 +22813,9 @@ function filterRiwayat() {
 
 
 
-  const startIndex = (window._riwayatCurrentPage - 1) * 12;
+  const startIndex = (window._riwayatCurrentPage - 1) * riwayatRows;
 
-  const pageData = data.slice(startIndex, startIndex + 12);
+  const pageData = data.slice(startIndex, startIndex + riwayatRows);
 
 
 
@@ -25581,9 +25672,9 @@ function editPermintaan(noSurat) {
 
         row.setAttribute('data-unfulfilled', 'true');
 
-        row.style.background = 'rgba(239, 68, 68, 0.12)';
+        row.style.background = '#ffffff';
 
-        row.style.border = '1.5px solid #ef4444';
+        row.style.border = '1px solid #cbd5e1';
 
         const inputs = row.querySelectorAll('input');
 
@@ -27370,7 +27461,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
 
 
 
-    const rowBgColor = isUnfulfilled ? 'rgba(239, 68, 68, 0.08)' : (idx % 2 === 1 ? '#f0f6fa' : '#ffffff');
+    const rowBgColor = (idx % 2 === 1 ? '#f0f6fa' : '#ffffff');
 
     if (isDus) {
 
@@ -31408,40 +31499,20 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
 
       );
 
-      const rowTdStyle = isUnfulfilled 
-
-        ? 'padding:6px 6px; border:1px solid #cbd5e1; font-size:11px; text-decoration: line-through; text-decoration-thickness: 2px; font-weight: bold; color: #b91c1c; background-color: #fef2f2;' 
-
-        : 'padding:6px 6px; border:1px solid #cbd5e1; font-size:11px;';
-
-      const numTdStyle = isUnfulfilled 
-
-        ? 'text-align:center; padding:6px 4px; border:1px solid #cbd5e1; font-size:11px; text-decoration: line-through; text-decoration-thickness: 2px; font-weight: bold; color: #b91c1c; background-color: #fef2f2; white-space: nowrap !important;' 
-
-        : 'text-align:center; padding:6px 4px; border:1px solid #cbd5e1; font-size:11px; white-space: nowrap !important;';
-
-
+      const strikeStyle = isUnfulfilled ? 'text-decoration: line-through; text-decoration-thickness: 1.5px; color: #475569;' : '';
+      const rowTdStyle = `padding:6px 6px; border:1px solid #cbd5e1; font-size:11px; ${strikeStyle}`;
+      const numTdStyle = `text-align:center; padding:6px 4px; border:1px solid #cbd5e1; font-size:11px; white-space: nowrap !important; ${strikeStyle}`;
 
       return `
-
-        <tr style="border-bottom:1px solid #cbd5e1; ${isUnfulfilled ? 'background-color:#fef2f2;' : ''}">
-
+        <tr style="border-bottom:1px solid #cbd5e1;">
           <td style="${numTdStyle} width:1%;">${idx + 1}</td>
-
           <td style="${rowTdStyle} white-space: nowrap !important; width:1%; text-align:left;">${i.type || i.tipe || '-'}</td>
-
           <td style="${rowTdStyle} white-space: nowrap !important; width:1%; text-align:left;">${i.seri || i.sn || '-'}</td>
-
-          ${req.jenis === 'DUS' ? `<td style="${rowTdStyle} white-space: nowrap !important; width:1%; text-align:left; color:${isUnfulfilled ? '#b91c1c' : '#d97706'}; font-weight: 400 ;">${i.dus || '-'}</td>` : ''}
-
+          ${req.jenis === 'DUS' ? `<td style="${rowTdStyle} white-space: nowrap !important; width:1%; text-align:left; color:#d97706; font-weight: 400 ;">${i.dus || '-'}</td>` : ''}
           <td style="${rowTdStyle} white-space: normal !important; word-break: break-word; text-align:left;">${i.barang || i.permintaan || '-'}</td>
-
           <td style="${rowTdStyle} white-space: normal !important; word-break: break-word; text-align:left;">${i.alasan || '-'}</td>
-
           <td style="${numTdStyle} width:1%;">${i.qty || 1}</td>
-
         </tr>
-
       `;
 
     }).join('');
@@ -32029,17 +32100,7 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
           <div style="margin-top: 28px; display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; color: #64748b; letter-spacing: 0.2px;">
 
             <div>
-
-              ${hasUnfulfilledItem ? `
-
-                <div style="font-weight: 800; color: #b91c1c; font-style: normal; display: flex; align-items: center; gap: 4px; font-size: 8px;">
-
-                  <span style="text-decoration: line-through; text-decoration-thickness: 2.5px; font-weight: 900; color: #b91c1c; font-size: 10px;">---</span> = Tidak di penuhi
-
-                </div>
-
-              ` : ''}
-
+              ${hasUnfulfilledItem ? `<div style="font-weight: 700; color: #475569; font-style: normal; display: flex; align-items: center; gap: 4px; font-size: 8px;"><span style="text-decoration: line-through; text-decoration-thickness: 2px; font-weight: 800; color: #475569; font-size: 10px;">---</span> = Tidak di penuhi</div>` : ''}
             </div>
 
             <div style="font-style: italic; opacity: 0.85; font-size: 8px;">
