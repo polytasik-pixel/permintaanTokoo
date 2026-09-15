@@ -24263,6 +24263,29 @@ async function approveDM(noSurat) {
 
         tambahNotifikasiSistem(['TOKO'], requests[idx].area, `PERMINTAAN SURAT #${noSurat} TELAH DISETUJUI (APPROVE). SILAKAN CETAK PDF DOKUMEN, BERI CAP & TTD, LALU UPLOAD BUKTI PERMINTAAN KE APLIKASI.`, noSurat);
 
+        // Kirim Notifikasi WA Otomatis ke Toko/Pemohon saat DM Approve
+        try {
+          const allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
+          const reqTokoUpper = String(requests[idx].createdBy || requests[idx].toko || '').toUpperCase();
+          const creator = allUsers.find(u => u && u.username && String(u.username).toUpperCase() === reqTokoUpper) ||
+                          allUsers.find(u => u && u.storeCode && String(u.storeCode).toUpperCase() === reqTokoUpper);
+
+          if (creator && creator.phone && creator.phone !== '-' && typeof kirimNotifikasiWA === 'function') {
+            const creatorName = creator.fullName || creator.username || requests[idx].toko;
+            const directLink = typeof getAppDirectLink === 'function' ? getAppDirectLink(noSurat) : window.location.href;
+            kirimNotifikasiWA(creator.phone,
+              `Yth. Bapak/Ibu *${creatorName}*\n\n` +
+              `\u2705 *PERMINTAAN DISETUJUI (DM APPROVE)*\n` +
+              `Pengajuan permintaan barang Surat *#${noSurat}* (*${requests[idx].toko}*) telah *DISETUJUI oleh DM Pusat*.\n\n` +
+              `\U0001f4c4 *Segera upload file PDF permintaan yang sudah dicap dan di-TTD ke aplikasi.*\n\n` +
+              `\u2022 Link Detail: ${directLink}\n\n` +
+              `Terima kasih.`
+            );
+          }
+        } catch (eWA) {
+          console.warn('[DM APPROVE WA DISPATCH ERROR]:', eWA);
+        }
+
       }
 
     }
@@ -58811,13 +58834,56 @@ function applyPhotoInputPopupDoneState(enabled) {
 }
 window.applyPhotoInputPopupDoneState = applyPhotoInputPopupDoneState;
 
-function togglePhotoInputPopupDoneAdmin() {
+async function syncPhotoInputPopupDoneFromSupabase() {
+  const client = (typeof supabase !== 'undefined' && supabase) ? supabase : null;
+  if (!client) return;
+  try {
+    const { data } = await client.from('system_settings').select('setting_value').eq('setting_key', 'global_show_photo_input_popup_done').maybeSingle();
+    if (data && data.setting_value !== undefined && data.setting_value !== null) {
+      const enabled = data.setting_value === 'true' || data.setting_value === true;
+      applyPhotoInputPopupDoneState(enabled);
+    }
+  } catch(e) {}
+}
+window.syncPhotoInputPopupDoneFromSupabase = syncPhotoInputPopupDoneFromSupabase;
+
+async function togglePhotoInputPopupDoneAdmin() {
   const currentState = window._showPhotoInputInPopupDone !== false;
   const newState = !currentState;
 
   applyPhotoInputPopupDoneState(newState);
 
-  // Broadcast ke Supabase & Simpan Setting System Cloud
+  // 1. Simpan Langsung ke Supabase (tabel system_settings & lookup)
+  const client = (typeof supabase !== 'undefined' && supabase) ? supabase : null;
+  if (client) {
+    try {
+      await client.from('system_settings').upsert({
+        setting_key: 'global_show_photo_input_popup_done',
+        setting_value: newState ? 'true' : 'false',
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'setting_key' });
+
+      await client.from('lookup').upsert({
+        key: 'global_show_photo_input_popup_done',
+        value: newState ? 'true' : 'false'
+      }, { onConflict: 'key' });
+    } catch (e) {
+      console.warn('[SUPABASE SETTING PHOTO DONE SAVE ERROR]:', e);
+    }
+  }
+
+  // 2. Realtime Broadcast Supabase
+  if (typeof supabaseRealtimeChannel !== 'undefined' && supabaseRealtimeChannel) {
+    try {
+      supabaseRealtimeChannel.send({
+        type: 'broadcast',
+        event: 'photo_input_popup_done_changed',
+        payload: { enabled: newState }
+      });
+    } catch(e) {}
+  }
+
+  // 3. Broadcast ke Firebase/Cloud Failsafe
   if (typeof broadcastDatabaseDataChange === 'function') {
     broadcastDatabaseDataChange('CONFIG_CHANGE', 'PHOTO_INPUT_POPUP_DONE', { enabled: newState });
   }
@@ -58834,6 +58900,7 @@ window.togglePhotoInputPopupDoneAdmin = togglePhotoInputPopupDoneAdmin;
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     applyPhotoInputPopupDoneState(window._showPhotoInputInPopupDone);
+    syncPhotoInputPopupDoneFromSupabase();
   }, 500);
 });
 
