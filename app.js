@@ -1,3 +1,61 @@
+
+// ==========================================
+// HAK AKSES UPLOAD EXCEL SMART (KHUSUS AKUN SERVICE)
+// ==========================================
+function checkUserCanUploadSmart(userObj) {
+  if (!userObj) return false;
+  const cat = String(userObj.category || userObj.role || userObj.kategori || '').trim().toUpperCase();
+  if (cat !== 'SERVICE') return false; // Fitur khusus role SERVICE
+  if (userObj.canUploadSmart !== undefined && userObj.canUploadSmart !== null) {
+    return (userObj.canUploadSmart === true || userObj.canUploadSmart === 'true' || userObj.canUploadSmart === 1);
+  }
+  if (userObj.can_upload_smart !== undefined && userObj.can_upload_smart !== null) {
+    return (userObj.can_upload_smart === true || userObj.can_upload_smart === 'true' || userObj.can_upload_smart === 1);
+  }
+  return true; // Default untuk akun SERVICE adalah aktif (true)
+}
+window.checkUserCanUploadSmart = checkUserCanUploadSmart;
+
+function toggleUserFormSmartUploadVisibility() {
+  const catEl = document.getElementById('uFormCategory') || document.getElementById('uFormRole');
+  const wrapper = document.getElementById('wrapperUFormCanUploadSmart');
+  if (!wrapper) return;
+  const cat = catEl ? String(catEl.value || '').trim().toUpperCase() : '';
+  if (cat === 'SERVICE') {
+    wrapper.style.setProperty('display', 'flex', 'important');
+  } else {
+    wrapper.style.setProperty('display', 'none', 'important');
+    const chk = document.getElementById('uFormCanUploadSmart');
+    if (chk) chk.checked = false;
+  }
+}
+window.toggleUserFormSmartUploadVisibility = toggleUserFormSmartUploadVisibility;
+
+function updateSmartUploadButtonVisibility() {
+  const btn = document.getElementById('btnUploadStatusPartExcel');
+  if (!btn) return;
+
+  const user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : null;
+  if (!user) {
+    btn.style.setProperty('display', 'none', 'important');
+    return;
+  }
+
+  const cat = String(user.category || user.role || user.kategori || '').trim().toUpperCase();
+  if (cat !== 'SERVICE') {
+    btn.style.setProperty('display', 'none', 'important');
+    return;
+  }
+
+  const canUpload = checkUserCanUploadSmart(user);
+  if (canUpload) {
+    btn.style.setProperty('display', 'inline-flex', 'important');
+  } else {
+    btn.style.setProperty('display', 'none', 'important');
+  }
+}
+window.updateSmartUploadButtonVisibility = updateSmartUploadButtonVisibility;
+
 // ==========================================
 // PURE CATATAN CLEANER UTILITY (LINE 1)
 // ==========================================
@@ -9638,6 +9696,10 @@ function handleRealtimeUserChange(payload) {
 
         area: String(u.area || 'BDG').trim().toUpperCase(),
 
+        canUploadSmart: u.can_upload_smart !== undefined ? (u.can_upload_smart === true || u.can_upload_smart === 'true' || u.can_upload_smart === 1) : (u.canUploadSmart !== undefined ? (u.canUploadSmart === true || u.canUploadSmart === 'true' || u.canUploadSmart === 1) : true),
+
+        can_upload_smart: u.can_upload_smart !== undefined ? (u.can_upload_smart === true || u.can_upload_smart === 'true' || u.can_upload_smart === 1) : (u.canUploadSmart !== undefined ? (u.canUploadSmart === true || u.canUploadSmart === 'true' || u.canUploadSmart === 1) : true),
+
         canPrintPdf: u.can_print_pdf !== undefined ? (u.can_print_pdf === true || u.can_print_pdf === 'true' || u.can_print_pdf === 1) : (u.canPrintPdf !== undefined ? (u.canPrintPdf === true || u.canPrintPdf === 'true' || u.canPrintPdf === 1) : false),
 
         ttd: u.ttd || '',
@@ -9721,6 +9783,8 @@ function handleRealtimeUserChange(payload) {
         const profileUserName = document.getElementById('profileUserName');
 
         if (profileUserName) profileUserName.textContent = currentUser.fullName || currentUser.username;
+
+        if (typeof updateSmartUploadButtonVisibility === 'function') updateSmartUploadButtonVisibility();
 
       }
 
@@ -10569,6 +10633,22 @@ async function syncSupabaseUsersToLocalCache() {
 
         }
 
+        let canUploadSmart = true;
+
+        if (u.can_upload_smart !== undefined && u.can_upload_smart !== null) {
+
+          canUploadSmart = (u.can_upload_smart === true || u.can_upload_smart === 'true' || u.can_upload_smart === 1);
+
+        } else if (u.canUploadSmart !== undefined && u.canUploadSmart !== null) {
+
+          canUploadSmart = (u.canUploadSmart === true || u.canUploadSmart === 'true' || u.canUploadSmart === 1);
+
+        } else if (oldUser && oldUser.canUploadSmart !== undefined && oldUser.canUploadSmart !== null) {
+
+          canUploadSmart = (oldUser.canUploadSmart === true || oldUser.canUploadSmart === 'true' || oldUser.canUploadSmart === 1);
+
+        }
+
 
 
         const isMasterAdmin = (uname.toUpperCase() === 'ADMIN');
@@ -10604,6 +10684,10 @@ async function syncSupabaseUsersToLocalCache() {
           canUploadBukti: canUploadBukti,
 
           can_upload_bukti: canUploadBukti,
+
+          canUploadSmart: canUploadSmart,
+
+          can_upload_smart: canUploadSmart,
 
           ttd: u.ttd || '',
 
@@ -10703,7 +10787,7 @@ async function getSupabaseUserColumns(client) {
 
   } catch (e) {}
 
-  return ['id', 'username', 'password', 'full_name', 'store_code', 'phone', 'category', 'area', 'can_print_pdf', 'can_forward', 'can_upload_bukti', 'ttd', 'theme', 'bg_image', 'created_at', 'updated_at'];
+  return ['id', 'username', 'password', 'full_name', 'store_code', 'phone', 'category', 'area', 'can_print_pdf', 'can_forward', 'can_download_excel', 'can_upload_bukti', 'can_upload_smart', 'ttd', 'theme', 'bg_image', 'created_at', 'updated_at'];
 
 }
 
@@ -10727,13 +10811,17 @@ async function simpanUserKeSupabase(userObj) {
 
 
 
-    const userCanPrint = userObj.canPrintPdf === true || userObj.can_print_pdf === true || userObj.canPrintPdf === 'true' || userObj.can_print_pdf === 'true' || userObj.canPrintPdf === 1 || userObj.can_print_pdf === 1;
+    const parseBool = (v1, v2, defVal = true) => {
+      if (v1 !== undefined && v1 !== null) return (v1 === true || v1 === 'true' || v1 === 1);
+      if (v2 !== undefined && v2 !== null) return (v2 === true || v2 === 'true' || v2 === 1);
+      return defVal;
+    };
 
-    const userCanForward = userObj.canForward !== false && userObj.can_forward !== false && userObj.canForward !== 'false' && userObj.can_forward !== 'false' && userObj.canForward !== 0 && userObj.can_forward !== 0;
-
-    const userCanDownloadExcel = userObj.canDownloadExcel !== false && userObj.can_download_excel !== false && userObj.canDownloadExcel !== 'false' && userObj.can_download_excel !== 'false' && userObj.canDownloadExcel !== 0 && userObj.can_download_excel !== 0;
-
-    const userCanUploadBukti = userObj.canUploadBukti !== false && userObj.can_upload_bukti !== false && userObj.canUploadBukti !== 'false' && userObj.can_upload_bukti !== 'false' && userObj.canUploadBukti !== 0 && userObj.can_upload_bukti !== 0;
+    const userCanPrint = parseBool(userObj.canPrintPdf, userObj.can_print_pdf, false);
+    const userCanForward = parseBool(userObj.canForward, userObj.can_forward, true);
+    const userCanDownloadExcel = parseBool(userObj.canDownloadExcel, userObj.can_download_excel, false);
+    const userCanUploadBukti = parseBool(userObj.canUploadBukti, userObj.can_upload_bukti, true);
+    const userCanUploadSmart = parseBool(userObj.canUploadSmart, userObj.can_upload_smart, true);
 
 
 
@@ -10767,6 +10855,8 @@ async function simpanUserKeSupabase(userObj) {
 
       can_upload_bukti: userCanUploadBukti,
 
+      can_upload_smart: userCanUploadSmart,
+
       ttd: userObj.ttd || '',
 
       theme: userObj.theme || 'dark-mode',
@@ -10781,7 +10871,7 @@ async function simpanUserKeSupabase(userObj) {
 
 
 
-    let validCols = await getSupabaseUserColumns(client);
+    _supabaseUserColumnsCache = null; let validCols = await getSupabaseUserColumns(client);
 
     let sanitizedPayload = {};
 
@@ -10840,6 +10930,7 @@ async function simpanUserKeSupabase(userObj) {
 }
 
 window.simpanUserKeSupabase = simpanUserKeSupabase;
+window.syncUserToSupabase = simpanUserKeSupabase;
 
 
 
@@ -12261,6 +12352,10 @@ function normalizeUserList(users) {
       canPrintPdf: user.canPrintPdf !== undefined ? (user.canPrintPdf === true || user.canPrintPdf === 'true' || user.canPrintPdf === 1) : (user.can_print_pdf !== undefined ? (user.can_print_pdf === true || user.can_print_pdf === 'true' || user.can_print_pdf === 1) : false),
 
       canForward: user.canForward !== undefined ? (user.canForward === true || user.canForward === 'true' || user.canForward === 1) : (user.can_forward !== undefined ? (user.can_forward === true || user.can_forward === 'true' || user.can_forward === 1) : true),
+
+      canUploadSmart: user.canUploadSmart !== undefined ? (user.canUploadSmart === true || user.canUploadSmart === 'true' || user.canUploadSmart === 1) : (user.can_upload_smart !== undefined ? (user.can_upload_smart === true || user.can_upload_smart === 'true' || user.can_upload_smart === 1) : true),
+
+      can_upload_smart: user.canUploadSmart !== undefined ? (user.canUploadSmart === true || user.canUploadSmart === 'true' || user.canUploadSmart === 1) : (user.can_upload_smart !== undefined ? (user.can_upload_smart === true || user.can_upload_smart === 'true' || user.can_upload_smart === 1) : true),
 
       ttd: user.ttd || ''
 
@@ -17714,6 +17809,7 @@ function checkIsAdminUser(userObj = null) {
 
 
 function updateAdminNavVisibility() {
+  if (typeof updateSmartUploadButtonVisibility === 'function') updateSmartUploadButtonVisibility();
 
   const isAdmin = checkIsAdminUser();
 
@@ -22940,6 +23036,7 @@ window.isPdfButtonAllowed = isPdfButtonAllowed;
 
 
 function loadRiwayat() {
+  if (typeof updateSmartUploadButtonVisibility === 'function') updateSmartUploadButtonVisibility();
 
   if (typeof updateExcelDownloadButtonState === 'function') updateExcelDownloadButtonState();
 
@@ -24418,7 +24515,7 @@ function doneService(noSurat) {
 
   if (artemisSubTitle) {
 
-    artemisSubTitle.textContent = `UPLOAD FOTO BUKTI PROSES ARTEMIS UNTUK MENYELESAIKAN PERMINTAAN #${noSurat}:`;
+    artemisSubTitle.textContent = `BUKTI PROSES ARTEMIS UNTUK MENYELESAIKAN PERMINTAAN #${noSurat}:`;
 
   }
 
@@ -24433,6 +24530,7 @@ function doneService(noSurat) {
   tempArtemisPhotos = [];
 
   renderArtemisPhotoPreviews();
+  applyPhotoInputPopupDoneState(window._showPhotoInputInPopupDone !== false);
 
 
 
@@ -24601,6 +24699,7 @@ async function handleArtemisGlobalPaste(e) {
   if (addedCount > 0) {
     if (e.preventDefault) e.preventDefault();
     renderArtemisPhotoPreviews();
+  applyPhotoInputPopupDoneState(window._showPhotoInputInPopupDone !== false);
   }
 }
 
@@ -24647,6 +24746,7 @@ async function handleArtemisPhotoSelect(e) {
     }
 
     renderArtemisPhotoPreviews();
+  applyPhotoInputPopupDoneState(window._showPhotoInputInPopupDone !== false);
 
   } catch (err) {
 
@@ -24783,6 +24883,7 @@ function hapusPhotoArtemisTemp(idx) {
     tempArtemisPhotos.splice(idx, 1);
 
     renderArtemisPhotoPreviews();
+  applyPhotoInputPopupDoneState(window._showPhotoInputInPopupDone !== false);
 
   }
 
@@ -24835,9 +24936,12 @@ function prosesSimpanDoneDenganBuktiArtemis() {
     return;
   }
 
-  // WAJIB UPLOAD FOTO BUKTI PROSES ARTEMIS UNTUK SEMUA PROSES DONE (SELESAIKAN)
-  if (!Array.isArray(tempArtemisPhotos) || tempArtemisPhotos.length === 0) {
-    showNotif('TIDAK ADA FOTO BUKTI PROSES ARTEMIS YANG DIUPLOAD! WAJIB MENGUNGGAH FOTO BUKTI UNTUK PROSES DONE.', 'warning');
+  // WAJIB MENGISI NO / KODE BUKTI TRANSAKSI UNTUK PROSES DONE (FOTO BUKTI SEKARANG OPSIONAL)
+  const elKet = document.getElementById('inputKetPartArtemis');
+  const noKodeBukti = elKet ? elKet.value.trim() : '';
+  if (!noKodeBukti) {
+    showNotif('MOHON ISI NO / KODE BUKTI TRANSAKSI UNTUK MENYELESAIKAN PERMINTAAN!', 'warning');
+    if (elKet) elKet.focus();
     return;
   }
 
@@ -38157,6 +38261,8 @@ function bukaUserModal(userId = null, btnElement = null) {
 
         if (document.getElementById('uFormCanUploadBukti')) document.getElementById('uFormCanUploadBukti').checked = typeof checkUserCanUploadBukti === 'function' ? checkUserCanUploadBukti(u) : true;
 
+        if (document.getElementById('uFormCanUploadSmart')) document.getElementById('uFormCanUploadSmart').checked = typeof checkUserCanUploadSmart === 'function' ? checkUserCanUploadSmart(u) : true;
+
         const rawArea = String(u.area || '').trim().toUpperCase();
 
         const parsedList = typeof getUserAreaList === 'function' ? getUserAreaList(rawArea) : [rawArea];
@@ -38206,6 +38312,8 @@ function bukaUserModal(userId = null, btnElement = null) {
       if (document.getElementById('uFormCanDownloadExcel')) document.getElementById('uFormCanDownloadExcel').checked = true;
 
       if (document.getElementById('uFormCanUploadBukti')) document.getElementById('uFormCanUploadBukti').checked = true;
+
+      if (document.getElementById('uFormCanUploadSmart')) document.getElementById('uFormCanUploadSmart').checked = true;
 
       targetAreas = ['BDG'];
 
@@ -38269,6 +38377,8 @@ function bukaUserModal(userId = null, btnElement = null) {
 
 }
 
+// Ensure smart upload checkbox visibility matches category
+if (typeof toggleUserFormSmartUploadVisibility === 'function') toggleUserFormSmartUploadVisibility();
 window.bukaUserModal = bukaUserModal;
 
 
@@ -38336,6 +38446,8 @@ async function simpanUserData(btnElement = null) {
   const canDownloadExcel = !!(document.getElementById('uFormCanDownloadExcel') && document.getElementById('uFormCanDownloadExcel').checked);
 
   const canUploadBukti = !!(document.getElementById('uFormCanUploadBukti') && document.getElementById('uFormCanUploadBukti').checked);
+
+  const canUploadSmart = !!(document.getElementById('uFormCanUploadSmart') && document.getElementById('uFormCanUploadSmart').checked);
 
   const docId = String(username).toUpperCase();
 
@@ -38487,6 +38599,12 @@ async function simpanUserData(btnElement = null) {
 
             users[i].custom_upload_bukti = true;
 
+            users[i].canUploadSmart = canUploadSmart;
+
+            users[i].can_upload_smart = canUploadSmart;
+
+            users[i].custom_upload_smart = true;
+
           }
 
         });
@@ -38583,7 +38701,13 @@ async function simpanUserData(btnElement = null) {
 
           can_upload_bukti: canUploadBukti,
 
-          custom_upload_bukti: true
+          custom_upload_bukti: true,
+
+          canUploadSmart,
+
+          can_upload_smart: canUploadSmart,
+
+          custom_upload_smart: true
 
         };
 
@@ -38631,9 +38755,33 @@ async function simpanUserData(btnElement = null) {
 
         canPrintPdf,
 
+        can_print_pdf: canPrintPdf,
+
+        custom_print_pdf: true,
+
         canForward,
 
-        can_forward: canForward
+        can_forward: canForward,
+
+        custom_forward: true,
+
+        canDownloadExcel,
+
+        can_download_excel: canDownloadExcel,
+
+        custom_download_excel: true,
+
+        canUploadBukti,
+
+        can_upload_bukti: canUploadBukti,
+
+        custom_upload_bukti: true,
+
+        canUploadSmart,
+
+        can_upload_smart: canUploadSmart,
+
+        custom_upload_smart: true
 
       };
 
@@ -49354,7 +49502,7 @@ function bukaModalDoneParsial(noSurat, partialId) {
 
   const artemisSubTitle = document.getElementById('artemisSubTitle');
 
-  if (artemisSubTitle) artemisSubTitle.textContent = `UPLOAD FOTO BUKTI PROSES ARTEMIS UNTUK SURAT PARSIAL ${noSurat}-${partialId}:`;
+  if (artemisSubTitle) artemisSubTitle.textContent = `BUKTI PROSES ARTEMIS UNTUK SURAT PARSIAL ${noSurat}-${partialId}:`;
 
 
 
@@ -49371,6 +49519,7 @@ function bukaModalDoneParsial(noSurat, partialId) {
   tempArtemisPhotos = [];
 
   renderArtemisPhotoPreviews();
+  applyPhotoInputPopupDoneState(window._showPhotoInputInPopupDone !== false);
 
 
 
@@ -56462,6 +56611,7 @@ async function handleArtemisFileInputChange(event) {
     if (typeof renderArtemisPhotoPreviews === 'function') {
 
       renderArtemisPhotoPreviews();
+  applyPhotoInputPopupDoneState(window._showPhotoInputInPopupDone !== false);
 
     }
 
@@ -58351,3 +58501,339 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Run maintenance status check immediately on script load
 try { loadMaintenanceStatusFromCloud(); } catch(e) {}
+
+
+
+/* =============================================================================
+   FITUR UPLOAD EXCEL STATUS PART (MEMADUKAN KOLOM B -> NO SURAT & KOLOM A -> STATUS PART)
+   ============================================================================= */
+let _pendingExcelStatusPartUpdates = [];
+
+function bukaModalUploadStatusPartExcel() {
+  const modal = document.getElementById('modalUploadStatusPartExcel');
+  if (!modal) {
+    showNotif('MODAL UPLOAD TIDAK DITEMUKAN!', 'error');
+    return;
+  }
+
+  _pendingExcelStatusPartUpdates = [];
+  const fileInput = document.getElementById('fileExcelStatusPart');
+  if (fileInput) fileInput.value = '';
+
+  const previewContainer = document.getElementById('previewContainerUploadStatusPart');
+  if (previewContainer) previewContainer.style.setProperty('display', 'none', 'important');
+
+  const btnProses = document.getElementById('btnProsesImportStatusPart');
+  if (btnProses) {
+    btnProses.disabled = true;
+    btnProses.style.opacity = '0.5';
+  }
+
+  modal.style.setProperty('display', 'flex', 'important');
+}
+window.bukaModalUploadStatusPartExcel = bukaModalUploadStatusPartExcel;
+
+function tutupModalUploadStatusPartExcel() {
+  const modal = document.getElementById('modalUploadStatusPartExcel');
+  if (modal) modal.style.setProperty('display', 'none', 'important');
+  _pendingExcelStatusPartUpdates = [];
+}
+window.tutupModalUploadStatusPartExcel = tutupModalUploadStatusPartExcel;
+
+function bacaFileExcelStatusPart(event) {
+  const file = event.target.files ? event.target.files[0] : null;
+  if (!file) return;
+
+  if (typeof XLSX === 'undefined') {
+    showNotif('LIBRARY EXCEL (XLSX) BELUM SIAP! SILAHKAN REFRESH HALAMAN.', 'error');
+    return;
+  }
+
+  showLoading('MEMBACA BERKAS EXCEL...');
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+
+      if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+        hideLoading();
+        showNotif('BERKAS EXCEL KOSONG!', 'warning');
+        return;
+      }
+
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+      if (!rawRows || rawRows.length === 0) {
+        hideLoading();
+        showNotif('TIDAK ADA DATA PADA SHEET EXCEL!', 'warning');
+        return;
+      }
+
+      const allRequests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
+      if (allRequests.length === 0) {
+        hideLoading();
+        showNotif('TIDAK ADA DATA PERMINTAAN DI APLIKASI UNTUK DICOCOKKAN!', 'warning');
+        return;
+      }
+
+      _pendingExcelStatusPartUpdates = [];
+      const tbody = document.getElementById('tbodyPreviewStatusPartExcel');
+      if (tbody) tbody.innerHTML = '';
+
+      // Map NoSurat ke Request Object (KHUSUS SURAT BERSTATUS APPROVE!)
+      const reqMap = new Map();
+      allRequests.forEach(r => {
+        if (r && r.noSurat) {
+          const stUpper = String(r.status || '').trim().toUpperCase();
+          if (stUpper === 'APPROVE' || stUpper === 'APPROVED' || stUpper === 'DISETUJUI') {
+            reqMap.set(String(r.noSurat).trim().toUpperCase(), r);
+          }
+        }
+      });
+
+      // Group data Excel berdasarkan NoSurat yang cocok untuk mendukung BANYAK NOMOR ORDER per Surat!
+      const excelMap = new Map();
+
+      rawRows.forEach((row) => {
+        if (!Array.isArray(row) || row.length < 2) return;
+
+        const valA = String(row[0] || '').trim().toUpperCase(); // Kolom A (Nomor Order / Status Part)
+        const valB = String(row[1] || '').trim().toUpperCase(); // Kolom B (Nomor SOB / mengandung No Surat)
+
+        if (!valA || !valB) return;
+        if (valA.includes('NOMOR ORDER') || valB.includes('NOMOR SOB')) return; // Lewati header
+
+        for (let [nsUpper, rObj] of reqMap.entries()) {
+          if (valB === nsUpper || valB.includes(nsUpper) || nsUpper.includes(valB)) {
+            if (!excelMap.has(nsUpper)) {
+              excelMap.set(nsUpper, { req: rObj, valAList: [], valB: valB });
+            }
+            const entry = excelMap.get(nsUpper);
+            if (!entry.valAList.includes(valA)) {
+              entry.valAList.push(valA);
+            }
+            break;
+          }
+        }
+      });
+
+      let totalMatchedItemsCount = 0;
+
+      excelMap.forEach((entry, nsUpper) => {
+        const req = entry.req;
+        if (!req || !Array.isArray(req.items)) return;
+
+        // Cari item yang keterangan part nya masih kosong
+        let emptyItemIndexes = [];
+        req.items.forEach((it, itIdx) => {
+          const rawKet = String(it.keteranganPart || it.statusPart || '').trim();
+          if (!rawKet || rawKet === '-' || rawKet.toUpperCase() === 'DIPENUHI' || rawKet.toUpperCase() === 'SUDAH DIPENUHI') {
+            emptyItemIndexes.push(itIdx);
+          }
+        });
+
+        if (emptyItemIndexes.length > 0) {
+          _pendingExcelStatusPartUpdates.push({
+            noSurat: req.noSurat,
+            valAList: entry.valAList,
+            valB: entry.valB,
+            emptyItemIndexes: emptyItemIndexes
+          });
+
+          totalMatchedItemsCount += emptyItemIndexes.length;
+
+          if (tbody) {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #e2e8f0';
+            const orderText = entry.valAList.join(', ');
+            tr.innerHTML = `
+              <td style="padding: 6px 8px; font-weight: 700; color: #0284c7;">${req.noSurat}</td>
+              <td style="padding: 6px 8px; color: #475569;">${entry.valB}</td>
+              <td style="padding: 6px 8px; font-weight: 700; color: #16a34a;">${orderText} (${emptyItemIndexes.length} Item Kosong)</td>
+            `;
+            tbody.appendChild(tr);
+          }
+        }
+      });
+
+      hideLoading();
+
+      const previewContainer = document.getElementById('previewContainerUploadStatusPart');
+      const headerPreview = document.getElementById('previewStatusPartHeader');
+      const btnProses = document.getElementById('btnProsesImportStatusPart');
+
+      if (_pendingExcelStatusPartUpdates.length > 0) {
+        if (previewContainer) previewContainer.style.display = 'block';
+        if (headerPreview) headerPreview.textContent = `Pratinjau Data Cocok (${_pendingExcelStatusPartUpdates.length} Surat APPROVE, Total ${totalMatchedItemsCount} Item Part Kosong Siap Diisi):`;
+        if (btnProses) {
+          btnProses.disabled = false;
+          btnProses.style.opacity = '1';
+        }
+        showNotif(`DITEMUKAN ${_pendingExcelStatusPartUpdates.length} SURAT APPROVE BERISI ${totalMatchedItemsCount} ITEM PART KOSONG!`, 'info');
+      } else {
+        if (previewContainer) previewContainer.style.display = 'none';
+        if (btnProses) {
+          btnProses.disabled = true;
+          btnProses.style.opacity = '0.5';
+        }
+        showNotif('TIDAK DITEMUKAN SURAT APPROVE BERISI ITEM PART KOSONG YANG COCOK!', 'warning');
+      }
+
+    } catch (err) {
+      hideLoading();
+      console.error('[READ EXCEL ERROR]:', err);
+      showNotif('GAGAL MEMBACA FORMAT BERKAS EXCEL!', 'error');
+    }
+  };
+
+  reader.onerror = function() {
+    hideLoading();
+    showNotif('GAGAL MEMBACA FILE!', 'error');
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+window.bacaFileExcelStatusPart = bacaFileExcelStatusPart;
+
+async function eksekusiImportStatusPartExcel() {
+  if (!_pendingExcelStatusPartUpdates || _pendingExcelStatusPartUpdates.length === 0) {
+    showNotif('TIDAK ADA DATA COCOK UNTUK DIIMPOR!', 'warning');
+    return;
+  }
+
+  showLoading('MEMPROSES & MENYIMPAN KE DATABASE...');
+
+  setTimeout(async () => {
+    try {
+      let requests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
+      let updatedCount = 0;
+      let updatedSuratSet = new Set();
+
+      _pendingExcelStatusPartUpdates.forEach(update => {
+        const req = requests.find(r => r && String(r.noSurat || '').trim().toUpperCase() === String(update.noSurat).trim().toUpperCase());
+        if (req && Array.isArray(req.items)) {
+          const stUpper = String(req.status || '').trim().toUpperCase();
+          if (stUpper !== 'APPROVE' && stUpper !== 'APPROVED' && stUpper !== 'DISETUJUI') return;
+
+          const valAList = update.valAList || [];
+          const emptyIndexes = update.emptyItemIndexes || [];
+          if (valAList.length === 0 || emptyIndexes.length === 0) return;
+
+          if (emptyIndexes.length >= valAList.length) {
+            // Distribusikan per item jika jumlah item cukup
+            emptyIndexes.forEach((itemIdx, i) => {
+              const valToSet = valAList[i] || valAList.join(', ');
+              req.items[itemIdx].keteranganPart = valToSet;
+              req.items[itemIdx].statusPart = valToSet;
+              updatedCount++;
+            });
+          } else {
+            // Tampilkan SEMUA Nomor Order gabungan jika jumlah item kosong lebih sedikit
+            const combinedVal = valAList.join(', ');
+            emptyIndexes.forEach(itemIdx => {
+              req.items[itemIdx].keteranganPart = combinedVal;
+              req.items[itemIdx].statusPart = combinedVal;
+              updatedCount++;
+            });
+          }
+
+          updatedSuratSet.add(req.noSurat);
+
+          // Push update ke Cloud DB Supabase
+          if (typeof pushCentralCloudDB === 'function') {
+            pushCentralCloudDB(req).catch(() => {});
+          }
+          if (typeof broadcastDatabaseDataChange === 'function') {
+            broadcastDatabaseDataChange('UPDATE', req.noSurat, req);
+          }
+        }
+      });
+
+      // Simpan ke DB Lokal
+      saveRequestsToDB(requests);
+
+      hideLoading();
+      tutupModalUploadStatusPartExcel();
+
+      showNotif(`BERHASIL PERBARUI KETERANGAN PART UNTUK ${updatedCount} ITEM KOSONG (${updatedSuratSet.size} SURAT)!`, 'success');
+
+      if (typeof loadRiwayat === 'function') loadRiwayat();
+      if (typeof loadDashboard === 'function') loadDashboard();
+
+    } catch (err) {
+      hideLoading();
+      console.error('[IMPORT EXCEL ERROR]:', err);
+      showNotif('TERJADI KESALAHAN SAAT MENYIMPAN DATA!', 'error');
+    }
+  }, 100);
+}
+window.eksekusiImportStatusPartExcel = eksekusiImportStatusPartExcel;
+
+
+/* === ADMIN REALTIME CONTROL FOR PHOTO INPUT IN POPUP DONE === */
+window._showPhotoInputInPopupDone = localStorage.getItem('global_show_photo_input_popup_done') !== 'false';
+
+function applyPhotoInputPopupDoneState(enabled) {
+  window._showPhotoInputInPopupDone = !!enabled;
+  localStorage.setItem('global_show_photo_input_popup_done', window._showPhotoInputInPopupDone ? 'true' : 'false');
+
+  const uploadContainer = document.getElementById('artemisUploadContainer');
+  const dropArea = document.getElementById('artemisUploadDropArea');
+  const previewGrid = document.getElementById('artemisPhotoPreviewGrid');
+
+  if (uploadContainer) {
+    uploadContainer.style.setProperty('display', window._showPhotoInputInPopupDone ? 'flex' : 'none', 'important');
+  }
+  if (dropArea) {
+    dropArea.style.setProperty('display', window._showPhotoInputInPopupDone ? 'block' : 'none', 'important');
+  }
+  if (previewGrid) {
+    previewGrid.style.setProperty('display', window._showPhotoInputInPopupDone ? 'flex' : 'none', 'important');
+  }
+
+  const btnToggle = document.getElementById('btnTogglePhotoInputPopupDoneAdmin');
+  if (btnToggle) {
+    btnToggle.style.setProperty('color', '#000000', 'important');
+    if (window._showPhotoInputInPopupDone) {
+      btnToggle.style.background = '#16a34a';
+      btnToggle.style.backgroundColor = '#16a34a';
+      btnToggle.innerHTML = '<span class="material-symbols-rounded" style="font-size: 18px !important; color: #000000 !important;">visibility</span> TOMBOL INPUT FOTO: AKTIF (TAMPIL)';
+    } else {
+      btnToggle.style.background = '#dc2626';
+      btnToggle.style.backgroundColor = '#dc2626';
+      btnToggle.innerHTML = '<span class="material-symbols-rounded" style="font-size: 18px !important; color: #000000 !important;">visibility_off</span> TOMBOL INPUT FOTO: NONAKTIF (SEMBUNYIKAN)';
+    }
+  }
+}
+window.applyPhotoInputPopupDoneState = applyPhotoInputPopupDoneState;
+
+function togglePhotoInputPopupDoneAdmin() {
+  const currentState = window._showPhotoInputInPopupDone !== false;
+  const newState = !currentState;
+
+  applyPhotoInputPopupDoneState(newState);
+
+  // Broadcast ke Supabase & Simpan Setting System Cloud
+  if (typeof broadcastDatabaseDataChange === 'function') {
+    broadcastDatabaseDataChange('CONFIG_CHANGE', 'PHOTO_INPUT_POPUP_DONE', { enabled: newState });
+  }
+
+  if (typeof pushCentralCloudDB === 'function') {
+    pushCentralCloudDB({ _type: 'SYSTEM_SETTING', settingKey: 'PHOTO_INPUT_POPUP_DONE', enabled: newState }).catch(() => {});
+  }
+
+  showNotif(`TOMBOL INPUT FOTO POPUP DONE BERHASIL DI-SET: ${newState ? 'AKTIF (TAMPIL)' : 'NONAKTIF (SEMBUNYIKAN)'} REAL-TIME!`, 'success');
+}
+window.togglePhotoInputPopupDoneAdmin = togglePhotoInputPopupDoneAdmin;
+
+// Inisialisasi awal saat halaman dimuat
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    applyPhotoInputPopupDoneState(window._showPhotoInputInPopupDone);
+  }, 500);
+});
+

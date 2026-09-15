@@ -10666,3 +10666,63 @@ html body #excelTemplateOverlay .btnExcelTemplateOption:active .btnIconDownload 
   padding: 0 !important;
   box-shadow: none !important;
 }
+
+
+/* MODAL UPLOAD EXCEL STATUS PART OVERLAY RULE */
+#modalUploadStatusPartExcel {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  z-index: 99999 !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ==========================================================================
+   SOFT 90-DEGREE CORNERS (BORDER-RADIUS: 4PX !IMPORTANT) & OVERRIDE RULES
+   ========================================================================== */
+html body #modalPilihanCetakPdfCard,
+html body #modalPilihanCetakPdfCard > div,
+html body .modal-card,
+html body .modal-container,
+html body .modal-dialog,
+html body .modal-content,
+html body .card,
+html body .popup-card,
+html body .popup-header,
+html body .btn-pdf-option {
+  border-radius: 4px !important;
+}
+
+html body #modalPilihanCetakPdfHeader {
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
+  border-top-left-radius: 4px !important;
+  border-top-right-radius: 4px !important;
+}
+
+html body #modalPilihanCetakPdfTitle {
+  font-weight: 400 !important;
+  color: #ffffff !important;
+}
+
+html body #searchUserModalInput,
+html body #cariTokoModalInput {
+  background: #334155 !important;
+  background-color: #334155 !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+}
+
+html body #btnSimpanTokoBaru {
+  background: #16a34a !important;
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+  border: 1px solid #15803d !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+}
+

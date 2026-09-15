@@ -34,9 +34,9 @@
 
   <!-- Master Stylesheet -->
 
-  <link rel="stylesheet" href="styles.css?v=20260915_FIX_DASHBOARD_CARDS_INDEPENDENCY_V285">
+  <link rel="stylesheet" href="styles.css?v=20260915_SMART_UPLOAD_SUPABASE_FIX_V296">
 
-  <script src="app.js?v=20260915_FIX_DASHBOARD_CARDS_INDEPENDENCY_V285"></script>
+  <script src="app.js?v=20260915_SMART_UPLOAD_SUPABASE_FIX_V296"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -708,6 +708,10 @@
           <button class="btnDownload" onclick="downloadExcel()" title="DOWNLOAD EXCEL (.XLSX)" style="background: linear-gradient(135deg, #107c41, #0f7b40) !important; color: #ffffff !important;">
             <span class="material-symbols-rounded">download</span>
           </button>
+          <button class="btnUploadExcel" id="btnUploadStatusPartExcel" onclick="bukaModalUploadStatusPartExcel()" title="UPLOAD EXCEL STATUS PART (.XLSX)" style="background: #0284c7 !important; color: #ffffff !important; border-radius: 4px !important; margin-left: 6px !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; height: 38px !important; padding: 0 12px !important; font-weight: 700 !important; border: none !important; cursor: pointer !important;">
+            <span class="material-symbols-rounded">upload_file</span>
+            <span style="font-size: 12px !important; text-transform: uppercase !important;">UPLOAD PART</span>
+          </button>
         </div>
 
         <div class="tableWrap">
@@ -1199,6 +1203,19 @@
           <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; opacity: 0.8;">
             <input type="checkbox" class="chk-upload-bukti-role" value="ADMIN" checked disabled style="accent-color: #0284c7; cursor: not-allowed; width: 16px; height: 16px;"> ADMIN (SELALU AKTIF)
           </label>
+        </div>
+      </div>
+
+<!-- PENGATURAN KONTROL ONLINE TOMBOL INPUT FOTO (POPUP DONE ARTEMIS) -->
+      <div id="photoInputPopupDoneConfigCard" class="box" style="border-left: 4px solid #16a34a; margin-bottom: 1mm !important; background: var(--bg-card);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px; color: #16a34a;">
+            <span class="material-symbols-rounded" style="font-size: 20px;">add_a_photo</span>
+            <span>PENGATURAN TOMBOL INPUT FOTO POPUP DONE (REAL-TIME ONLINE):</span>
+          </div>
+          <button type="button" id="btnTogglePhotoInputPopupDoneAdmin" onclick="togglePhotoInputPopupDoneAdmin()" style="background: #16a34a !important; color: #000000 !important; border: 1px solid #000000 !important; height: 38px !important; padding: 0 16px !important; font-weight: 800 !important; border-radius: 6px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important;">
+            <span class="material-symbols-rounded" style="font-size: 18px !important; color: #000000 !important;">visibility</span> TOMBOL INPUT FOTO: AKTIF (TAMPIL)
+          </button>
         </div>
       </div>
 
@@ -1821,22 +1838,25 @@
 
         <!-- Textarea Keterangan -->
         <div style="display: flex !important; flex-direction: column !important; gap: 4px !important;">
-          <label style="font-size: 11.5px !important; font-weight: 700 !important; color: #000000 !important; text-transform: uppercase !important;">Keterangan Penyelesaian (Opsional)</label>
-          <textarea id="inputKetPartArtemis" rows="2" placeholder="Ketik keterangan penyelesaian..." style="width: 100% !important; min-height: 60px !important; border: 1px solid #000000 !important; border-radius: 4px !important; padding: 8px 12px !important; font-size: 12.5px !important; font-weight: 600 !important; outline: none !important; font-family: inherit !important; resize: vertical !important; box-sizing: border-box !important; background: #ffffff !important; color: #000000 !important; box-shadow: none !important;"></textarea>
+          <label style="font-size: 11.5px !important; font-weight: 700 !important; color: #000000 !important; text-transform: uppercase !important;">NO / KODE BUKTI TRANSAKSI</label>
+          <textarea id="inputKetPartArtemis" rows="2" placeholder="Ketik No / Kode Bukti Transaksi..." style="width: 100% !important; min-height: 60px !important; border: 1px solid #000000 !important; border-radius: 4px !important; padding: 8px 12px !important; font-size: 12.5px !important; font-weight: 600 !important; outline: none !important; font-family: inherit !important; resize: vertical !important; box-sizing: border-box !important; background: #ffffff !important; color: #000000 !important; box-shadow: none !important;"></textarea>
         </div>
         
         <!-- Upload Box Sudut 90 Derajat (Border-Radius 4px, Tanpa Bayangan) -->
-        <div id="artemisUploadDropArea" tabindex="0" onclick="document.getElementById('artemisFileInput').click();" title="KLIK ATAU PILIH FOTO (JPG / PNG)" style="padding: 20px 16px !important; border: 1.5px dashed #000000 !important; border-radius: 4px !important; background: #f8fafc !important; text-align: center !important; cursor: pointer !important; transition: all 0.2s ease !important; outline: none !important; box-sizing: border-box !important; box-shadow: none !important;">
-          <div style="display: flex !important; align-items: center !important; justify-content: center !important; margin-bottom: 6px !important;">
-            <div style="width: 40px !important; height: 40px !important; border-radius: 4px !important; background: #e2e8f0 !important; color: #000000 !important; display: flex !important; align-items: center !important; justify-content: center !important;">
-              <span class="material-symbols-rounded" style="font-size: 22px !important; color: #000000 !important;">add_a_photo</span>
+        <div id="artemisUploadContainer" style="display: flex !important; flex-direction: column !important; gap: 4px !important;">
+          <label style="font-size: 11.5px !important; font-weight: 700 !important; color: #000000 !important; text-transform: uppercase !important;">UNGGAH FOTO BUKTI (OPSIONAL)</label>
+          <div id="artemisUploadDropArea" tabindex="0" onclick="document.getElementById('artemisFileInput').click();" title="KLIK ATAU PILIH FOTO (JPG / PNG - OPSIONAL)" style="padding: 16px 16px !important; border: 1.5px dashed #000000 !important; border-radius: 4px !important; background: #f8fafc !important; text-align: center !important; cursor: pointer !important; transition: all 0.2s ease !important; outline: none !important; box-sizing: border-box !important; box-shadow: none !important;">
+            <div style="display: flex !important; align-items: center !important; justify-content: center !important; margin-bottom: 4px !important;">
+              <div style="width: 36px !important; height: 36px !important; border-radius: 4px !important; background: #e2e8f0 !important; color: #000000 !important; display: flex !important; align-items: center !important; justify-content: center !important;">
+                <span class="material-symbols-rounded" style="font-size: 20px !important; color: #000000 !important;">add_a_photo</span>
+              </div>
             </div>
-          </div>
-          <div style="font-size: 13px !important; font-weight: 700 !important; color: #000000 !important;">
-            Klik untuk memilih foto (JPG / PNG)
-          </div>
-          <div style="font-size: 11px !important; font-weight: 600 !important; color: #000000 !important; margin-top: 2px !important;">
-            Atau tarik dan lepas file foto di sini (Maks 1 MB)
+            <div style="font-size: 12.5px !important; font-weight: 700 !important; color: #000000 !important;">
+              Klik untuk memilih foto (JPG / PNG - Opsional)
+            </div>
+            <div style="font-size: 11px !important; font-weight: 600 !important; color: #64748b !important; margin-top: 2px !important;">
+              Atau tarik dan lepas file foto di sini (Maks 1 MB - Opsional)
+            </div>
           </div>
         </div>
 
@@ -2137,7 +2157,7 @@
           <!-- KATEGORI (ROLE) -->
           <div>
             <label style="display: block !important; font-size: 11px !important; font-weight: 800 !important; color: #475569 !important; margin-bottom: 4px !important; letter-spacing: 0.2px !important;">KATEGORI (ROLE) <span style="color:#ef4444;">*</span></label>
-            <select id="uFormCategory" style="width: 100% !important; padding: 10px 12px !important; border-radius: 4px !important; border: 1px solid #cbd5e1 !important; font-size: 12px !important; background: #f8fafc !important; color: #0f172a !important; font-weight: 800 !important; box-sizing: border-box !important; outline: none !important; cursor: pointer !important;">
+            <select id="uFormCategory" onchange="toggleUserFormSmartUploadVisibility()" style="width: 100% !important; padding: 10px 12px !important; border-radius: 4px !important; border: 1px solid #cbd5e1 !important; font-size: 12px !important; background: #f8fafc !important; color: #0f172a !important; font-weight: 800 !important; box-sizing: border-box !important; outline: none !important; cursor: pointer !important;">
               <option value="TOKO">TOKO</option>
               <option value="SALES">SALES</option>
               <option value="SERVICE">SERVICE</option>
@@ -2204,6 +2224,15 @@
             <span style="display: inline-flex !important; align-items: center !important; gap: 6px !important;">
               <span class="material-symbols-rounded" style="font-size: 18px !important; color: #f97316 !important;">upload_file</span>
               UPLOAD BUKTI SURAT / FOTO
+            </span>
+          </label>
+
+          <!-- UPLOAD SMART (KHUSUS AKUN SERVICE) -->
+          <label id="wrapperUFormCanUploadSmart" style="display: none !important; align-items: center !important; gap: 8px !important; font-size: 11.5px !important; font-weight: 800 !important; color: #1e293b !important; cursor: pointer !important;">
+            <input type="checkbox" id="uFormCanUploadSmart" style="width: 16px !important; height: 16px !important; accent-color: #0284c7 !important;">
+            <span style="display: inline-flex !important; align-items: center !important; gap: 6px !important;">
+              <span class="material-symbols-rounded" style="font-size: 18px !important; color: #0284c7 !important;">upload_file</span>
+              UPLOAD EXCEL SMART (SERVICE)
             </span>
           </label>
 
@@ -2542,5 +2571,51 @@
     </div>
   </div>
 
+
+  <!-- MODAL UPLOAD EXCEL STATUS PART -->
+  <div id="modalUploadStatusPartExcel" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 680px; width: 92%; border-radius: 4px !important; border: 1px solid #1e293b !important; padding: 0 !important; overflow: hidden !important; background: #ffffff !important;">
+      <div style="background: #0284c7 !important; color: #ffffff !important; padding: 14px 20px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; border-radius: 4px 4px 0 0 !important;">
+        <h3 style="margin: 0 !important; font-size: 16px !important; font-weight: 400 !important; color: #ffffff !important;">UPLOAD DATA EXCEL STATUS PART</h3>
+        <button type="button" onclick="tutupModalUploadStatusPartExcel()" style="background: transparent !important; border: none !important; color: #ffffff !important; font-size: 22px !important; cursor: pointer !important;">&times;</button>
+      </div>
+
+      <div style="padding: 20px !important; max-height: 75vh !important; overflow-y: auto !important;">
+        <div style="background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; border-radius: 4px !important; padding: 12px 16px !important; margin-bottom: 16px !important; font-size: 13px !important; color: #334155 !important;">
+          <div style="font-weight: 700 !important; margin-bottom: 4px !important; color: #0284c7 !important;">💡 Petunjuk Format Berkas Excel (Hasil Download SMART):</div>
+          <ul style="margin: 0 !important; padding-left: 18px !important; line-height: 1.5 !important;">
+            <li>Unggah berkas Excel <strong>hasil download dari SMART</strong>.</li>
+            <li><strong>Pastikan saat melakukan order SMART, untuk No SCL diisi dengan No Surat</strong>.</li>
+          </ul>
+        </div>
+
+        <div style="margin-bottom: 16px !important;">
+          <label style="display: block !important; font-size: 13px !important; font-weight: 700 !important; margin-bottom: 6px !important; color: #1e293b !important;">PILIH BERKAS EXCEL (.XLSX / .XLS / .CSV):</label>
+          <input type="file" id="fileExcelStatusPart" accept=".xlsx, .xls, .csv" onchange="bacaFileExcelStatusPart(event)" style="width: 100% !important; padding: 8px !important; border: 1px solid #cbd5e1 !important; border-radius: 4px !important; font-size: 13px !important;">
+        </div>
+
+        <div id="previewContainerUploadStatusPart" style="display: none !important;">
+          <h4 style="font-size: 13px !important; font-weight: 700 !important; margin: 12px 0 8px 0 !important; color: #0f172a !important;" id="previewStatusPartHeader">Pratinjau Data Cocok:</h4>
+          <div style="max-height: 220px !important; overflow-y: auto !important; border: 1px solid #cbd5e1 !important; border-radius: 4px !important;">
+            <table style="width: 100% !important; border-collapse: collapse !important; font-size: 12px !important; text-align: left !important;">
+              <thead style="background: #e2e8f0 !important; position: sticky !important; top: 0 !important;">
+                <tr>
+                  <th style="padding: 8px !important; border-bottom: 1px solid #cbd5e1 !important;">NO SURAT (APP)</th>
+                  <th style="padding: 8px !important; border-bottom: 1px solid #cbd5e1 !important;">KOLOM B (EXCEL)</th>
+                  <th style="padding: 8px !important; border-bottom: 1px solid #cbd5e1 !important;">KOLOM A (VAL STATUS PART)</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyPreviewStatusPartExcel"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8fafc !important; padding: 12px 20px !important; border-top: 1px solid #e2e8f0 !important; display: flex !important; justify-content: flex-end !important; gap: 10px !important;">
+        <button type="button" onclick="tutupModalUploadStatusPartExcel()" style="padding: 8px 18px !important; background: #64748b !important; color: #ffffff !important; border: none !important; border-radius: 4px !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important;">BATAL</button>
+        <button type="button" id="btnProsesImportStatusPart" onclick="eksekusiImportStatusPartExcel()" disabled style="padding: 8px 20px !important; background: #16a34a !important; color: #ffffff !important; border: none !important; border-radius: 4px !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; opacity: 0.5 !important;">IMPOR & SIMPAN KE DATABASE</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
