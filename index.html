@@ -34,9 +34,9 @@
 
   <!-- Master Stylesheet -->
 
-  <link rel="stylesheet" href="styles.css?v=20260914_ACTIVE_CLOUD_PING_OFFLINE_DETECTION_V266">
+  <link rel="stylesheet" href="styles.css?v=20260915_PURE_EXCEL_COLUMNS_K_AND_N_UPPERCASE_V283">
 
-  <script src="app.js?v=20260914_ACTIVE_CLOUD_PING_OFFLINE_DETECTION_V266"></script>
+  <script src="app.js?v=20260915_PURE_EXCEL_COLUMNS_K_AND_N_UPPERCASE_V283"></script>
 
   <!-- Global Failsafe Gemini AI Key Handler -->
   <script>
@@ -261,7 +261,7 @@
 
         <!-- User Profile Avatar Badge -->
         <div class="topbar-user-badge" onclick="bukaAkun()" title="Profil & Pengaturan Akun" style="background: rgba(255, 255, 255, 0.18) !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; border-radius: 6px !important;">
-          <div class="user-avatar" id="topUserAvatarInitials" style="border-radius: 6px !important; font-weight: 400 !important;">BA</div>
+          <div class="user-avatar" id="topUserAvatarInitials" style="width: 32px !important; height: 32px !important; min-width: 32px !important; min-height: 32px !important; max-width: 32px !important; max-height: 32px !important; border-radius: 4px !important; font-weight: 700 !important; font-size: 11px !important; display: flex !important; align-items: center !important; justify-content: center !important; overflow: hidden !important; flex-shrink: 0 !important; background: #0284c7 !important; color: #ffffff !important; padding: 0 !important; box-sizing: border-box !important;">BA</div>
           <span class="user-name-text" id="namaUserTopHeader" style="font-weight: 400 !important;">BAUT ADHI</span>
         </div>
 
@@ -702,6 +702,7 @@
             <option value="APPROVE">APPROVE</option>
             <option value="REJECT">REJECT</option>
             <option value="DONE">DONE</option>
+            <option value="BATAL">BATAL</option>
           </select>
 
           <button class="btnDownload" onclick="downloadExcel()" title="DOWNLOAD EXCEL (.XLSX)" style="background: linear-gradient(135deg, #107c41, #0f7b40) !important; color: #ffffff !important;">
@@ -1254,9 +1255,23 @@
         <div style="padding: 24px; background: #ffffff;">
           <!-- USER HEADER CARD -->
           <div style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid #e2e8f0; border-radius: 4px !important; padding: 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-            <div id="akunUserAvatarLarge" style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; font-weight: 800; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25); flex-shrink: 0;">
-              BA
+            <div style="position: relative; display: inline-block;">
+              <div id="akunUserAvatarLarge" onclick="bukaModalPengaturanFotoProfil()" title="Klik untuk membuka pengaturan foto profil (JPG / PNG)" style="width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; font-weight: 800; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3); flex-shrink: 0; cursor: pointer; overflow: hidden; position: relative; border: 2.5px solid #ffffff; transition: transform 0.2s ease;">
+                <span id="akunUserAvatarText">SA</span>
+                <img id="akunUserAvatarImg" src="" alt="Foto Profil" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                
+                <!-- Hover Camera Badge Overlay -->
+                <div class="avatarHoverBadge" style="position: absolute; inset: 0; background: rgba(0,0,0,0.45); color: #ffffff; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; border-radius: 50%;">
+                  <span class="material-symbols-rounded" style="font-size: 24px;">photo_camera</span>
+                </div>
+              </div>
+
+              <!-- Action Button Edit Icon Badge (Bottom Right) -->
+              <button type="button" onclick="bukaModalPengaturanFotoProfil()" title="Atur Foto Profil" style="position: absolute; bottom: 2px; right: 2px; background: transparent !important; color: #ffffff !important; border: none !important; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0 !important; outline: none !important; filter: drop-shadow(0px 1px 3px rgba(0,0,0,0.85)) !important;">
+                <span class="material-symbols-rounded" style="font-size: 18px !important; font-weight: 700 !important; color: #ffffff !important;">edit</span>
+              </button>
             </div>
+
             <div style="flex: 1; min-width: 200px;">
               <h3 id="akunUserHeadingName" style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">USER PERMINTAAN TOKO</h3>
               <p id="akunUserHeadingRole" style="margin: 4px 0 0 0; font-size: 12.5px; font-weight: 600; color: #2563eb;">AKUN SERVICE TOKO</p>
@@ -2469,6 +2484,59 @@
             SISTEM SEDANG DALAM PEMELIHARAAN SEBENTAR. MOHON TUNGGU BEBERAPA SAAT.
           </p>
         </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- POPUP MODAL PENGATURAN FOTO PROFIL (PRATINJAU / VIEW & UPLOAD) -->
+  <div id="popupFotoProfilModal" class="popupOverlay" style="display: none !important; position: fixed !important; inset: 0 !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.85) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 12px !important; box-sizing: border-box !important;">
+    <div style="position: relative !important; width: min(380px, 90vw) !important; max-width: 90vw !important; background: #ffffff !important; color: #0f172a !important; border-radius: 4px !important; border: 1px solid #000000 !important; box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; margin: auto !important; box-sizing: border-box !important;">
+      
+      <!-- HEADER POPUP: BIRU SOLID FULL, TEKS TITLE FONT WEIGHT 400 (UNBOLD) -->
+      <div style="background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 10px 14px !important; border-radius: 4px 4px 0 0 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; flex-shrink: 0 !important; box-sizing: border-box !important;">
+        <div style="display: flex !important; align-items: center !important; gap: 6px !important;">
+          <span class="material-symbols-rounded" style="font-size: 18px !important; color: #ffffff !important; font-weight: 400 !important;">photo_camera</span>
+          <span style="font-size: 12.5px !important; font-weight: 400 !important; color: #ffffff !important; text-transform: uppercase !important; letter-spacing: 0.3px !important;">PENGATURAN FOTO PROFIL</span>
+        </div>
+        <button type="button" class="btnHeaderCloseX" onclick="tutupModalPengaturanFotoProfil()" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.4) !important; font-size: 20px !important; font-weight: 900 !important; color: #ffffff !important; cursor: pointer !important; width: 28px !important; height: 28px !important; border-radius: 4px !important; display: flex !important; align-items: center !important; justify-content: center !important;">&times;</button>
+      </div>
+
+      <!-- BODY CONTENT -->
+      <div style="padding: 20px 18px !important; background: #ffffff !important; color: #0f172a !important; display: flex !important; flex-direction: column !important; gap: 14px !important; box-sizing: border-box !important; text-align: center !important; align-items: center !important;">
+        
+        <!-- KOTAK PREVIEW VIEW FOTO / AVATAR SEMENTARA -->
+        <div style="display: flex !important; flex-direction: column !important; align-items: center !important; gap: 6px !important; width: 100% !important;">
+          <div id="popupAvatarPreviewBox" style="width: 135px !important; height: 135px !important; border-radius: 50% !important; background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; font-weight: 800 !important; font-size: 46px !important; display: flex !important; align-items: center !important; justify-content: center !important; border: 3px solid #0284c7 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important; overflow: hidden !important; position: relative !important;">
+            <span id="popupAvatarPreviewText">SA</span>
+            <img id="popupAvatarPreviewImg" src="" alt="Preview Foto Profil" style="display: none !important; width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 50% !important;">
+          </div>
+          <span style="font-size: 11px !important; font-weight: 600 !important; color: #64748b !important;">Pratinjau Tampilan Foto Profil</span>
+        </div>
+
+        <!-- Hidden Input File Selector -->
+        <input type="file" id="inputFotoProfilModalFile" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none !important;" onchange="handleFotoProfilSelectedInModal(this)">
+
+        <!-- TOMBOL PILIH FOTO & HAPUS FOTO -->
+        <div style="display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; width: 100% !important; margin-top: 4px !important;">
+          <button type="button" onclick="document.getElementById('inputFotoProfilModalFile').click()" style="height: 36px !important; border-radius: 4px !important; background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; border: 1px solid #000000 !important; font-weight: 700 !important; font-size: 11.5px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 5px !important;">
+            <span class="material-symbols-rounded" style="font-size: 16px !important;">upload</span>
+            PILIH FOTO
+          </button>
+
+          <button type="button" onclick="handleHapusFotoInModal()" style="height: 36px !important; border-radius: 4px !important; background: #fef2f2 !important; background-color: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fca5a5 !important; font-weight: 700 !important; font-size: 11.5px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 5px !important;">
+            <span class="material-symbols-rounded" style="font-size: 16px !important;">delete</span>
+            HAPUS FOTO
+          </button>
+        </div>
+
+        <!-- FOOTER ACTION BUTTONS (BATAL & SIMPAN) -->
+        <div style="display: flex !important; justify-content: flex-end !important; gap: 8px !important; width: 100% !important; margin-top: 8px !important; padding-top: 12px !important; border-top: 1px solid #e2e8f0 !important;">
+          <button type="button" onclick="tutupModalPengaturanFotoProfil()" style="height: 36px !important; padding: 0 16px !important; border-radius: 4px !important; font-weight: 700 !important; font-size: 12px !important; cursor: pointer !important; background: #ffffff !important; color: #000000 !important; border: 1px solid #000000 !important;">BATAL</button>
+          <button type="button" onclick="simpanFotoProfilFromModal()" style="height: 36px !important; padding: 0 20px !important; border-radius: 4px !important; font-weight: 700 !important; font-size: 12px !important; cursor: pointer !important; background: #16a34a !important; color: #ffffff !important; border: 1px solid #000000 !important;">SIMPAN FOTO</button>
+        </div>
+
       </div>
 
     </div>

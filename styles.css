@@ -10646,3 +10646,23 @@ html body #excelTemplateOverlay .btnExcelTemplateOption:focus .btnIconDownload,
 html body #excelTemplateOverlay .btnExcelTemplateOption:active .btnIconDownload {
   transform: scale(1.12) !important;
 }
+
+
+/* USER PROFILE AVATAR HOVER BADGE & PHOTO EFFECTS */
+#akunUserAvatarLarge:hover .avatarHoverBadge {
+  opacity: 1 !important;
+}
+#akunUserAvatarLarge:hover {
+  transform: scale(1.04);
+}
+#akunUserAvatarLarge {
+  user-select: none;
+}
+
+/* REMOVE OUTER CONTAINER BOX FOR BATCH EDIT KETERANGAN PART */
+#containerBatchKetPart {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}

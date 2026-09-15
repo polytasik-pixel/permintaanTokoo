@@ -11267,6 +11267,111 @@ window.sanitizePermintaanTokoRow = sanitizePermintaanTokoRow;
 
 
 
+
+/* =============================================================================
+   AUTO-CONVERT BASE64 DATA URL KE SUPABASE 2 (STORAGE FILE BUCKET)
+   ============================================================================= */
+async function uploadDataUrlToSupabaseStorageFile(dataUrl, bucketName = 'bukti_permintaan', customFileName = null) {
+  if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
+  const trimmed = dataUrl.trim();
+
+  // Jika sudah berupa URL HTTP / HTTPS, tidak perlu diunggah ulang ke Storage
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+
+  // Jika bukan data:image/ atau data:application/ (Base64), kembalikan teks aslinya
+  if (!trimmed.startsWith('data:')) return trimmed;
+
+  try {
+    const mimeMatch = trimmed.match(/^data:([^;]+);/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const ext = mimeType.includes('pdf') ? '.pdf' : (mimeType.includes('png') ? '.png' : '.jpg');
+    const fileName = customFileName || `File_${Date.now()}_${Math.floor(Math.random()*10000)}${ext}`;
+
+    const res = await fetch(trimmed);
+    const blob = await res.blob();
+    const file = new File([blob], fileName, { type: mimeType });
+
+    // Unggah ke SUPABASE 2 (STORAGE FILE BUCKET) - usePrimaryClient = false
+    const uploadedUrl = await uploadToSupabaseStorageDirect(bucketName, fileName, file, mimeType, false);
+    if (uploadedUrl) {
+      console.log('⚡ [SUPABASE 2 STORAGE FILE UPLOAD SUCCESS]:', uploadedUrl);
+      return uploadedUrl;
+    }
+  } catch(err) {
+    console.warn('[SUPABASE 2 STORAGE FILE UPLOAD NOTICE]:', err);
+  }
+
+  return trimmed;
+}
+window.uploadDataUrlToSupabaseStorageFile = uploadDataUrlToSupabaseStorageFile;
+
+async function convertAllRowBase64ToSupabase2Urls(row) {
+  if (!row) return row;
+  const noSuratClean = String(row.noSurat || row.no_surat || 'DOC').replace(/[^a-zA-Z0-9]/g, '_');
+
+  // 1. Upload photos array
+  if (Array.isArray(row.photos) && row.photos.length > 0) {
+    const newPhotos = [];
+    for (let i = 0; i < row.photos.length; i++) {
+      const p = row.photos[i];
+      if (typeof p === 'string' && p.startsWith('data:')) {
+        const url = await uploadDataUrlToSupabaseStorageFile(p, 'bukti_permintaan', `Photo_${noSuratClean}_${i+1}_${Date.now()}.jpg`);
+        newPhotos.push(url);
+      } else {
+        newPhotos.push(p);
+      }
+    }
+    row.photos = newPhotos;
+  }
+
+  // 2. Upload buktiPermintaan array
+  if (Array.isArray(row.buktiPermintaan) && row.buktiPermintaan.length > 0) {
+    const newBukti = [];
+    for (let i = 0; i < row.buktiPermintaan.length; i++) {
+      const p = row.buktiPermintaan[i];
+      if (typeof p === 'string' && p.startsWith('data:')) {
+        const url = await uploadDataUrlToSupabaseStorageFile(p, 'bukti_permintaan', `Bukti_${noSuratClean}_${i+1}_${Date.now()}.jpg`);
+        newBukti.push(url);
+      } else {
+        newBukti.push(p);
+      }
+    }
+    row.buktiPermintaan = newBukti;
+  }
+
+  // 3. Upload artemisPhotos array
+  if (Array.isArray(row.artemisPhotos) && row.artemisPhotos.length > 0) {
+    const newArt = [];
+    for (let i = 0; i < row.artemisPhotos.length; i++) {
+      const p = row.artemisPhotos[i];
+      if (typeof p === 'string' && p.startsWith('data:')) {
+        const url = await uploadDataUrlToSupabaseStorageFile(p, 'foto_lampiran', `Artemis_${noSuratClean}_${i+1}_${Date.now()}.jpg`);
+        newArt.push(url);
+      } else {
+        newArt.push(p);
+      }
+    }
+    row.artemisPhotos = newArt;
+  }
+
+  // 4. Upload items fotoBuktiPart if any
+  if (Array.isArray(row.items) && row.items.length > 0) {
+    for (let i = 0; i < row.items.length; i++) {
+      const item = row.items[i];
+      if (item && item.fotoBuktiPart && typeof item.fotoBuktiPart === 'string' && item.fotoBuktiPart.startsWith('data:')) {
+        item.fotoBuktiPart = await uploadDataUrlToSupabaseStorageFile(item.fotoBuktiPart, 'foto_lampiran', `Part_${noSuratClean}_Item${i+1}_${Date.now()}.jpg`);
+      }
+      if (item && item.fotoPart && typeof item.fotoPart === 'string' && item.fotoPart.startsWith('data:')) {
+        item.fotoPart = await uploadDataUrlToSupabaseStorageFile(item.fotoPart, 'foto_lampiran', `Part_${noSuratClean}_Item${i+1}_${Date.now()}.jpg`);
+      }
+    }
+  }
+
+  return row;
+}
+window.convertAllRowBase64ToSupabase2Urls = convertAllRowBase64ToSupabase2Urls;
+
+
 async function safeSupabaseUpsertPermintaan(payload) {
 
   if (typeof supabase === 'undefined' || !supabase) return { error: { message: 'Supabase client not initialized' } };
@@ -11277,6 +11382,10 @@ async function safeSupabaseUpsertPermintaan(payload) {
 
 
 
+  // Auto-convert any Base64 photos to Supabase 2 Storage URLs before upserting
+  for (let i = 0; i < rows.length; i++) {
+    try { await convertAllRowBase64ToSupabase2Urls(rows[i]); } catch(e) {}
+  }
   let preparedRows = rows.map(r => sanitizePermintaanTokoRow(r)).filter(Boolean);
 
   if (!preparedRows.length) return { data: [], error: null };
@@ -15418,6 +15527,8 @@ function autoLogin() {
 
 
 async function prosesLogin() {
+  try { localStorage.setItem('PREF_POPUP_DETAIL_MODE', 'B'); } catch(e) {}
+  if (typeof applyDetailPopupModeUI === 'function') applyDetailPopupModeUI('B');
 
   if (window._isProcessingLogin) return;
 
@@ -17402,7 +17513,7 @@ function initMobileBackButtonEngine() {
 
       { id: 'rejectOverlay', closeFn: () => { if (typeof tutupRejectModal === 'function') tutupRejectModal(); } },
 
-      { id: 'popupOfflineSafetyModal', closeFn: () => { if (typeof tutupModalOfflineSafety === 'function') tutupModalOfflineSafety(); } },
+      
 
 
 
@@ -18077,7 +18188,7 @@ function loadDashboard() {
 
 
 
-  const data = getAccessibleRequests();
+  const data = getFilteredRequestsForExport();
 
 
 
@@ -22902,10 +23013,33 @@ function filterRiwayat() {
 
 
 
-  if (filterStatusRiwayat && filterStatusRiwayat !== 'ALL') {
+  const dropdownEl = document.getElementById('filterStatusDropdown');
+  const activeStatusFilter = (dropdownEl && dropdownEl.value ? dropdownEl.value : filterStatusRiwayat) || '';
 
-    data = data.filter(r => r.status === filterStatusRiwayat);
+  if (activeStatusFilter && activeStatusFilter !== 'ALL') {
+    const sel = String(activeStatusFilter).trim().toUpperCase();
+    data = data.filter(r => {
+      if (!r) return false;
+      const st = String(r.status || '').trim().toUpperCase();
 
+      if (sel === 'PENDING') {
+        return st === 'PENDING' || st.includes('TUNGGU') || st === 'WAITING';
+      }
+      if (sel === 'DONE' || sel === 'SELESAI') {
+        return st === 'DONE' || st === 'SELESAI' || st === 'SUDAH DIPENUHI';
+      }
+      if (sel === 'REJECT' || sel === 'REJECTED' || sel === 'DITOLAK' || sel === 'RIJEK') {
+        return st === 'REJECT' || st === 'REJECTED' || st === 'DITOLAK' || st === 'RIJEK';
+      }
+      if (sel === 'BATAL' || sel === 'CANCEL' || sel === 'CANCELLED') {
+        return st === 'BATAL' || st === 'CANCEL' || st === 'CANCELLED';
+      }
+      if (sel === 'APPROVE' || sel === 'APPROVED') {
+        return st === 'APPROVE' || st === 'APPROVED' || st === 'DISETUJUI';
+      }
+
+      return st === sel;
+    });
   }
 
 
@@ -27280,7 +27414,7 @@ async function lihatDetail(noSuratOrObj, fromDashboard = false) {
 
       batchKetInputHtml = `
 
-        <div id="containerBatchKetPart" style="display: none !important; align-items: center !important; gap: 6px !important; flex-wrap: wrap !important; background: rgba(2, 132, 199, 0.08) !important; padding: 4px 8px !important; border-radius: 3px !important; border: 1px solid rgba(2, 132, 199, 0.3) !important;">
+        <div id="containerBatchKetPart" style="display: none !important; align-items: center !important; gap: 6px !important; flex-wrap: wrap !important; background: transparent !important; padding: 0 !important; border: none !important; box-shadow: none !important;">
 
           <input type="text" id="inputBatchKetPart" placeholder="Keterangan Part Masal..." style="padding: 5px 10px !important; font-size: 12px !important; font-weight: 700 !important; border: 1.5px solid #0284c7 !important; border-radius: 3px !important; outline: none !important; background: #ffffff !important; color: #0f172a !important; width: 175px !important; box-shadow: 0 1px 4px rgba(0,0,0,0.1) !important;" onkeyup="if(event.key==='Enter') simpanBatchKetPart('${req.noSurat}')">
 
@@ -39543,25 +39677,8 @@ function downloadMasterExcel() {
 
 
 
+        // Kolom K: Murni nama barang permintaan tanpa tambahan [TIDAK DIPENUHI/Ket]
         let namaBarangDisplay = it.barang || it.permintaan || '-';
-
-        if (isUnfulfilled) {
-
-          if (customKet && customKet !== 'TIDAK DIPENUHI' && customKet !== 'TIDAK BISA DIPENUHI') {
-
-            namaBarangDisplay = `${namaBarangDisplay} [TIDAK DIPENUHI: ${customKet}]`;
-
-          } else {
-
-            namaBarangDisplay = `${namaBarangDisplay} [TIDAK DIPENUHI]`;
-
-          }
-
-        } else if (customKet && customKet !== 'DIPENUHI') {
-
-          namaBarangDisplay = `${namaBarangDisplay} [Ket: ${customKet}]`;
-
-        }
 
 
 
@@ -39895,6 +40012,378 @@ function tutupAkun() {
 
 window.tutupAkun = tutupAkun;
 
+
+
+
+// =============================================================================
+// FITUR FOTO PROFIL LOKAL (JPG / PNG UPLOAD & PERSISTENCE)
+// =============================================================================
+
+
+// State Sementara Foto Profil di Modal Popup
+let tempSelectedProfilePhoto = undefined; // undefined = belum berubah, null = hapus foto, string = base64 foto baru
+
+function bukaModalPengaturanFotoProfil() {
+  if (!currentUser) return;
+  const modal = document.getElementById('popupFotoProfilModal');
+  if (!modal) return;
+
+  const photoKey = getProfilePhotoKey();
+  const savedPhoto = localStorage.getItem(photoKey) || currentUser.photo || currentUser.foto || null;
+  tempSelectedProfilePhoto = savedPhoto;
+
+  renderPreviewFotoInModal(tempSelectedProfilePhoto);
+
+  modal.style.setProperty('display', 'flex', 'important');
+  modal.style.setProperty('z-index', '2147483647', 'important');
+  modal.classList.add('show');
+}
+window.bukaModalPengaturanFotoProfil = bukaModalPengaturanFotoProfil;
+
+function tutupModalPengaturanFotoProfil() {
+  const modal = document.getElementById('popupFotoProfilModal');
+  if (modal) {
+    modal.style.setProperty('display', 'none', 'important');
+    modal.classList.remove('show');
+  }
+  tempSelectedProfilePhoto = undefined;
+}
+window.tutupModalPengaturanFotoProfil = tutupModalPengaturanFotoProfil;
+
+function handleFotoProfilSelectedInModal(input) {
+  if (!input || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+
+  if (!file.type.match('image.*')) {
+    if (typeof showNotif === 'function') showNotif('File harus berupa gambar (JPG, JPEG, PNG, WEBP)!', 'warning');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const rawDataUrl = e.target.result;
+    const oneMb = 1024 * 1024; // 1 MB = 1,048,576 Bytes
+
+    // Jika ukuran file < 1MB: SAMA SEKALI TIDAK DIKOMPRES
+    if (file.size < oneMb) {
+      tempSelectedProfilePhoto = rawDataUrl;
+      renderPreviewFotoInModal(tempSelectedProfilePhoto);
+      return;
+    }
+
+    // Jika ukuran file >= 1MB: BARU JALANKAN FUNGSI KOMPRESI CANVAS
+    const img = new Image();
+    img.onload = function() {
+      try {
+        const canvas = document.createElement('canvas');
+        const maxDim = 250;
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        tempSelectedProfilePhoto = canvas.toDataURL('image/jpeg', 0.85);
+      } catch(err) {
+        tempSelectedProfilePhoto = rawDataUrl;
+      }
+      renderPreviewFotoInModal(tempSelectedProfilePhoto);
+    };
+    img.onerror = function() {
+      tempSelectedProfilePhoto = rawDataUrl;
+      renderPreviewFotoInModal(tempSelectedProfilePhoto);
+    };
+    img.src = rawDataUrl;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+window.handleFotoProfilSelectedInModal = handleFotoProfilSelectedInModal;
+
+function handleHapusFotoInModal() {
+  tempSelectedProfilePhoto = null; // Menandakan dihapus
+  renderPreviewFotoInModal(null);
+}
+window.handleHapusFotoInModal = handleHapusFotoInModal;
+
+function renderPreviewFotoInModal(photoUrl) {
+  const pImg = document.getElementById('popupAvatarPreviewImg');
+  const pText = document.getElementById('popupAvatarPreviewText');
+
+  const name = currentUser ? (currentUser.fullName || currentUser.nama_lengkap || currentUser.nama || currentUser.username || 'USER') : 'USER';
+  let initials = 'SA';
+  if (name) {
+    const parts = String(name).trim().split(/\s+/);
+    if (parts.length >= 2) {
+      initials = (parts[0][0] + parts[1][0]).toUpperCase();
+    } else if (parts[0].length >= 2) {
+      initials = parts[0].substring(0, 2).toUpperCase();
+    } else {
+      initials = parts[0][0].toUpperCase();
+    }
+  }
+
+  if (photoUrl) {
+    if (pImg) {
+      pImg.src = photoUrl;
+      pImg.style.display = 'block';
+    }
+    if (pText) pText.style.display = 'none';
+  } else {
+    if (pImg) pImg.style.display = 'none';
+    if (pText) {
+      pText.textContent = initials;
+      pText.style.display = 'block';
+    }
+  }
+}
+
+function simpanFotoProfilFromModal() {
+  if (tempSelectedProfilePhoto === undefined) {
+    tutupModalPengaturanFotoProfil();
+    return;
+  }
+
+  if (tempSelectedProfilePhoto === null) {
+    prosesHapusFotoProfilLocal();
+  } else {
+    simpanDanTerapkanFotoProfil(tempSelectedProfilePhoto);
+  }
+
+  tutupModalPengaturanFotoProfil();
+}
+window.simpanFotoProfilFromModal = simpanFotoProfilFromModal;
+
+
+function pilihFotoProfilLocal() {
+  const inputEl = document.getElementById('inputFotoProfilLocal');
+  if (inputEl) {
+    inputEl.click();
+  }
+}
+window.pilihFotoProfilLocal = pilihFotoProfilLocal;
+
+function uploadFotoProfilLocal(input) {
+  if (!input || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+
+  // Validasi format gambar
+  if (!file.type.match('image.*')) {
+    if (typeof showNotif === 'function') showNotif('File harus berupa gambar (JPG, JPEG, PNG, WEBP)!', 'warning');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const rawDataUrl = e.target.result;
+    const oneMb = 1024 * 1024; // 1 MB
+
+    // Jika ukuran file < 1MB: SAMA SEKALI TIDAK DIKOMPRES
+    if (file.size < oneMb) {
+      simpanDanTerapkanFotoProfil(rawDataUrl);
+      return;
+    }
+
+    // Jika ukuran file >= 1MB: BARU JALANKAN FUNGSI KOMPRESI CANVAS
+    const img = new Image();
+    img.onload = function() {
+      try {
+        const canvas = document.createElement('canvas');
+        const maxDim = 250;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        simpanDanTerapkanFotoProfil(compressedDataUrl);
+      } catch(err) {
+        simpanDanTerapkanFotoProfil(rawDataUrl);
+      }
+    };
+    img.onerror = function() {
+      simpanDanTerapkanFotoProfil(rawDataUrl);
+    };
+    img.src = rawDataUrl;
+  };
+  reader.readAsDataURL(file);
+
+  // Reset value agar dapat mengunggah file yang sama berturut-turut
+  input.value = '';
+}
+window.uploadFotoProfilLocal = uploadFotoProfilLocal;
+
+function getProfilePhotoKey() {
+  if (typeof currentUser !== 'undefined' && currentUser) {
+    const keyUser = String(currentUser.username || currentUser.nama || currentUser.id || 'default').trim().toLowerCase();
+    return 'user_profile_photo_' + keyUser;
+  }
+  return 'user_profile_photo_default';
+}
+
+function simpanDanTerapkanFotoProfil(photoDataUrl) {
+  if (!currentUser) return;
+  const photoKey = getProfilePhotoKey();
+
+  try {
+    localStorage.setItem(photoKey, photoDataUrl);
+  } catch(e) {
+    console.warn("Storage full when saving profile photo:", e);
+  }
+
+  // Update object session currentUser
+  currentUser.photo = photoDataUrl;
+  currentUser.foto = photoDataUrl;
+  try {
+    appStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+  } catch(e) {}
+
+  // Update local DB user list record if present
+  try {
+    const allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
+    const updatedUsers = allUsers.map(u => {
+      if (u && (
+        (u.id && currentUser.id && String(u.id) === String(currentUser.id)) ||
+        (u.username && String(u.username).trim().toUpperCase() === String(currentUser.username).trim().toUpperCase())
+      )) {
+        return { ...u, photo: photoDataUrl, foto: photoDataUrl };
+      }
+      return u;
+    });
+    if (typeof saveUsersToDB === 'function') saveUsersToDB(updatedUsers);
+  } catch(e) {}
+
+  // Render perubahan seketika pada UI
+  muatDanRenderFotoProfilUser();
+
+  if (typeof showNotif === 'function') {
+    showNotif('FOTO PROFIL BERHASIL DIPERBARUI!', 'success');
+  }
+}
+
+function muatDanRenderFotoProfilUser() {
+  if (!currentUser) return;
+  const photoKey = getProfilePhotoKey();
+  const savedPhoto = localStorage.getItem(photoKey) || currentUser.photo || currentUser.foto || null;
+
+  const elAvatarText = document.getElementById('akunUserAvatarText');
+  const elAvatarImg = document.getElementById('akunUserAvatarImg');
+  const btnHapus = document.getElementById('btnHapusFotoProfil');
+  const topInitialsEl = document.getElementById('topUserAvatarInitials');
+
+  const name = currentUser.fullName || currentUser.nama_lengkap || currentUser.namaLengkap || currentUser.name || currentUser.nama || currentUser.username || 'USER';
+
+  // Format Inisial Teks (misal "SA" / "BA")
+  let initials = 'SA';
+  if (name) {
+    const parts = String(name).trim().split(/\s+/);
+    if (parts.length >= 2) {
+      initials = (parts[0][0] + parts[1][0]).toUpperCase();
+    } else if (parts[0].length >= 2) {
+      initials = parts[0].substring(0, 2).toUpperCase();
+    } else {
+      initials = parts[0][0].toUpperCase();
+    }
+  }
+
+  if (savedPhoto) {
+    // 1. Tampilkan Foto di Profile Page Header
+    if (elAvatarImg) {
+      elAvatarImg.src = savedPhoto;
+      elAvatarImg.style.display = 'block';
+    }
+    if (elAvatarText) elAvatarText.style.display = 'none';
+    if (btnHapus) btnHapus.style.display = 'inline-block';
+
+    // 2. Tampilkan Foto di Topbar User Badge jika ada
+    if (topInitialsEl) {
+      topInitialsEl.innerHTML = `<img src="${savedPhoto}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">`;
+    }
+  } else {
+    // Tampilkan Teks Inisial
+    if (elAvatarImg) elAvatarImg.style.display = 'none';
+    if (elAvatarText) {
+      elAvatarText.textContent = initials;
+      elAvatarText.style.display = 'block';
+    }
+    if (btnHapus) btnHapus.style.display = 'none';
+
+    // Tampilkan Area Code / Initials di Topbar
+    if (topInitialsEl) {
+      var areaRaw = String(currentUser.area || currentUser.cabang || currentUser.service_area || initials).trim();
+      var displayArea = areaRaw;
+      if (displayArea.includes(',')) displayArea = displayArea.split(',')[0].trim();
+      if (displayArea.includes('-')) {
+        var areaParts = displayArea.split('-');
+        displayArea = areaParts[areaParts.length - 1].trim();
+      }
+      topInitialsEl.textContent = displayArea.toUpperCase();
+    }
+  }
+}
+window.muatDanRenderFotoProfilUser = muatDanRenderFotoProfilUser;
+
+function hapusFotoProfilLocal() {
+  if (typeof showConfirm === 'function') {
+    showConfirm('APAKAH ANDA YAKIN INGIN MENGHAPUS FOTO PROFIL DAN KEMBALI KE TEKS INISIAL?', () => {
+      prosesHapusFotoProfilLocal();
+    });
+  } else {
+    if (confirm('Apakah Anda yakin ingin menghapus foto profil?')) {
+      prosesHapusFotoProfilLocal();
+    }
+  }
+}
+window.hapusFotoProfilLocal = hapusFotoProfilLocal;
+
+function prosesHapusFotoProfilLocal() {
+  if (!currentUser) return;
+  const photoKey = getProfilePhotoKey();
+  try {
+    localStorage.removeItem(photoKey);
+  } catch(e) {}
+
+  delete currentUser.photo;
+  delete currentUser.foto;
+  try {
+    appStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+  } catch(e) {}
+
+  muatDanRenderFotoProfilUser();
+
+  if (typeof showNotif === 'function') {
+    showNotif('FOTO PROFIL DIHAPUS, EMBLEM KEMBALI KE TEKS INISIAL!', 'info');
+  }
+}
+window.prosesHapusFotoProfilLocal = prosesHapusFotoProfilLocal;
 
 
 function prosesBukaAkun() {
@@ -41975,6 +42464,96 @@ window.prosesUploadExcelToko = prosesUploadExcelToko;
 
 
 
+
+/* =============================================================================
+   HELPER FORMAT KETERANGAN PART KOLOM N UNTUK DOWNLOAD EXCEL
+   KAPITAL SEMUA & MURNI DARI ISI KOTAK KETERANGAN PART DI APLIKASI
+   ============================================================================= */
+function getExportKeteranganPartValue(req, item) {
+  if (!req && !item) return '-';
+
+  const itemObj = item || {};
+
+  // Ambil teks murni dari kotak Keterangan Part / Status Part di aplikasi
+  let rawKet = String(
+    itemObj.keteranganPart ||
+    itemObj.statusPart ||
+    itemObj.updatePart ||
+    itemObj.noPart ||
+    itemObj.alasanBatal ||
+    itemObj.ketPart ||
+    ''
+  ).trim();
+
+  // Abaikan teks otomatis bawaan sistem lama jika tidak diketik manual
+  const rawKetUpper = rawKet.toUpperCase();
+  if (rawKetUpper === 'DIPENUHI' || rawKetUpper === 'SUDAH DIPENUHI' || rawKetUpper === 'TIDAK DIPENUHI' || rawKetUpper === 'TIDAK BISA DIPENUHI') {
+    rawKet = '';
+  }
+
+  // Jika ada isi dari kotak keterangan part di aplikasi, kembalikan KAPITAL SEMUA!
+  if (rawKet) {
+    return rawKet.toUpperCase();
+  }
+
+  return '-';
+}
+window.getExportKeteranganPartValue = getExportKeteranganPartValue;
+
+
+
+/* =============================================================================
+   HELPER AMBIL DATA SESUAI FILTER STATUS (filterStatusDropdown) UNTUK EXCEL
+   ============================================================================= */
+function getFilteredRequestsForExport() {
+  let data = typeof getAccessibleRequests === 'function' ? getAccessibleRequests() : [];
+
+  const dropdown = document.getElementById('filterStatusDropdown');
+  let selectedStatus = '';
+  if (dropdown && dropdown.value) {
+    selectedStatus = String(dropdown.value).trim().toUpperCase();
+  } else if (typeof filterStatusRiwayat !== 'undefined' && filterStatusRiwayat) {
+    selectedStatus = String(filterStatusRiwayat).trim().toUpperCase();
+  }
+
+  // Filter berdasarkan filterStatusDropdown secara presisi
+  if (selectedStatus && selectedStatus !== 'ALL') {
+    data = data.filter(r => {
+      if (!r) return false;
+      const st = String(r.status || '').trim().toUpperCase();
+
+      if (selectedStatus === 'PENDING') {
+        return st === 'PENDING' || st.includes('TUNGGU') || st === 'WAITING';
+      }
+      if (selectedStatus === 'DONE' || selectedStatus === 'SELESAI') {
+        return st === 'DONE' || st === 'SELESAI' || st === 'SUDAH DIPENUHI';
+      }
+      if (selectedStatus === 'REJECT' || selectedStatus === 'REJECTED' || selectedStatus === 'DITOLAK' || selectedStatus === 'RIJEK') {
+        return st === 'REJECT' || st === 'REJECTED' || st === 'DITOLAK' || st === 'RIJEK';
+      }
+      if (selectedStatus === 'BATAL' || selectedStatus === 'CANCEL' || selectedStatus === 'CANCELLED') {
+        return st === 'BATAL' || st === 'CANCEL' || st === 'CANCELLED';
+      }
+      if (selectedStatus === 'APPROVE' || selectedStatus === 'APPROVED') {
+        return st === 'APPROVE' || st === 'APPROVED' || st === 'DISETUJUI';
+      }
+
+      return st === selectedStatus;
+    });
+  }
+
+  // Filter tambahan kata kunci pencarian aktif jika ada
+  const searchInput = document.getElementById('searchRiwayat') || document.getElementById('searchDashboard');
+  const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  if (search && typeof matchesRequestSearchFilter === 'function') {
+    data = data.filter(r => matchesRequestSearchFilter(r, search));
+  }
+
+  return data;
+}
+window.getFilteredRequestsForExport = getFilteredRequestsForExport;
+
+
 function downloadExcel() {
 
   if (typeof checkUserCanDownloadExcel === 'function' && !checkUserCanDownloadExcel(currentUser)) {
@@ -41985,7 +42564,7 @@ function downloadExcel() {
 
   }
 
-  const data = getAccessibleRequests();
+  const data = getFilteredRequestsForExport();
 
   if (data.length === 0) {
 
@@ -42031,55 +42610,11 @@ function downloadExcel() {
 
           
 
-          let statusPartVal = '';
-
-          if (isUnfulfilled) {
-
-            if (customKet && customKet !== 'TIDAK DIPENUHI' && customKet !== 'TIDAK BISA DIPENUHI') {
-
-              statusPartVal = `TIDAK DIPENUHI (${customKet})`;
-
-            } else {
-
-              statusPartVal = 'TIDAK DIPENUHI';
-
-            }
-
-          } else if (customKet) {
-
-            statusPartVal = customKet;
-
-          } else if (r.status === 'DONE') {
-
-            statusPartVal = 'DIPENUHI';
-
-          } else {
-
-            statusPartVal = '-';
-
-          }
+          let statusPartVal = getExportKeteranganPartValue(r, item);
 
 
 
           let namaBarangDisplay = item.barang || item.permintaan || '-';
-
-          if (isUnfulfilled) {
-
-            if (customKet && customKet !== 'TIDAK DIPENUHI' && customKet !== 'TIDAK BISA DIPENUHI') {
-
-              namaBarangDisplay = `${namaBarangDisplay} [TIDAK DIPENUHI: ${customKet}]`;
-
-            } else {
-
-              namaBarangDisplay = `${namaBarangDisplay} [TIDAK DIPENUHI]`;
-
-            }
-
-          } else if (customKet && customKet !== 'DIPENUHI') {
-
-            namaBarangDisplay = `${namaBarangDisplay} [Ket: ${customKet}]`;
-
-          }
 
 
 
@@ -47954,55 +48489,12 @@ function downloadSingleDetailExcel(noSurat) {
 
         
 
-        let statusPartVal = '';
-
-        if (isUnfulfilled) {
-
-          if (customKet && customKet !== 'TIDAK DIPENUHI' && customKet !== 'TIDAK BISA DIPENUHI') {
-
-            statusPartVal = `TIDAK DIPENUHI (${customKet})`;
-
-          } else {
-
-            statusPartVal = 'TIDAK DIPENUHI';
-
-          }
-
-        } else if (customKet) {
-
-          statusPartVal = customKet;
-
-        } else if (req.status === 'DONE') {
-
-          statusPartVal = 'DIPENUHI';
-
-        } else {
-
-          statusPartVal = '-';
-
-        }
+        let statusPartVal = getExportKeteranganPartValue(req, it);
 
 
 
+        // Kolom K: Murni nama barang permintaan tanpa tambahan [TIDAK DIPENUHI/Ket]
         let namaBarangDisplay = it.barang || it.permintaan || '-';
-
-        if (isUnfulfilled) {
-
-          if (customKet && customKet !== 'TIDAK DIPENUHI' && customKet !== 'TIDAK BISA DIPENUHI') {
-
-            namaBarangDisplay = `${namaBarangDisplay} [TIDAK DIPENUHI: ${customKet}]`;
-
-          } else {
-
-            namaBarangDisplay = `${namaBarangDisplay} [TIDAK DIPENUHI]`;
-
-          }
-
-        } else if (customKet && customKet !== 'DIPENUHI') {
-
-          namaBarangDisplay = `${namaBarangDisplay} [Ket: ${customKet}]`;
-
-        }
 
 
 
@@ -51260,9 +51752,8 @@ function bukaDetailSuratParsial(noSurat, partialId) {
    ============================================================================= */
 
 function getDetailPopupMode() {
-
-  return (typeof localStorage !== 'undefined' ? localStorage.getItem('PREF_POPUP_DETAIL_MODE') : null) || 'A';
-
+  const pref = (typeof localStorage !== 'undefined' ? localStorage.getItem('PREF_POPUP_DETAIL_MODE') : null);
+  return (pref === 'A') ? 'A' : 'B';
 }
 
 window.getDetailPopupMode = getDetailPopupMode;
@@ -51401,6 +51892,65 @@ function applyDetailPopupModeUI(mode = getDetailPopupMode()) {
 
 window.applyDetailPopupModeUI = applyDetailPopupModeUI;
 
+
+
+
+/* =============================================================================
+   HELPER KOMPRESI BUKTI FOTO DONE / DOKUMEN SUPABASE (THRESHOLD 1 MB)
+   ============================================================================= */
+async function compressImageToJpeg(file) {
+  if (!file) return null;
+  const oneMb = 1024 * 1024; // 1 MB (1,048,576 Bytes)
+
+  // 1. Jika ukuran file < 1MB: LANGSUNG PAKAI FOTO ASLI TANPA DIKOMPRES
+  if (file.size && file.size < oneMb) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 2. Jika ukuran file >= 1MB: BARU JALANKAN KOMPRESI CANVAS
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1600;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        } catch(err) {
+          resolve(e.target.result);
+        }
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
+}
+window.compressImageToJpeg = compressImageToJpeg;
 
 
 window.bukaDetailSuratParsial = bukaDetailSuratParsial;
@@ -52593,7 +53143,7 @@ function tampilkanModalOfflineSafety(customMessage = null) {
             Koneksi internet perangkat Anda terputus! Silakan periksa Wi-Fi / Data Seluler Anda.
           </p>
           <div style="display: flex !important; width: 100% !important; margin-top: 4px !important;">
-            <button type="button" class="btnOkNotif" onclick="cekKoneksiInternetCloudActive(true)" style="width: 100% !important; height: 34px !important; min-height: 34px !important; border-radius: 4px !important; background: #e2e8f0 !important; background-color: #e2e8f0 !important; color: #0f172a !important; border: 1px solid #000000 !important; font-weight: 700 !important; font-size: 11.5px !important; cursor: pointer !important; box-sizing: border-box !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">COBA LAGI</button>
+            <button type="button" class="btnOkNotif" onclick="cekKoneksiInternetCloudActive(true)" style="width: 100% !important; height: 34px !important; min-height: 34px !important; border-radius: 4px !important; background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; border: 1px solid #000000 !important; font-weight: 700 !important; font-size: 12px !important; cursor: pointer !important; box-sizing: border-box !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">COBA LAGI</button>
           </div>
         </div>
       </div>
@@ -52634,17 +53184,17 @@ window.tampilkanModalOfflineSafety = tampilkanModalOfflineSafety;
 
 
 function tutupModalOfflineSafety() {
-
-  const modal = document.getElementById('popupOfflineSafetyModal');
-
-  if (modal) {
-
-    modal.style.setProperty('display', 'none', 'important');
-
-    modal.classList.remove('show');
-
+  // SAFETY GUARD: Jika perangkat masih offline (misal Mode Pesawat), Modal JANGAN BISA DITUTUP!
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    tampilkanModalOfflineSafety('MODE PESAWAT / INTERNET TERPUTUS! Silakan matikan Mode Pesawat atau aktifkan Wi-Fi / Data Seluler.');
+    return;
   }
 
+  const modal = document.getElementById('popupOfflineSafetyModal');
+  if (modal) {
+    modal.style.setProperty('display', 'none', 'important');
+    modal.classList.remove('show');
+  }
 }
 
 window.tutupModalOfflineSafety = tutupModalOfflineSafety;
@@ -52675,18 +53225,21 @@ window.eksekusiKeluarAplikasi = eksekusiKeluarAplikasi;
 
 
 
-// ACTIVE INTERNET & CLOUD CONNECTION HEARTBEAT CHECK (MENDETEKSI INTERNET MATI MESKIPUN WI-FI/LAN TERHUBUNG)
+// ACTIVE INTERNET & CLOUD CONNECTION HEARTBEAT CHECK (MENDETEKSI MODE PESAWAT & INTERNET MATI)
 async function cekKoneksiInternetCloudActive(isManualCheck = false) {
+  // A. Pengecekan Langsung Mode Pesawat / Offline Perangkat
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    tampilkanModalOfflineSafety('Koneksi internet terputus! Wi-Fi / Data Seluler perangkat Anda mati.');
+    tampilkanModalOfflineSafety('MODE PESAWAT / KONEKSI INTERNET TERPUTUS! Silakan matikan Mode Pesawat & periksa Wi-Fi / Data Seluler Anda.');
     return false;
   }
 
-  // Active Ping ke endpoint Supabase / CDN untuk memastikan internet benar-benar ada
+  // B. Active Ping ke endpoint Supabase / Cloud
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3500);
-    const targetUrl = (typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL) ? `${SUPABASE_URL}/rest/v1/` : 'https://www.google.com/favicon.ico';
+    
+    // Gunakan static favicon check dengan no-cors agar 100% bebas error 401 Unauthorized di console
+    const targetUrl = 'https://www.google.com/favicon.ico?t=' + Date.now();
 
     const res = await fetch(targetUrl, {
       method: 'HEAD',
@@ -52703,37 +53256,51 @@ async function cekKoneksiInternetCloudActive(isManualCheck = false) {
     }
     return true;
   } catch (err) {
-    // Jika LAN/Wi-Fi aktif TETAPI tidak ada akses internet / cloud timeout
-    tampilkanModalOfflineSafety('Wi-Fi / LAN terhubung, tetapi TIDAK ADA AKSES INTERNET! Silakan periksa koneksi ISP / router Anda.');
+    // Jika Mode Pesawat atau tidak ada koneksi
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      tampilkanModalOfflineSafety('MODE PESAWAT / KONEKSI INTERNET TERPUTUS! Silakan matikan Mode Pesawat Anda.');
+    } else {
+      tampilkanModalOfflineSafety('Wi-Fi / LAN terhubung, tetapi TIDAK ADA AKSES INTERNET! Silakan periksa koneksi ISP / router Anda.');
+    }
     return false;
   }
 }
 window.cekKoneksiInternetCloudActive = cekKoneksiInternetCloudActive;
 
-// Network online/offline event listeners & active periodic check
-if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-  setTimeout(() => {
-    tampilkanModalOfflineSafety('Koneksi internet terputus! Silakan periksa Wi-Fi / Data Seluler Anda.');
-  }, 100);
+// Periksa Mode Pesawat & Offline secara Seketika pada Booting Pertama
+function periksaStatusOfflineSeketika() {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    tampilkanModalOfflineSafety('MODE PESAWAT / KONEKSI INTERNET TERPUTUS! Silakan matikan Mode Pesawat & periksa Wi-Fi / Data Seluler Anda.');
+  } else {
+    cekKoneksiInternetCloudActive();
+  }
 }
 
+// Event Listener Seketika untuk Mode Pesawat / Offline Device Toggle
 window.addEventListener('offline', () => {
-  tampilkanModalOfflineSafety('Koneksi internet terputus! Wi-Fi / Data Seluler Anda mati.');
+  tampilkanModalOfflineSafety('MODE PESAWAT / KONEKSI INTERNET TERPUTUS! Silakan matikan Mode Pesawat & periksa Wi-Fi / Data Seluler Anda.');
 });
 
 window.addEventListener('online', () => {
-  cekKoneksiInternetCloudActive();
+  cekKoneksiInternetCloudActive(true);
   if (typeof syncSupabaseRequestsToLocalCache === 'function') {
     syncSupabaseRequestsToLocalCache();
   }
 });
 
-// Periodic Cloud Ping Heartbeat Check setiap 8 detik
-setInterval(() => {
-  cekKoneksiInternetCloudActive();
-}, 8000);
+// Direct Boot & Document Ready Handlers
+try { localStorage.setItem('PREF_POPUP_DETAIL_MODE', 'B'); } catch(e) {}
+if (typeof applyDetailPopupModeUI === 'function') applyDetailPopupModeUI('B');
+window.addEventListener('DOMContentLoaded', periksaStatusOfflineSeketika);
+window.addEventListener('load', periksaStatusOfflineSeketika);
+periksaStatusOfflineSeketika();
 
-// Global Unhandled Rejection for Network Fetch Failures (TETAP TAMPILKAN POPUP WALAUPUN NAVIGATOR.ONLINE = TRUE)
+// Periodic Cloud Ping Heartbeat Check setiap 4 detik
+setInterval(() => {
+  periksaStatusOfflineSeketika();
+}, 4000);
+
+// Global Unhandled Rejection for Network Fetch Failures
 window.addEventListener('unhandledrejection', (event) => {
   if (event && event.reason && (
     event.reason.message === 'Failed to fetch' || 
@@ -52741,13 +53308,9 @@ window.addEventListener('unhandledrejection', (event) => {
     (event.reason.toString && event.reason.toString().includes('Failed to fetch')) ||
     (event.reason.toString && event.reason.toString().includes('NetworkError'))
   )) {
-    tampilkanModalOfflineSafety('Koneksi internet terputus saat mengambil data! Silakan periksa jaringan Wi-Fi / LAN Anda.');
+    periksaStatusOfflineSeketika();
   }
 });
-
-
-
-
 
 // =============================================================================
 
@@ -55732,7 +56295,7 @@ function updateEnterpriseBreadcrumbAndSidebar(pageId) {
   // Update Topbar User Avatar (Area Code) & Full Name
 
   if (typeof currentUser !== 'undefined' && currentUser) {
-
+    if (typeof muatDanRenderFotoProfilUser === 'function') { try { muatDanRenderFotoProfilUser(); } catch(e) {} }
     var fullName = (currentUser.fullName || currentUser.nama_lengkap || currentUser.namaLengkap || currentUser.name || currentUser.nama || currentUser.username || 'USER').toString().trim();
 
     var topUserEl = document.getElementById('namaUserTopHeader');
@@ -55744,29 +56307,24 @@ function updateEnterpriseBreadcrumbAndSidebar(pageId) {
     
 
     if (initialsEl) {
+      const photoKey = typeof getProfilePhotoKey === 'function' ? getProfilePhotoKey() : ('user_profile_photo_' + (currentUser.username || 'default'));
+      const savedPhoto = localStorage.getItem(photoKey) || currentUser.photo || currentUser.foto || null;
 
-      var areaRaw = String(currentUser.area || currentUser.cabang || currentUser.service_area || 'ALL').trim();
-
-      var displayArea = areaRaw;
-
-      if (displayArea.includes(',')) displayArea = displayArea.split(',')[0].trim();
-
-      if (displayArea.includes('/')) displayArea = displayArea.split('/')[0].trim();
-
-      if (displayArea.includes(';')) displayArea = displayArea.split(';')[0].trim();
-
-      if (displayArea.includes('-')) {
-
-        var areaParts = displayArea.split('-');
-
-        displayArea = areaParts[areaParts.length - 1].trim();
-
+      if (savedPhoto) {
+        initialsEl.innerHTML = `<img src="${savedPhoto}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; display: block;">`;
+      } else {
+        var areaRaw = String(currentUser.area || currentUser.cabang || currentUser.service_area || 'ALL').trim();
+        var displayArea = areaRaw;
+        if (displayArea.includes(',')) displayArea = displayArea.split(',')[0].trim();
+        if (displayArea.includes('/')) displayArea = displayArea.split('/')[0].trim();
+        if (displayArea.includes(';')) displayArea = displayArea.split(';')[0].trim();
+        if (displayArea.includes('-')) {
+          var areaParts = displayArea.split('-');
+          displayArea = areaParts[areaParts.length - 1].trim();
+        }
+        displayArea = displayArea.toUpperCase();
+        initialsEl.textContent = displayArea;
       }
-
-      displayArea = displayArea.toUpperCase();
-
-      initialsEl.textContent = displayArea;
-
     }
 
   }
