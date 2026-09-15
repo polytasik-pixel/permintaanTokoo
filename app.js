@@ -18188,7 +18188,7 @@ function loadDashboard() {
 
 
 
-  const data = getFilteredRequestsForExport();
+  const data = getAccessibleRequests();
 
 
 
@@ -42543,7 +42543,7 @@ function getFilteredRequestsForExport() {
   }
 
   // Filter tambahan kata kunci pencarian aktif jika ada
-  const searchInput = document.getElementById('searchRiwayat') || document.getElementById('searchDashboard');
+  const searchInput = document.getElementById('searchRiwayat');
   const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
   if (search && typeof matchesRequestSearchFilter === 'function') {
     data = data.filter(r => matchesRequestSearchFilter(r, search));
