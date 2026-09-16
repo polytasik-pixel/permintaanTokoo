@@ -24285,7 +24285,7 @@ async function approveDM(noSurat) {
 
         tambahNotifikasiSistem(['SERVICE'], requests[idx].area, `PERMINTAAN #${noSurat} DARI ${requests[idx].toko} TELAH DISETUJUI DM. SILAKAN DIPROSES.`, noSurat);
 
-        tambahNotifikasiSistem(['TOKO'], requests[idx].area, `PERMINTAAN SURAT #${noSurat} TELAH DISETUJUI (APPROVE). SILAKAN CETAK PDF DOKUMEN, BERI CAP & TTD, LALU UPLOAD BUKTI PERMINTAAN KE APLIKASI.`, noSurat);
+        tambahNotifikasiSistem(['TOKO', 'USER', 'SALES'], requests[idx].area, `PERMINTAAN SURAT #${noSurat} TELAH DISETUJUI (APPROVE). SILAKAN CETAK PDF DOKUMEN, BERI CAP & TTD, LALU UPLOAD BUKTI PERMINTAAN KE APLIKASI.`, noSurat);
 
         // Kirim Notifikasi WA Otomatis ke Toko/Pemohon saat DM Approve
         try {
