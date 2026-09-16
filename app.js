@@ -24133,6 +24133,30 @@ async function approveService(noSurat) {
 
         tambahNotifikasiSistem(['DM'], 'ALL', `PERMINTAAN #${noSurat} DISETUJUI SERVICE (${currentUser.fullName || currentUser.username}). MOHON APPROVAL DM.`, noSurat);
 
+
+      // Kirim Notifikasi WA Otomatis ke DM saat Service Approve
+      try {
+        const allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
+        const reqArea = requests[idx].area || 'ALL';
+        const dmUsers = allUsers.filter(u => u && (u.category === 'DM' || u.role === 'DM') && (u.area === reqArea || u.area === 'ALL' || u.area === 'PUSAT') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
+
+        dmUsers.forEach(dm => {
+          const dmName = dm.fullName || dm.username || 'Bapak/Ibu DM';
+          const directLink = typeof getAppDirectLink === 'function' ? getAppDirectLink(noSurat) : window.location.href;
+          if (typeof kirimNotifikasiWA === 'function') {
+            kirimNotifikasiWA(dm.phone,
+              `Yth. Bapak/Ibu *${dmName}*\n\n` +
+              `✅ *PERMINTAAN DISETUJUI SERVICE*\n` +
+              `Pengajuan Surat *#${noSurat}* (*${requests[idx].toko}*) telah di-approve oleh Service (*${currentUser ? (currentUser.fullName || currentUser.username) : 'SERVICE'}*).\n` +
+              `Status: *Menunggu Approval DM*.\n\n` +
+              `• Link Detail: ${directLink}\n\n` +
+              `Mohon persetujuan (Approval) dari DM. Terima kasih.`
+            );
+          }
+        });
+      } catch (eWADM) {
+        console.warn('[SERVICE APPROVE WA DISPATCH ERROR]:', eWADM);
+      }
       }
 
     }
@@ -24281,6 +24305,25 @@ async function approveDM(noSurat) {
               `\u2022 Link Detail: ${directLink}\n\n` +
               `Terima kasih.`
             );
+
+          // Kirim Notifikasi WA Otomatis ke Tim Service Area saat DM Approve
+          const reqArea = requests[idx].area || 'ALL';
+          const serviceUsers = allUsers.filter(u => u && (u.category === 'SERVICE' || u.category === 'HODS' || u.role === 'SERVICE') && (u.area === reqArea || u.area === 'ALL') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
+
+          serviceUsers.forEach(srv => {
+            const srvName = srv.fullName || srv.username || 'Bapak/Ibu Tim Service';
+            const directLink = typeof getAppDirectLink === 'function' ? getAppDirectLink(noSurat) : window.location.href;
+            if (typeof kirimNotifikasiWA === 'function') {
+              kirimNotifikasiWA(srv.phone,
+                `Yth. Bapak/Ibu *${srvName}*\n\n` +
+                `🎉 *PERMINTAAN DISETUJUI DM*\n` +
+                `Pengajuan Surat *#${noSurat}* (*${requests[idx].toko}*) telah *DISETUJUI (APPROVED) oleh DM*.\n` +
+                `Silakan proses/kerjakan barang permintaan.\n\n` +
+                `• Link Detail: ${directLink}\n\n` +
+                `Terima kasih.`
+              );
+            }
+          });
           }
         } catch (eWA) {
           console.warn('[DM APPROVE WA DISPATCH ERROR]:', eWA);
