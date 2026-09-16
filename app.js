@@ -40135,7 +40135,7 @@ function bukaAkun() {
 
   if (typeof tutupPdfModal === 'function') tutupPdfModal();
 
-  if (typeof tutupDetailBarangV2 === 'function') tutupDetailBarangV2();
+  if (typeof tutupDetailBarangV2 === 'function') tutupDetailBarangV2(true);
 
 
 
@@ -40561,7 +40561,7 @@ function prosesBukaAkun() {
 
   if (typeof tutupPdfModal === 'function') tutupPdfModal();
 
-  if (typeof tutupDetailBarangV2 === 'function') tutupDetailBarangV2();
+  if (typeof tutupDetailBarangV2 === 'function') tutupDetailBarangV2(true);
 
 
 
@@ -49870,7 +49870,7 @@ function bukaModalBuatParsial(noSurat) {
 
             <button type="button" onclick="document.getElementById('inputFotoParsialFile').click()" style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; border: none !important; padding: 5px 14px; height: 32px; border-radius: 4px !important; font-weight: 800; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap !important; box-shadow: 0 3px 8px rgba(2,132,199,0.3) !important;">
 
-              <span class="material-symbols-rounded" style="font-size: 15px; color: #ffffff !important;">add_a_photo</span> UNGGAH BUKTI (FOTO / PDF) <span style="color: #e0f2fe; font-weight: 600; font-size: 10.5px;">(OPSIONAL)</span>
+              <span class="material-symbols-rounded" style="font-size: 15px; color: #ffffff !important;">add_a_photo</span> UNGGAH <span style="color: #e0f2fe; font-weight: 600; font-size: 10.5px;">(OPSIONAL)</span>
 
             </button>
 
@@ -50308,7 +50308,7 @@ function renderTempFotoParsialPreviews() {
 
           <button type="button" onclick="downloadPdfFile('${url.replace(/'/g, "\'")}', 'Bukti_Parsial_${idx+1}.pdf')" style="background: #10b981; color: #ffffff; border: none; border-radius: 3px; padding: 2px 6px; font-size: 10px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" title="Download PDF">DOWNLOAD</button>
 
-          <button type="button" onclick="hapusTempFotoParsial(${idx})" title="Hapus PDF" style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: #ffffff; border: 1px solid #ffffff; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">&times;</button>
+          <button type="button" onclick="hapusTempFotoParsial(${idx})" title="Hapus PDF" style="position: absolute; top: -4px; right: -4px; background: #dc2626 !important; color: #ffffff !important; border: 1px solid #ffffff !important; width: 15px !important; height: 15px !important; border-radius: 50% !important; cursor: pointer !important; font-size: 11px !important; font-weight: 900 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; line-height: 1 !important; padding: 0 !important; margin: 0 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important; z-index: 10 !important;">&times;</button>
 
         </div>
 
@@ -50322,7 +50322,7 @@ function renderTempFotoParsialPreviews() {
 
         <img src="${url}" onclick="if (typeof bukaViewGambar === 'function') bukaViewGambar(['${url}'], 0)" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; border-radius: 3px; display: block;" title="Klik untuk memperbesar foto">
 
-        <button type="button" onclick="hapusTempFotoParsial(${idx})" title="Hapus foto ini" style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: #ffffff; border: 1px solid #ffffff; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">&times;</button>
+        <button type="button" onclick="hapusTempFotoParsial(${idx})" title="Hapus foto ini" style="position: absolute; top: -4px; right: -4px; background: #dc2626 !important; color: #ffffff !important; border: 1px solid #ffffff !important; width: 15px !important; height: 15px !important; border-radius: 50% !important; cursor: pointer !important; font-size: 11px !important; font-weight: 900 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; line-height: 1 !important; padding: 0 !important; margin: 0 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important; z-index: 10 !important;">&times;</button>
 
       </div>
 
