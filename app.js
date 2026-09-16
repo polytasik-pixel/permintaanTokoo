@@ -49239,66 +49239,88 @@ window.syncSupabaseBreakdownParsialToLocalCache = syncSupabaseBreakdownParsialTo
 
 
 function kirimNotifDanWaBreakdown(noSurat, partialId, statusType, extra = {}) {
-
   if (!noSurat || !partialId) return;
 
-
-
-  // JIKA APPROVAL DM DIMATIKAN (TANPA APPROVAL DM), JANGAN KIRIM NOTIFIKASI PENDING APPROVAL KE DM
-
-  if (statusType === 'PENDING' && window.REQUIRE_DM_APPROVAL_PARSIAL === false) {
-
+  // JIKA APPROVAL DM DIMATIKAN (TANPA APPROVAL DM / OTOMATIS APPROVE), JANGAN KIRIM WA ATAU NOTIFIKASI DM
+  if (window.REQUIRE_DM_APPROVAL_PARSIAL === false) {
     return;
-
   }
-
-  
 
   const reqs = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
-
   const req = reqs.find(r => r && (r.noSurat === noSurat || String(r.noSurat).trim().toUpperCase() === String(noSurat).trim().toUpperCase()));
-
   const targetArea = req ? (req.area || 'ALL') : 'ALL';
-
   const tokoName = req ? (req.toko || 'TOKO') : 'TOKO';
-
-
+  const directLink = typeof getAppDirectLink === 'function' ? getAppDirectLink(noSurat) : window.location.href;
 
   let msg = '';
-
   let targetRoles = ['SERVICE', 'ADMIN', 'DM'];
 
-
-
   if (statusType === 'PENDING') {
-
     targetRoles = ['DM', 'ADMIN'];
-
     msg = `[BREAKDOWN PARSIAL] MOHON APPROVAL DM - Surat Jalan Parsial #${noSurat}-${partialId} (${tokoName}) telah diajukan.`;
-
   } else if (statusType === 'APPROVE') {
-
     targetRoles = ['SERVICE', 'ADMIN', 'TOKO', 'GBJ'];
-
-    msg = `[BREAKDOWN PARSIAL] DISETUJUI DM - Surat Jalan Parsial #${noSurat}-${partialId} (${tokoName}) telah disetujui!`;
-
+    msg = `[BREAKDOWN PARSIAL] DISETUJUI DM - Surat Jalan Parsial #${noSurat}-${partialId} (${tokoName}) telah disetujui DM.`;
   } else if (statusType === 'REJECT') {
-
     targetRoles = ['SERVICE', 'ADMIN', 'TOKO', 'GBJ'];
-
     msg = `[BREAKDOWN PARSIAL] DITOLAK DM - Surat Jalan Parsial #${noSurat}-${partialId} (${tokoName}) ditolak DM. Alasan: ${extra.reason || '-'}`;
-
   }
 
-
-
+  // 1. Notifikasi Sistem (Lonceng Aplikasi)
   if (msg && typeof tambahNotifikasiSistem === 'function') {
-
     tambahNotifikasiSistem(targetRoles, targetArea, msg, noSurat);
-
   }
 
+  // 2. Notifikasi WhatsApp (WA)
+  if (typeof kirimNotifikasiWA === 'function') {
+    try {
+      const allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
+
+      if (statusType === 'PENDING') {
+        const dmUsers = allUsers.filter(u => u && (u.category === 'DM' || u.role === 'DM') && (u.area === targetArea || u.area === 'ALL' || u.area === 'PUSAT') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
+        dmUsers.forEach(dm => {
+          const dmName = dm.fullName || dm.username || 'Bapak/Ibu DM';
+          kirimNotifikasiWA(dm.phone,
+            `Yth. Bapak/Ibu *${dmName}*\n\n` +
+            `📦 *PENGAJUAN SURAT JALAN PARSIAL*\n` +
+            `Surat Jalan Parsial *#${noSurat}-${partialId}* (*${tokoName}*) telah diajukan.\n` +
+            `Status: *Menunggu Approval DM*.\n\n` +
+            `• Link Detail: ${directLink}\n\n` +
+            `Mohon persetujuan (Approval) dari DM. Terima kasih.`
+          );
+        });
+      } else if (statusType === 'APPROVE') {
+        const serviceUsers = allUsers.filter(u => u && (u.category === 'SERVICE' || u.category === 'HODS' || u.role === 'SERVICE') && (u.area === targetArea || u.area === 'ALL') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
+        serviceUsers.forEach(srv => {
+          const srvName = srv.fullName || srv.username || 'Bapak/Ibu Tim Service';
+          kirimNotifikasiWA(srv.phone,
+            `Yth. Bapak/Ibu *${srvName}*\n\n` +
+            `🎉 *SURAT JALAN PARSIAL DISETUJUI DM*\n` +
+            `Surat Jalan Parsial *#${noSurat}-${partialId}* (*${tokoName}*) telah *DISETUJUI (APPROVED) oleh DM*.\n\n` +
+            `• Link Detail: ${directLink}\n\n` +
+            `Terima kasih.`
+          );
+        });
+      } else if (statusType === 'REJECT') {
+        const serviceUsers = allUsers.filter(u => u && (u.category === 'SERVICE' || u.category === 'HODS' || u.role === 'SERVICE') && (u.area === targetArea || u.area === 'ALL') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
+        serviceUsers.forEach(srv => {
+          const srvName = srv.fullName || srv.username || 'Bapak/Ibu Tim Service';
+          kirimNotifikasiWA(srv.phone,
+            `Yth. Bapak/Ibu *${srvName}*\n\n` +
+            `❌ *SURAT JALAN PARSIAL DITOLAK DM*\n` +
+            `Surat Jalan Parsial *#${noSurat}-${partialId}* (*${tokoName}*) telah *DITOLAK oleh DM*.\n` +
+            `• Alasan Penolakan: *${extra.reason || '-'}*\n\n` +
+            `• Link Detail: ${directLink}\n\n` +
+            `Terima kasih.`
+          );
+        });
+      }
+    } catch (eWAParsial) {
+      console.warn('[WA PARSIAL DISPATCH ERROR]:', eWAParsial);
+    }
+  }
 }
+
 
 window.kirimNotifDanWaBreakdown = kirimNotifDanWaBreakdown;
 
