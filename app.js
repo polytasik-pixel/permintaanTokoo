@@ -1,4 +1,19 @@
 
+function findRequestByNoSuratOrId(noSurat) {
+  if (!noSurat) return null;
+  const requests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
+  const cleanTarget = String(noSurat).replace(/^#/g, '').trim().toUpperCase();
+
+  return requests.find(r => {
+    if (!r) return false;
+    const rNo = String(r.noSurat || '').replace(/^#/g, '').trim().toUpperCase();
+    const rId = String(r.id || '').replace(/^#/g, '').trim().toUpperCase();
+    return (rNo && rNo === cleanTarget) || (rId && rId === cleanTarget);
+  }) || null;
+}
+window.findRequestByNoSuratOrId = findRequestByNoSuratOrId;
+
+
 // ==========================================
 // HAK AKSES UPLOAD EXCEL SMART (KHUSUS AKUN SERVICE)
 // ==========================================
@@ -1264,6 +1279,7 @@ CREATE TABLE IF NOT EXISTS public.permintaan_toko (
 ALTER TABLE public.permintaan_toko ADD COLUMN IF NOT EXISTS service_approve BOOLEAN DEFAULT false;
 ALTER TABLE public.permintaan_toko ADD COLUMN IF NOT EXISTS service_ttd TEXT;
 ALTER TABLE public.permintaan_toko ADD COLUMN IF NOT EXISTS dm_ttd TEXT;
+ALTER TABLE public.permintaan_toko ADD COLUMN IF NOT EXISTS pdf_drive_url TEXT;
 
 
 
@@ -5212,17 +5228,8 @@ function loadNotificationList() {
 
 
   if (!userNotifs || userNotifs.length === 0) {
-
-    container.innerHTML = `<div style="text-align:center; padding:35px 20px; color:#64748b; font-size:13px; font-weight:600;">
-
-      <span class="material-symbols-rounded" style="font-size:36px; color:#94a3b8; display:block; margin-bottom:8px;">notifications_off</span>
-
-      BELUM ADA NOTIFIKASI MASUK.
-
-    </div>`;
-
+    container.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:13px;">Tidak ada notifikasi sistem.</div>';
     return;
-
   }
 
 
@@ -8443,37 +8450,40 @@ async function initSupabaseRealtimeEngine() {
       )
 
       .on(
-
         'postgres_changes',
-
         { event: '*', schema: 'public', table: 'breakdown_parsial' },
-
         async (payload) => {
-
           if (typeof syncSupabaseBreakdownParsialToLocalCache === 'function') {
-
-await syncSupabaseBreakdownParsialToLocalCache().catch(() => {});
-
+            await syncSupabaseBreakdownParsialToLocalCache().catch(() => {});
           }
-
           if (typeof refreshRealtimeUI === 'function') {
-
             refreshRealtimeUI();
-
           }
-
           if (typeof refreshOpenPopupsUI === 'function') {
-
             refreshOpenPopupsUI();
-
           }
-
         }
+      )
 
-      ).on(
-
+      .on(
         'postgres_changes',
+        { event: '*', schema: 'public', table: 'system_settings' },
+        (payload) => {
+          if (payload && payload.new && payload.new.setting_key === 'google_apps_script_url' && payload.new.setting_value) {
+            const cloudUrl = String(payload.new.setting_value || '').trim(); // JAGA KAPITALISASI ASLI
+            if (cloudUrl) {
+              window._activeAdminScriptUrl = cloudUrl;
+              try { appStorage.setItem(ADMIN_SCRIPT_URL_KEY, cloudUrl); } catch(e) {}
+              const input = document.getElementById('adminScriptUrlInput');
+              if (input) input.value = cloudUrl;
+              console.log('⚡ [REALTIME SUPABASE 1]: URL Google Apps Script diperbarui dari Cloud:', cloudUrl);
+            }
+          }
+        }
+      )
 
+      .on(
+        'postgres_changes',
         { event: '*', schema: 'public', table: 'users' },
 
         (payload) => {
@@ -8941,6 +8951,25 @@ function handleRealtimePermintaanToko(payload) {
 
 
     // 1. HANDLE SYSTEM CONFIG BROADCASTS IN REALTIME ACROSS ALL DEVICES
+    if (rawNoSurat === '__SYSTEM_SETTING_DM_AUTO_DOWNLOAD__' || rawNoSurat === '__SYSTEM_SETTING_DM_AUTO_DOWNLOAD') {
+      try {
+        let valStr = 'true';
+        if (payload.new && payload.new.catatan) {
+          valStr = String(payload.new.catatan) === 'false' ? 'false' : 'true';
+        }
+        appStorage.setItem('DM_AUTO_DOWNLOAD_PDF_ENABLED', valStr);
+        try { localStorage.setItem('DM_AUTO_DOWNLOAD_PDF_ENABLED', valStr); } catch(e) {}
+
+        const toggleEl = document.getElementById('toggleDmAutoDownloadPdf');
+        const labelEl = document.getElementById('labelDmAutoDownloadStatus');
+        if (toggleEl) toggleEl.checked = valStr === 'true';
+        if (labelEl) {
+          labelEl.innerText = valStr === 'true' ? 'AKTIF' : 'NONAKTIF';
+          labelEl.style.color = valStr === 'true' ? '#0284c7' : '#64748b';
+        }
+      } catch(e) {}
+      return;
+    }
 
     if (rawNoSurat === '__SYSTEM_PHOTO_FEATURE__') {
 
@@ -11346,6 +11375,8 @@ function sanitizePermintaanTokoRow(r) {
 
     forward_reject_reason: r.forwardRejectReason || r.forward_reject_reason || '',
 
+    pdf_drive_url: r.pdfDriveUrl || r.pdf_drive_url || r.pdfUrl || r.pdf_url || '',
+
 
 
     updated_at: new Date().toISOString()
@@ -12489,107 +12520,165 @@ function clearAllAppCacheAndData(force = false) {
 
 
 
+const DEFAULT_ADMIN_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyd07gNGgZpp6lEfpGXw9SCOlKcMtJd_XOstWUyI-mwxBZU6unXPLSqxYj4skdMnREJsw/exec';
+
 function getAdminScriptUrl() {
-
-  return (appStorage.getItem(ADMIN_SCRIPT_URL_KEY) || '').trim();
-
+  let saved = window._activeAdminScriptUrl || (appStorage.getItem(ADMIN_SCRIPT_URL_KEY) || '').trim();
+  if (!saved) {
+    saved = DEFAULT_ADMIN_SCRIPT_URL;
+  }
+  return saved;
 }
-
-
+window.getAdminScriptUrl = getAdminScriptUrl;
 
 function saveAdminScriptUrl(url) {
-
-  const clean = (url || '').trim();
-
-  if (clean) appStorage.setItem(ADMIN_SCRIPT_URL_KEY, clean);
-
-  else appStorage.removeItem(ADMIN_SCRIPT_URL_KEY);
-
+  const rawUrl = (url || '').trim(); // JAGA KAPITALISASI ASLI DARI HASIL PASTE (JANGAN UBAH KAPITAL/KECIL)
+  if (rawUrl) {
+    window._activeAdminScriptUrl = rawUrl;
+    appStorage.setItem(ADMIN_SCRIPT_URL_KEY, rawUrl);
+  } else {
+    window._activeAdminScriptUrl = '';
+    appStorage.removeItem(ADMIN_SCRIPT_URL_KEY);
+  }
 }
+window.saveAdminScriptUrl = saveAdminScriptUrl;
 
-
+async function loadAdminScriptUrlFromSupabase() {
+  const sb1 = (typeof supabase !== 'undefined' && supabase) || window.supabase || window.supabaseClient || window.supabaseAdmin;
+  if (sb1 && typeof sb1.from === 'function') {
+    try {
+      const { data } = await sb1.from('system_settings').select('setting_value').eq('setting_key', 'google_apps_script_url').maybeSingle();
+      if (data && data.setting_value) {
+        const cloudUrl = String(data.setting_value || '').trim(); // JAGA KAPITALISASI ASLI
+        if (cloudUrl) {
+          window._activeAdminScriptUrl = cloudUrl;
+          try { appStorage.setItem(ADMIN_SCRIPT_URL_KEY, cloudUrl); } catch(e) {}
+          const input = document.getElementById('adminScriptUrlInput');
+          if (input) input.value = cloudUrl;
+          console.log('✅ [SUPABASE 1 LOADED]: Google Apps Script URL =', cloudUrl);
+        }
+      }
+    } catch(e) {
+      console.warn('[LOAD SCRIPT URL SUPABASE 1 ERR]:', e);
+    }
+  }
+}
+window.loadAdminScriptUrlFromSupabase = loadAdminScriptUrlFromSupabase;
 
 function togglePasswordVisibility(targetId) {
-
   let targetFieldId = 'akunPassword';
-
   if (typeof targetId === 'string' && targetId) {
-
     targetFieldId = targetId;
-
   } else {
-
     const akunP = document.getElementById('akunPassword');
-
     const loginP = document.getElementById('password');
-
     if (akunP && akunP.offsetParent !== null) {
-
       targetFieldId = 'akunPassword';
-
     } else if (loginP && loginP.offsetParent !== null) {
-
       targetFieldId = 'password';
-
     }
-
   }
-
-
 
   const pswInput = document.getElementById(targetFieldId);
-
   if (!pswInput) return;
 
-
-
   const iconId = (pswInput.id === 'akunPassword') ? 'toggleAkunPasswordIcon' : 'togglePasswordIcon';
-
   const icon = document.getElementById(iconId);
 
-
-
   if (pswInput.type === 'password') {
-
     pswInput.type = 'text';
-
     if (icon) icon.textContent = 'visibility_off';
-
   } else {
-
     pswInput.type = 'password';
-
     if (icon) icon.textContent = 'visibility';
-
   }
-
 }
-
 window.togglePasswordVisibility = togglePasswordVisibility;
 
-
-
 function loadAdminScriptUrlInput() {
-
   const input = document.getElementById('adminScriptUrlInput');
-
   if (input) input.value = getAdminScriptUrl();
-
+  loadAdminScriptUrlFromSupabase();
 }
+window.loadAdminScriptUrlInput = loadAdminScriptUrlInput;
 
-
-
-function simpanAdminScriptUrl() {
-
+async function simpanAdminScriptUrlCloud() {
   const input = document.getElementById('adminScriptUrlInput');
+  const rawUrl = input ? String(input.value || '').trim() : ''; // JAGA KAPITALISASI ASLI DARI HASIL PASTE
 
-  const value = input ? input.value.trim() : '';
+  if (!rawUrl) {
+    if (typeof showNotif === 'function') showNotif('MOHON PASTE URL GOOGLE APPS SCRIPT DENGAN BENAR!', 'warning');
+    return;
+  }
 
-  saveAdminScriptUrl(value);
+  saveAdminScriptUrl(rawUrl);
 
-  showNotif(value ? 'URL GOOGLE APPS SCRIPT BERHASIL DISIMPAN!' : 'URL GOOGLE APPS SCRIPT DIHAPUS!', 'info');
+  if (typeof tampilkanLoadingProses === 'function') tampilkanLoadingProses('MENYIMPAN URL KE SUPABASE 1...');
 
+  // Simpan ke Supabase 1 (tabel system_settings)
+  const sb1 = (typeof supabase !== 'undefined' && supabase) || window.supabase || window.supabaseClient || window.supabaseAdmin;
+  if (sb1 && typeof sb1.from === 'function') {
+    try {
+      await sb1.from('system_settings').upsert({
+        setting_key: 'google_apps_script_url',
+        setting_value: rawUrl,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'setting_key' });
+      console.log('✅ [SUPABASE 1 REALTIME]: URL Google Apps Script berhasil disimpan!');
+    } catch(e) {
+      console.warn('[SUPABASE 1 SAVE SCRIPT URL ERR]:', e);
+    }
+  }
+
+  if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+  if (typeof showNotif === 'function') showNotif('URL GOOGLE APPS SCRIPT BERHASIL DISIMPAN KE SUPABASE 1 REALTIME!', 'success');
 }
+window.simpanAdminScriptUrlCloud = simpanAdminScriptUrlCloud;
+window.simpanAdminScriptUrl = simpanAdminScriptUrlCloud;
+
+async function tesKoneksiAdminScriptUrl() {
+  const input = document.getElementById('adminScriptUrlInput');
+  const targetUrl = input && input.value ? String(input.value).trim() : getAdminScriptUrl();
+  if (!targetUrl) {
+    if (typeof showNotif === 'function') showNotif('MOHON PASTE URL GOOGLE APPS SCRIPT TERLEBIH DAHULU!', 'warning');
+    return;
+  }
+
+  // 1. Deteksi Dini Kesalahan Format Tautan
+  if (targetUrl.includes('/edit') || targetUrl.includes('script.google.com/home')) {
+    if (typeof showNotif === 'function') showNotif('⚠️ SALAH PASTE! Jangan paste URL Editor Apps Script. Gunakan URL Web App (yang diakhiri /exec).', 'warning');
+    return;
+  }
+  if (targetUrl.includes('/dev')) {
+    if (typeof showNotif === 'function') showNotif('⚠️ SALAH PASTE! Tautan diakhiri /dev (Draft). Gunakan URL Deployment Resmi yang diakhiri /exec.', 'warning');
+    return;
+  }
+
+  if (typeof tampilkanLoadingProses === 'function') tampilkanLoadingProses('MENGETES KONEKSI GOOGLE APPS SCRIPT WEB APP...');
+  try {
+    const testUrl = targetUrl + (targetUrl.includes('?') ? '&' : '?') + 'action=get_settings&_t=' + Date.now();
+    const resp = await fetch(testUrl, { method: 'GET' });
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+    
+    if (resp.ok) {
+      const resJson = await resp.json().catch(() => ({}));
+      console.log('✅ [TES KONEKSI SCRIPT SUCCESS]:', resJson);
+      if (typeof showNotif === 'function') showNotif('✅ KONEKSI GOOGLE APPS SCRIPT BERHASIL TERHUBUNG! (HTTP 200 OK)', 'success');
+    } else {
+      console.warn('❌ [TES KONEKSI SCRIPT HTTP ERR]:', resp.status, resp.statusText);
+      if (resp.status === 404) {
+        if (typeof showNotif === 'function') showNotif('❌ KONEKSI GAGAL (HTTP 404)! Pengaturan Deployment di Apps Script belum disetel ke "Siapa saja / Anyone" atau perbarui New Deployment.', 'danger');
+      } else {
+        if (typeof showNotif === 'function') showNotif(`❌ KONEKSI GAGAL (HTTP ${resp.status})! Periksa Pengaturan Deployment di Apps Script.`, 'danger');
+      }
+    }
+  } catch(err) {
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+    console.error('❌ [TES KONEKSI SCRIPT ERR]:', err);
+    if (typeof showNotif === 'function') showNotif('❌ KONEKSI GAGAL TERHUBUNG! Pastikan URL diakhiri /exec dan disetel Akses Siapa Saja (Anyone).', 'danger');
+  }
+}
+window.tesKoneksiAdminScriptUrl = tesKoneksiAdminScriptUrl;
 
 
 
@@ -18819,7 +18908,8 @@ function getAudioContext() {
 if (typeof window !== 'undefined') {
   const unlockAudioEngine = function(e) {
     try {
-      if (!_audioCtx) {
+      // Only construct AudioContext upon actual user interaction gesture
+      if (!_audioCtx && e && (e.type === 'click' || e.type === 'touchstart' || e.type === 'mousedown' || e.type === 'keydown' || e.type === 'pointerdown')) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) {
           try { _audioCtx = new AudioCtx(); } catch(err) {}
@@ -21414,9 +21504,15 @@ async function uploadSignatureDataUrlToSupabaseStorage(dataUrl, customFileName =
 
 
 
-      const uploadedUrl = await uploadToSupabaseStorageDirect('photos', fileName, file, 'image/png', true);
+            let uploadedUrl = await uploadToSupabaseStorageDirect('photos', fileName, file, 'image/png', false);
+      if (!uploadedUrl) {
+        uploadedUrl = await uploadToSupabaseStorageDirect('bukti_permintaan', fileName, file, 'image/png', false);
+      }
+      if (!uploadedUrl) {
+        uploadedUrl = await uploadToSupabaseStorageDirect('photos', fileName, file, 'image/png', true);
+      }
       if (uploadedUrl) {
-        console.log('⚡ [TTD STORAGE UPLOAD SUCCESS]:', uploadedUrl);
+        console.log('⚡ [TTD STORAGE UPLOAD SUCCESS SUPABASE 2]:', uploadedUrl);
         return uploadedUrl;
       }
 
@@ -22936,21 +23032,20 @@ function isPdfButtonAllowed(req) {
 
 
   // 1. JIKA LOGIN ADALAH ADMIN: Admin selalu dapat melihat & mencetak PDF
-
   if (isAdmin) {
-
     return true;
-
   }
 
+  const isDM = role === 'DM';
 
+  // 2. KHUSUS USER ROLE DM: TOMBOL PDF SELALU MUNCUL UNTUK STATUS 'APPROVE' DAN 'DONE' / 'SELESAI'
+  if (isDM && (stUpper === 'APPROVE' || stUpper === 'DONE' || stUpper === 'SELESAI' || stUpper === 'PARSIAL' || stUpper === 'DONE PARSIAL')) {
+    return true;
+  }
 
-  // 2. UNTUK USER NON-ADMIN: DOKUMEN BER-STATUS 'DONE' / 'SELESAI' TIDAK MENAMPILKAN TOMBOL PDF
-
+  // 3. UNTUK USER NON-ADMIN & NON-DM: DOKUMEN BER-STATUS 'DONE' / 'SELESAI' TIDAK MENAMPILKAN TOMBOL PDF
   if (stUpper === 'DONE' || stUpper === 'SELESAI') {
-
     return false;
-
   }
 
 
@@ -23582,7 +23677,7 @@ function filterRiwayat() {
       <td style="padding: 10px 14px; text-align: center; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${r.tanggal || '-'}</td>
       <td style="padding: 10px 14px; text-align: center; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0 !important;">${r.noSurat || '-'}</td>
       <td style="padding: 10px 14px; color: #1e293b; border-bottom: 1px solid #e2e8f0 !important;"><div class="namaTokoWrap" style="color: #1e293b; font-weight: 700; text-transform: uppercase;">${r.toko || '-'}</div></td>
-      <td style="padding: 10px 14px; text-align: center; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${r.jenis || '-'}</td>
+      <td style="padding: 10px 14px; text-align: left !important; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${r.jenis || '-'}</td>
 <td style="padding: 10px 14px; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${cleanCatatanExport(r.catatan)}</td>
     `;
 
@@ -24172,178 +24267,28 @@ window.approveService = approveService;
 
 
 async function approveDM(noSurat) {
-
   if (!noSurat) return;
-
-  const requests = getRequestsFromDB();
-
+  const requests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
   const req = requests.find(r => r && String(r.noSurat).trim().toUpperCase() === String(noSurat).trim().toUpperCase());
-
   if (req && !req.serviceApprove) {
-
     if (typeof showNotif === 'function') showNotif('PERMINTAAN WAJIB DI-APPROVE OLEH SERVICE TERLEBIH DAHULU SEBELUM DM DAPAT MEMPROSES APPROVAL!', 'warning');
-
     return;
-
   }
 
-
-
   if (typeof showLoading === 'function') showLoading('MEMERIKSA DATA SERVER...');
-
   const isValid = await validatePreApprovalData(noSurat, 'DM');
-
   if (typeof hideLoading === 'function') hideLoading();
-
   if (!isValid) return;
 
-
-
-  showConfirm(`APPROVE PERMINTAAN #${noSurat}?`, async () => {
-
-    showLoading('MEMPROSES APPROVAL DM...');
-
-    const requests = getRequestsFromDB();
-
-    const idx = requests.findIndex(r => r && String(r.noSurat).trim().toUpperCase() === String(noSurat).trim().toUpperCase());
-
-    if (idx !== -1) {
-
-      if (!requests[idx].serviceApprove) {
-
-        if (typeof showNotif === 'function') showNotif('PERMINTAAN WAJIB DI-APPROVE OLEH SERVICE TERLEBIH DAHULU!', 'warning');
-
-        if (typeof hideLoading === 'function') hideLoading();
-
-        return;
-
-      }
-
-      requests[idx].status = 'APPROVE';
-
-      requests[idx].dmUserName = currentUser ? (currentUser.fullName || currentUser.username) : 'DM';
-
-
-
-      const dmSig = getUserRealSignature('DM', requests[idx].area, currentUser ? currentUser.username : '', requests[idx].dmUserName);
-
-      requests[idx].dmTTD = dmSig || '';
-
-
-
-      if (!requests[idx].log) requests[idx].log = [];
-
-      requests[idx].log.push({
-
-        action: 'APPROVE_DM',
-
-        user: currentUser ? (currentUser.fullName || currentUser.username) : 'DM',
-
-        notes: 'DISETUJUI DM',
-
-        time: `${getFormattedDateDDMMYYYY()} ${new Date().toLocaleTimeString('id-ID')}`
-
-      });
-
-
-
-      saveRequestsToDB(requests, requests[idx], 'UPDATE');
-
-      if (typeof showNotif === 'function') showNotif(`NO SURAT #${noSurat} BERHASIL DI-APPROVE DM`, 'success');
-
-      if (typeof loadRiwayat === 'function') loadRiwayat();
-
-      if (typeof loadDashboard === 'function') loadDashboard();
-
-      if (currentUser && currentUser.category === 'SERVICE' && currentUser.area === 'TSM' && typeof loadMasterDbTable === 'function') loadMasterDbTable();
-
-      if (typeof refreshDetailModalIfOpen === 'function') refreshDetailModalIfOpen(noSurat);
-
-      const btnRefDM = document.getElementById('btnRefreshDetailV2');
-
-      if (btnRefDM) btnRefDM.style.setProperty('display', 'none', 'important');
-
-
-
-      const docId = String(noSurat).replace(/[\/\.]/g, '_');
-
-      if (docId && typeof dbFirestore !== 'undefined' && dbFirestore) {
-
-        dbFirestore.collection('requests').doc(docId).set(requests[idx], { merge: true }).catch(e => console.warn(e));
-
-      }
-
-      if (docId && typeof dbRealtime !== 'undefined' && dbRealtime) {
-
-        dbRealtime.ref(`requests/${docId}`).set(requests[idx]).catch(e => console.warn(e));
-
-      }
-
-
-
-      if (typeof tambahNotifikasiSistem === 'function') {
-
-        tambahNotifikasiSistem(['SERVICE'], requests[idx].area, `PERMINTAAN #${noSurat} DARI ${requests[idx].toko} TELAH DISETUJUI DM. SILAKAN DIPROSES.`, noSurat);
-
-        tambahNotifikasiSistem(['TOKO', 'USER', 'SALES'], requests[idx].area, `PERMINTAAN SURAT #${noSurat} TELAH DISETUJUI (APPROVE). SILAKAN CETAK PDF DOKUMEN, BERI CAP & TTD, LALU UPLOAD BUKTI PERMINTAAN KE APLIKASI.`, noSurat);
-
-        // Kirim Notifikasi WA Otomatis ke Toko/Pemohon saat DM Approve
-        try {
-          const allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
-          const reqTokoUpper = String(requests[idx].createdBy || requests[idx].toko || '').toUpperCase();
-          const creator = allUsers.find(u => u && u.username && String(u.username).toUpperCase() === reqTokoUpper) ||
-                          allUsers.find(u => u && u.storeCode && String(u.storeCode).toUpperCase() === reqTokoUpper);
-
-          if (creator && creator.phone && creator.phone !== '-' && typeof kirimNotifikasiWA === 'function') {
-            const creatorName = creator.fullName || creator.username || requests[idx].toko;
-            const directLink = typeof getAppDirectLink === 'function' ? getAppDirectLink(noSurat) : window.location.href;
-            kirimNotifikasiWA(creator.phone,
-              `Yth. Bapak/Ibu *${creatorName}*\n\n` +
-              `\u2705 *PERMINTAAN DISETUJUI (DM APPROVE)*\n` +
-              `Pengajuan permintaan barang Surat *#${noSurat}* (*${requests[idx].toko}*) telah *DISETUJUI oleh DM Pusat*.\n\n` +
-              `\U0001f4c4 *Segera upload file PDF permintaan yang sudah dicap dan di-TTD ke aplikasi.*\n\n` +
-              `\u2022 Link Detail: ${directLink}\n\n` +
-              `Terima kasih.`
-            );
-
-          // Kirim Notifikasi WA Otomatis ke Tim Service Area saat DM Approve
-          const reqArea = requests[idx].area || 'ALL';
-          const serviceUsers = allUsers.filter(u => u && (u.category === 'SERVICE' || u.category === 'HODS' || u.role === 'SERVICE') && (u.area === reqArea || u.area === 'ALL') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
-
-          serviceUsers.forEach(srv => {
-            const srvName = srv.fullName || srv.username || 'Bapak/Ibu Tim Service';
-            const directLink = typeof getAppDirectLink === 'function' ? getAppDirectLink(noSurat) : window.location.href;
-            if (typeof kirimNotifikasiWA === 'function') {
-              kirimNotifikasiWA(srv.phone,
-                `Yth. Bapak/Ibu *${srvName}*\n\n` +
-                `🎉 *PERMINTAAN DISETUJUI DM*\n` +
-                `Pengajuan Surat *#${noSurat}* (*${requests[idx].toko}*) telah *DISETUJUI (APPROVED) oleh DM*.\n` +
-                `Silakan proses/kerjakan barang permintaan.\n\n` +
-                `• Link Detail: ${directLink}\n\n` +
-                `Terima kasih.`
-              );
-            }
-          });
-          }
-        } catch (eWA) {
-          console.warn('[DM APPROVE WA DISPATCH ERROR]:', eWA);
-        }
-
-      }
-
-    }
-
-    if (typeof hideLoading === 'function') hideLoading();
-
-  });
-
+  if (typeof bukaModalApprovalDMCanvas === 'function') {
+    bukaModalApprovalDMCanvas(noSurat);
+  }
 }
-
 window.approveDM = approveDM;
 
 
 
-let tempArtemisPhotos = [];
+var tempArtemisPhotos = window.tempArtemisPhotos || [];
 
 
 
@@ -25028,10 +24973,13 @@ function prosesSimpanDoneDenganBuktiArtemis() {
         if (pIdx !== -1) {
 
           partials[pIdx].status = 'DONE';
-
           partials[pIdx].done_by = currentUser ? (currentUser.fullName || currentUser.username) : 'SERVICE';
-
           partials[pIdx].done_at = new Date().toISOString();
+
+          if (noKodeBukti) {
+            partials[pIdx].catatan = noKodeBukti;
+            partials[pIdx].keterangan = noKodeBukti;
+          }
 
 
 
@@ -25058,6 +25006,12 @@ function prosesSimpanDoneDenganBuktiArtemis() {
           const mainIdx = requests.findIndex(r => r && String(r.noSurat || '').trim().toUpperCase() === targetNo);
 
           if (mainIdx !== -1) {
+            if (noKodeBukti) {
+              const prevCat = requests[mainIdx].catatan || requests[mainIdx].keterangan || '';
+              const newCat = prevCat ? (prevCat + ' | ' + noKodeBukti) : noKodeBukti;
+              requests[mainIdx].catatan = newCat;
+              requests[mainIdx].keterangan = newCat;
+            }
 
             if (Array.isArray(partials[pIdx].items)) {
 
@@ -25250,10 +25204,14 @@ function prosesSimpanDoneDenganBuktiArtemis() {
         // STATUS PART: JIKA DIISI TEKS MAKA GUNAKAN TEKS TERSEBUT, JIKA KOSONG MAKA DEFAULT = "DIPENUHI"
 
         const elKetArtemis = document.getElementById('inputKetPartArtemis');
-
         const customKetPart = elKetArtemis ? elKetArtemis.value.trim() : '';
-
         const finalStatusPart = customKetPart || 'DIPENUHI';
+
+        // SIMPAN ISI KOTAK INPUTKETPARTARTEMIS KE KOLOM CATATAN DAN KETERANGAN
+        if (customKetPart) {
+          requests[idx].catatan = customKetPart;
+          requests[idx].keterangan = customKetPart;
+        }
 
 
 
@@ -31007,15 +30965,11 @@ window.formatSupabaseStorageUrl = formatSupabaseStorageUrl;
 
 
 function renderSafeTtdImageTag(sigUrl, styleAttr = 'max-height: 52px; max-width: 100%; object-fit: contain;') {
-
   if (!isValidSig(sigUrl)) return '';
-
   const fullUrl = formatSupabaseStorageUrl(sigUrl);
-
   if (!fullUrl) return '';
 
-  return `<img src="${fullUrl}" style="${styleAttr}" onerror="this.style.display='none';">`;
-
+  return `<img src="${fullUrl}" style="${styleAttr}; background: transparent; mix-blend-mode: multiply;" onerror="this.style.display='none';">`;
 }
 
 window.renderSafeTtdImageTag = renderSafeTtdImageTag;
@@ -31023,141 +30977,79 @@ window.renderSafeTtdImageTag = renderSafeTtdImageTag;
 
 
 async function preloadAndConvertTtdToBase64(sigUrl) {
-
   if (!sigUrl || typeof sigUrl !== 'string') return '';
-
   const fullUrl = formatSupabaseStorageUrl(sigUrl);
-
   if (!fullUrl) return '';
 
-
-
   if (fullUrl.startsWith('data:image/')) {
-
+    if (typeof getThickCroppedSignatureBase64 === 'function') {
+      return await getThickCroppedSignatureBase64(fullUrl);
+    }
     return fullUrl;
-
   }
-
-
 
   if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
-
     return '';
-
   }
 
-
-
-  const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(''), 1500));
-
-
+  const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(''), 2500));
 
   const convertPromise = (async () => {
-
     try {
-
       const isSupabase = fullUrl.includes('supabase.co') || fullUrl.includes('storage/v1/object');
-
       const fetchUrl = isSupabase ? fullUrl : (fullUrl.includes('?') ? `${fullUrl}&_t=${Date.now()}` : `${fullUrl}?_t=${Date.now()}`);
-
       
-
       const res = await fetch(fetchUrl, { cache: 'force-cache' });
-
       if (res.ok) {
-
         const blob = await res.blob();
-
         if (blob && blob.size > 0) {
-
           const base64Str = await new Promise((resolve) => {
-
             const reader = new FileReader();
-
             reader.onloadend = () => resolve(reader.result || '');
-
             reader.onerror = () => resolve('');
-
             reader.readAsDataURL(blob);
-
           });
-
           if (base64Str && base64Str.startsWith('data:image/')) {
-
+            if (typeof getThickCroppedSignatureBase64 === 'function') {
+              return await getThickCroppedSignatureBase64(base64Str);
+            }
             return base64Str;
-
           }
-
         }
-
-      } else {
-
-        return '';
-
       }
-
-    } catch (e) {
-
-      return '';
-
-    }
-
-
-
-    try {
-
-      const imgBase64 = await new Promise((resolve) => {
-
-        const img = new Image();
-
-        img.crossOrigin = 'anonymous';
-
-        img.onload = () => {
-
-          try {
-
-            const canvas = document.createElement('canvas');
-
-            canvas.width = img.naturalWidth || img.width || 300;
-
-            canvas.height = img.naturalHeight || img.height || 300;
-
-            const ctx = canvas.getContext('2d');
-
-            ctx.drawImage(img, 0, 0);
-
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-
-            resolve(dataUrl.startsWith('data:image/') ? dataUrl : '');
-
-          } catch(e) {
-
-            resolve('');
-
-          }
-
-        };
-
-        img.onerror = () => resolve('');
-
-        img.src = fullUrl;
-
-      });
-
-      if (imgBase64) return imgBase64;
-
     } catch (e) {}
 
+    try {
+      const imgBase64 = await new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || img.width || 300;
+            canvas.height = img.naturalHeight || img.height || 300;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = canvas.toDataURL('image/png');
+            resolve(dataUrl.startsWith('data:image/') ? dataUrl : '');
+          } catch(e) {
+            resolve('');
+          }
+        };
+        img.onerror = () => resolve('');
+        img.src = fullUrl;
+      });
 
+      if (imgBase64 && typeof getThickCroppedSignatureBase64 === 'function') {
+        return await getThickCroppedSignatureBase64(imgBase64);
+      }
+      if (imgBase64) return imgBase64;
+    } catch (e) {}
 
     return '';
-
   })();
 
-
-
   return Promise.race([convertPromise, timeoutPromise]).catch(() => '');
-
 }
 
 window.preloadAndConvertTtdToBase64 = preloadAndConvertTtdToBase64;
@@ -31665,202 +31557,82 @@ function renderFullPdfPreviewDocument(modelId) {
 
 
   container.innerHTML = `
+      <div style="font-family: 'Poppins', Arial, sans-serif; background: #ffffff; color: #0f172a; padding: 18px; border-radius: 4px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        
+        <!-- Header Title: PERMINTAAN TOKO -->
+        <div style="text-align: center; font-size: 18px; font-weight: 800; border-bottom: 2.5px solid #0f172a; padding-bottom: 10px; margin-bottom: 16px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+          PERMINTAAN TOKO
+        </div>
 
-    <div style="background: #ffffff; color: #0f172a; width: 100%; max-width: 720px; margin: 0 auto; padding: 20px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.18); font-family: Arial, sans-serif; box-sizing: border-box; border: 1px solid #cbd5e1;">
-
-      ${headerTitleHtml}
-
-
-
-      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 10px; padding: 2px 0; flex-wrap: wrap; gap: 6px; background: transparent; border: none;">
-
-        <div><b>NO SURAT:</b> <span style="color:${m.color}; font-weight:800;">PRM/2026/001</span></div>
-
-        <div><b>TOKO:</b> TOKO UTAMA BANDUNG</div>
-
-        <div><b>TANGGAL:</b> 01/08/2026</div>
-
-        <div><b>JENIS:</b> UNIT</div>
-
-      </div>
-
-
-
-      <table style="width: 100%; border-collapse: collapse; font-size: 10.5px; margin-bottom: 10px; border: 1px solid #cbd5e1;">
-
-        <thead>
-
-          <tr style="background: ${tableHeaderBg}; color: #ffffff;">
-
-            <th style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; white-space: nowrap !important; width: 1%;">NO</th>
-
-            <th style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: left; white-space: nowrap !important; width: 1%;">TIPE BARANG</th>
-
-            <th style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: left; white-space: nowrap !important; width: 1%;">NO. SERI</th>
-
-            <th style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: left; white-space: normal !important;">NAMA BARANG</th>
-
-            <th style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: left; white-space: normal !important;">ALASAN</th>
-
-            <th style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; white-space: nowrap !important; width: 1%;">QTY</th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
-
+        <!-- Info Grid -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11.5px; color: #0f172a;">
           <tr>
-
-            <td style="text-align:center; padding:6px 8px; border: 1px solid #cbd5e1;">1</td>
-
-            <td style="padding:6px 8px; border: 1px solid #cbd5e1;">AC DAIKIN 2 PK</td>
-
-            <td style="padding:6px 8px; border: 1px solid #cbd5e1;">SN-889920112</td>
-
-            <td style="padding:6px 8px; border: 1px solid #cbd5e1;">UNIT INDOOR AC 2PK</td>
-
-            <td style="padding:6px 8px; border: 1px solid #cbd5e1;">KOMPRESOR BOCOR FREON</td>
-
-            <td style="text-align:center; padding:6px 8px; border: 1px solid #cbd5e1; font-weight: 400 ;">1</td>
-
+            <td style="padding: 3px 0; width: 85px; font-weight: 600; color: #0f172a;">NO SURAT</td>
+            <td style="padding: 3px 4px; width: 12px; color: #0f172a;">:</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0284c7;">${req.noSurat || '-'}</td>
+            <td style="padding: 3px 0; width: 85px; font-weight: 600; color: #0f172a; text-align: left;">TANGGAL</td>
+            <td style="padding: 3px 4px; width: 12px; color: #0f172a; text-align: center;">:</td>
+            <td style="padding: 3px 0; font-weight: 400; color: #0f172a; width: 120px;">${req.tanggal || '-'}</td>
           </tr>
-
           <tr>
-
-            <td style="text-align:center; padding:6px 8px; border: 1px solid #cbd5e1;">2</td>
-
-            <td style="padding:6px 8px; border: 1px solid #cbd5e1;">KULKAS 2 PINTU</td>
-
-            <td style="padding:6px 8px; border: 1px solid #cbd5e1;">SN-776655100</td>
-
-            <td style="padding:6px 8px; border: 1px solid #cbd5e1;">UNIT KULKAS INVERTER</td>
-
-            <td style="padding:6px 8px; border: 1px solid #cbd5e1;">KARET PINTU LONGGAR</td>
-
-            <td style="text-align:center; padding:6px 8px; border: 1px solid #cbd5e1; font-weight: 400 ;">1</td>
-
+            <td style="padding: 3px 0; font-weight: 600; color: #0f172a;">TOKO</td>
+            <td style="padding: 3px 4px; color: #0f172a;">:</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0f172a; text-transform: uppercase;">${req.toko || '-'}</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0f172a; text-align: left;">JENIS</td>
+            <td style="padding: 3px 4px; color: #0f172a; text-align: center;">:</td>
+            <td style="padding: 3px 0; text-transform: uppercase; font-weight: 400; color: #0f172a;">${req.jenis || 'DEFAULT'}</td>
           </tr>
+        </table>
 
-        </tbody>
+        <!-- Section Label -->
+        <div style="font-size: 11.5px; font-weight: 700; margin-bottom: 8px; color: #0f172a; text-transform: uppercase;">DETAIL PERMINTAAN:</div>
 
-      </table>
+        <!-- Items Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px; border: 1px solid #cbd5e1; table-layout: auto;">
+          <thead>
+            <tr style="background: #0284c7; color: #ffffff;">
+              <th style="width: 1%; white-space: nowrap; text-align: center; padding: 7px 6px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600;">NO</th>
+              <th style="width: 1%; white-space: nowrap; padding: 7px 10px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">TIPE BARANG</th>
+              <th style="width: 1%; white-space: nowrap; padding: 7px 10px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">NO. SERI</th>
+              <th style="padding: 7px 10px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left; white-space: normal; word-break: break-word;">PERMINTAAN BARANG</th>
+              <th style="padding: 7px 10px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left; white-space: normal; word-break: break-word;">ALASAN PERMINTAAN</th>
+              <th style="width: 1%; white-space: nowrap; text-align: center; padding: 7px 6px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600;">QTY</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRowsHtml || '<tr><td colspan="6" style="text-align: center; padding: 10px; color: #94a3b8; font-weight: 400;">Tidak ada item</td></tr>'}
+          </tbody>
+        </table>
 
-
-
-      <div style="margin-top: 8px; margin-bottom: 12px; font-size: 11px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1.5px solid #0284c7; border-left: 5px solid ${tableHeaderBg}; padding: 8px 12px; border-radius: 6px; color: #0f172a;">
-
-        <div style="font-weight: 800; font-size: 11px; color: ${tableHeaderBg === '#0f172a' ? '#0369a1' : tableHeaderBg}; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
-
-          <span>📌</span> CATATAN / KETERANGAN PERMINTAAN:
-
-        </div>
-
-        <div style="font-weight: 600; color: #0f172a; font-size: 11px;">MOHON DIPROSES SECEPATNYA UNTUK KEPERLUAN DISPLAY TOKO UTAMA.</div>
-
-      </div>
-
-
-
-      <div style="display: flex; justify-content: space-around; font-size: 10.5px; text-align: center; margin-top: 14px;">
-
-        <div style="width: 30%; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; text-align: center;">
-
-          <div style="font-weight: 500; color: #0f172a; text-transform: uppercase;">PEMOHON</div>
-
-          <div style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 48px;">
-
-            ${(() => {
-
-              const isGBJDemo = currentUser && (
-
-                currentUser.category === 'GBJ' || 
-
-                String(currentUser.username || '').toUpperCase().includes('GBJ') || 
-
-                String(currentUser.fullName || '').toUpperCase().includes('GBJ')
-
-              );
-
-              const tokoSig = isGBJDemo ? ((currentUser && isValidSig(currentUser.ttd)) ? currentUser.ttd : getUserRealSignature('GBJ')) : '';
-
-              return renderSafeTtdImageTag(tokoSig, 'max-height: 46px; max-width: 90%; object-fit: contain;');
-
-            })()}
-
+        <!-- TTD Area Summary -->
+        <div style="display: flex; justify-content: space-around; text-align: center; font-size: 11px; margin-top: 10px; gap: 8px;">
+          <div style="flex: 1; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; background: #f8fafc;">
+            <div style="font-weight: 500; color: #475569; margin-bottom: 2px;">PEMOHON (TOKO)</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center;">
+              ${pemohonTtdImg || '<span style="color: #94a3b8; font-style: italic; font-weight: 400;">ADA</span>'}
+            </div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">${req.pemohonUserName || req.pemohon || 'Pemohon Toko'}</div>
           </div>
 
-          <div>
-
-            <div style="font-weight: 500; color: #0f172a; font-size: 11px;">TOKO UTAMA</div>
-
-            <div style="font-size: 9.5px; color: #475569; margin-top: 1px; text-transform: uppercase;">TOKO</div>
-
+          <div style="flex: 1; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; background: #f8fafc;">
+            <div style="font-weight: 500; color: #0284c7; margin-bottom: 2px;">SERVICE (VERIFIKATOR)</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center;">
+              ${serviceTtdImg}
+            </div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">${req.serviceUserName || 'Service'}</div>
           </div>
 
-        </div>
-
-
-
-        <div style="width: 30%; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; text-align: center;">
-
-          <div style="font-weight: 500; color: #0f172a; text-transform: uppercase;">DIPERIKSA</div>
-
-          <div style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 48px;">
-
-            ${(() => {
-
-              const srvSig = getUserRealSignature('SERVICE', 'BDG');
-
-              return srvSig ? `<img src="${srvSig}" style="max-height: 46px; max-width: 90%; object-fit: contain;">` : '';
-
-            })()}
-
+          <div style="flex: 1; border: 1px dashed #16a34a; padding: 6px; border-radius: 4px; background: #f0fdf4;">
+            <div style="font-weight: 500; color: #16a34a; margin-bottom: 2px;">DM (DITANDATANGANI DI BEWAH)</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center; color: #16a34a; font-weight: 500; font-size: 10px;">
+              [ SILAKAN TTD DI CANVAS ]
+            </div>
+            <div style="font-size: 10px; color: #16a34a; font-weight: 500; margin-top: 2px;">${currentUser ? (currentUser.fullName || currentUser.username) : 'DM'}</div>
           </div>
-
-          <div>
-
-            <div style="font-weight: 500; color: #0f172a; font-size: 11px;">SERVICE BANDUNG</div>
-
-            <div style="font-size: 9.5px; color: #475569; margin-top: 1px; text-transform: uppercase;">HODS BANDUNG</div>
-
-          </div>
-
-        </div>
-
-
-
-        <div style="width: 30%; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; text-align: center;">
-
-          <div style="font-weight: 500; color: #0f172a; text-transform: uppercase;">DISETUJUI</div>
-
-          <div style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 48px;">
-
-            ${(() => {
-
-              const dmSig = getUserRealSignature('DM');
-
-              return dmSig ? `<img src="${dmSig}" style="max-height: 46px; max-width: 90%; object-fit: contain;">` : '';
-
-            })()}
-
-          </div>
-
-          <div>
-
-            <div style="font-weight: 500; color: #0f172a; font-size: 11px;">${typeof getNamaDM === 'function' ? getNamaDM() : 'FERRY EDIYANTO'}</div>
-
-            <div style="font-size: 9.5px; color: #475569; margin-top: 1px; text-transform: uppercase;">DISTRICT MANAGER</div>
-
-          </div>
-
         </div>
 
       </div>
-
-    </div>
-
-  `;
+    `;
 
 }
 
@@ -31897,8 +31669,103 @@ function tutupPilihanCetakPdf() {
 window.tutupPilihanCetakPdf = tutupPilihanCetakPdf;
 
 
+
+function formatGoogleDriveViewUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://drive.google.com/file/d/${match[1]}/view`;
+  }
+  return url;
+}
+window.formatGoogleDriveViewUrl = formatGoogleDriveViewUrl;
+window.formatGoogleDrivePreviewUrl = formatGoogleDriveViewUrl;
+
+function bukaCustomPdfDriveViewer(driveUrl, noSurat = '') {
+  if (!driveUrl) {
+    if (typeof showNotif === 'function') showNotif('LINK DOKUMEN GOOGLE DRIVE TIDAK TERSEDIA!', 'warning');
+    return;
+  }
+  const viewUrl = formatGoogleDriveViewUrl(driveUrl);
+  window.open(viewUrl, '_blank');
+}
+window.bukaCustomPdfDriveViewer = bukaCustomPdfDriveViewer;
+
+
+
+function formatGoogleDriveDownloadUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+  }
+  return url;
+}
+window.formatGoogleDriveDownloadUrl = formatGoogleDriveDownloadUrl;
 
 async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
+  const reqList = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
+  const targetNoStr = String(noSurat || '').replace(/^#/g, '').trim().toUpperCase();
+  const matchedReq = reqList.find(r => r && (
+    String(r.noSurat || '').replace(/^#/g, '').trim().toUpperCase() === targetNoStr ||
+    String(r.id || '').replace(/^#/g, '').trim().toUpperCase() === targetNoStr
+  ));
+
+  let directPdfUrl = (matchedReq && (matchedReq.pdf_drive_url || matchedReq.pdfDriveUrl)) || '';
+
+  // Coba periksa database Supabase jika URL belum ada di memori lokal
+  if (!directPdfUrl && typeof supabase !== 'undefined' && supabase) {
+    try {
+      const { data } = await supabase.from('permintaan_toko').select('pdf_drive_url').or(`no_surat.eq.${targetNoStr},id.eq.${targetNoStr}`).maybeSingle();
+      if (data && data.pdf_drive_url) {
+        directPdfUrl = data.pdf_drive_url;
+        if (matchedReq) {
+          matchedReq.pdf_drive_url = directPdfUrl;
+          matchedReq.pdfDriveUrl = directPdfUrl;
+        }
+      }
+    } catch(e) {}
+  }
+
+  const uploadedPdf = typeof getUploadedPdfFromRequest === 'function' ? getUploadedPdfFromRequest(matchedReq) : null;
+  const partials = typeof getPartialBreakdownsFromDB === 'function' ? getPartialBreakdownsFromDB(targetNoStr) : [];
+  const approvedPartials = partials.filter(p => p && (p.status === 'APPROVE' || p.status === 'DONE'));
+
+  const hasDriveUrl = Boolean(directPdfUrl && String(directPdfUrl).trim() !== '');
+  const hasUploadedPdf = Boolean(uploadedPdf && String(uploadedPdf).trim() !== '');
+  const hasPartials = Boolean(approvedPartials && approvedPartials.length > 0);
+
+  // 1. JIKA TERDAPAT PILIHAN DOKUMEN LAIN (LAMPIRAN BUKTI TERUPLOAD ATAU PARSIAL): TAMPILKAN POPUP PILIHAN
+  if (includePhotos !== 'skipChoice' && (hasUploadedPdf || hasPartials)) {
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+    if (typeof bukaModalPilihanCetakPdf === 'function') {
+      bukaModalPilihanCetakPdf(targetNoStr, matchedReq);
+    }
+    return;
+  }
+
+  // 2. JIKA HANYA ADA PDF_DRIVE_URL SAJA (TANPA LAMPIRAN BUKTI & TANPA PARSIAL): LANGSUNG UNDUH FILE PDF
+  if (includePhotos !== 'skipChoice' && hasDriveUrl && !hasUploadedPdf && !hasPartials) {
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+    const cleanNoSurat = targetNoStr.replace(/[\/\\:\*\?"<>\|]/g, '_');
+    const fileName = `SURAT_PERMINTAAN_${cleanNoSurat}.pdf`;
+    if (typeof downloadPdfFile === 'function') {
+      downloadPdfFile(directPdfUrl, fileName);
+    } else {
+      const dlUrl = typeof formatGoogleDriveDownloadUrl === 'function' ? formatGoogleDriveDownloadUrl(directPdfUrl) : directPdfUrl;
+      const a = document.createElement('a');
+      a.href = dlUrl;
+      a.download = fileName;
+      a.target = '_self';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 300);
+    }
+    return;
+  }
+
+  // 3. JIKA TIDAK ADA PDF_DRIVE_URL ATAU DIPILIH SURAT UTAMA DARI MODAL PILIHAN: LANGSUNG BUKA DIALOG CETAK BROWSER ASLI (WINDOW.PRINT)
+  autoPrint = true;
 
   if (typeof tampilkanLoadingProses === 'function') {
 
@@ -31948,19 +31815,7 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
 
     }
 
-    // JIKA TERDAPAT FILE PDF BUKTI PERMINTAAN TERUNGGAH: LANGSUNG MASUK MODE PRINT (PRINT DIALOG BROWSER)!
-    const uploadedPdf = typeof getUploadedPdfFromRequest === 'function' ? getUploadedPdfFromRequest(req) : null;
-    if (uploadedPdf) {
-      if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
-      if (typeof cetakPdfUploadedLangsung === 'function') {
-        cetakPdfUploadedLangsung(uploadedPdf, `Dokumen_Bukti_PDF_${req.noSurat || noSurat}.pdf`);
-      } else if (typeof bukaViewPdfDokumen === 'function') {
-        bukaViewPdfDokumen(uploadedPdf, `Dokumen_Bukti_PDF_${req.noSurat || noSurat}.pdf`);
-      } else {
-        window.open(uploadedPdf, '_blank');
-      }
-      return;
-    }
+
 
 
 
@@ -32152,18 +32007,18 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
 
 
 
-    let dmTTD = req.dmTTD || '';
+    let dmTTD = '';
+    const reqStatusUpper = String(req.status || '').toUpperCase();
+    const isApprovedByDM = reqStatusUpper === 'APPROVE' || reqStatusUpper === 'APPROVED' || reqStatusUpper === 'DONE';
 
-    if (!isValidSig(dmTTD)) {
-
-      dmTTD = getUserRealSignature('DM', '', '', dmName) || (dmUser ? dmUser.ttd : '');
-
-    }
-
-    if (!isValidSig(dmTTD)) {
-
-      dmTTD = ''; // KOSONGKAN DI PDF JIKA USER DM BELUM MEMPUNYAI TTD
-
+    if (isApprovedByDM) {
+      dmTTD = req.dmTTD || '';
+      if (!isValidSig(dmTTD)) {
+        dmTTD = getUserRealSignature('DM', '', '', dmName) || (dmUser ? dmUser.ttd : '');
+      }
+      if (!isValidSig(dmTTD)) {
+        dmTTD = ''; // KOSONGKAN DI PDF JIKA USER DM BELUM MEMPUNYAI TTD
+      }
     }
 
 
@@ -32300,7 +32155,7 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
 
     const pSec = String(nowPrint.getSeconds()).padStart(2, '0');
 
-    const timestampStr = `DICETAK PADA ${pDay}/${pMonth}/${pYear} Pukul ${pHour}:${pMin}:${pSec}`;
+    const timestampStr = ``;
 
 
 
@@ -32447,43 +32302,22 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
 
 
                                   <table class="pdf-info-table" style="width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 20px; font-size: 12px; background: transparent; border: none;">
-
             <tr>
-
-              <td style="padding: 4px 0; width: 85px; font-weight: 400 ; color: #0f172a; border: none; white-space: nowrap;">NO SURAT</td>
-
-              <td style="padding: 4px 12px 4px 8px; width: 14px; font-weight: 400 ; color: #0f172a; border: none; text-align: center;">:</td>
-
-              <td style="padding: 4px 20px 4px 0; width: 100%; font-weight: 400 ; color: #0284c7; border: none; letter-spacing: 0.2px;">${req.noSurat}</td>
-
-              
-
-              <td style="padding: 4px 0; width: 75px; font-weight: 400 ; color: #0f172a; border: none; white-space: nowrap; text-align: left;">TANGGAL</td>
-
-              <td style="padding: 4px 12px 4px 8px; width: 14px; font-weight: 400 ; color: #0f172a; border: none; text-align: center;">:</td>
-
-              <td style="padding: 4px 0; width: 105px; font-weight: 400 ; color: #0f172a; border: none; white-space: nowrap; text-align: left;">${(typeof formatDateDDMMYYYYString === 'function') ? formatDateDDMMYYYYString(req.tanggal) : (req.tanggal || '-')}</td>
-
+              <td style="padding: 4px 0; width: 85px; font-weight: 400; color: #0f172a; border: none; white-space: nowrap;">NO SURAT</td>
+              <td style="padding: 4px 4px; width: 12px; font-weight: 400; color: #0f172a; border: none; text-align: center;">:</td>
+              <td style="padding: 4px 20px 4px 0; font-weight: 600; color: #0284c7; border: none; letter-spacing: 0.2px; width: 100%;">${req.noSurat}</td>
+              <td style="padding: 4px 0; width: 75px; font-weight: 400; color: #0f172a; border: none; white-space: nowrap; text-align: left;">TANGGAL</td>
+              <td style="padding: 4px 4px; width: 12px; font-weight: 400; color: #0f172a; border: none; text-align: center;">:</td>
+              <td style="padding: 4px 0; font-weight: 400; color: #0f172a; border: none; white-space: nowrap; text-align: left;">${(typeof formatDateDDMMYYYYString === 'function') ? formatDateDDMMYYYYString(req.tanggal) : (req.tanggal || '-')}</td>
             </tr>
-
             <tr>
-
-              <td style="padding: 4px 0; font-weight: 400 ; color: #0f172a; border: none; white-space: nowrap;">TOKO</td>
-
-              <td style="padding: 4px 12px 4px 8px; font-weight: 400 ; color: #0f172a; border: none; text-align: center;">:</td>
-
-              <td style="padding: 4px 20px 4px 0; font-weight: 400 ; color: #0f172a; border: none; text-transform: uppercase;">${req.toko}</td>
-
-              
-
-              <td style="padding: 4px 0; font-weight: 400 ; color: #0f172a; border: none; white-space: nowrap; text-align: left;">JENIS</td>
-
-              <td style="padding: 4px 12px 4px 8px; font-weight: 400 ; color: #0f172a; border: none; text-align: center;">:</td>
-
-              <td style="padding: 4px 0; font-weight: 400 ; color: #0f172a; border: none; text-transform: uppercase; white-space: nowrap; text-align: left;">${req.jenis || 'DEFAULT'}</td>
-
+              <td style="padding: 4px 0; font-weight: 400; color: #0f172a; border: none; white-space: nowrap;">TOKO</td>
+              <td style="padding: 4px 4px; font-weight: 400; color: #0f172a; border: none; text-align: center;">:</td>
+              <td style="padding: 4px 20px 4px 0; font-weight: 600; color: #0f172a; border: none; text-transform: uppercase; width: 100%;">${req.toko}</td>
+              <td style="padding: 4px 0; font-weight: 400; color: #0f172a; border: none; white-space: nowrap; text-align: left;">JENIS</td>
+              <td style="padding: 4px 4px; font-weight: 400; color: #0f172a; border: none; text-align: center;">:</td>
+              <td style="padding: 4px 0; font-weight: 400; color: #0f172a; border: none; text-transform: uppercase; white-space: nowrap; text-align: left;">${req.jenis || 'DEFAULT'}</td>
             </tr>
-
           </table>
 
 
@@ -35409,13 +35243,81 @@ function filterListUserChat(query) {
   if (filtered.length === 0) {
 
     container.innerHTML = `
+      <div style="font-family: 'Poppins', Arial, sans-serif; background: #ffffff; color: #0f172a; padding: 18px; border-radius: 4px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        
+        <!-- Header Title: PERMINTAAN TOKO -->
+        <div style="text-align: center; font-size: 18px; font-weight: 800; border-bottom: 2.5px solid #0f172a; padding-bottom: 10px; margin-bottom: 16px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+          PERMINTAAN TOKO
+        </div>
 
-      <div style="padding:20px; text-align:center; color:var(--text-muted); font-size:12px;">
+        <!-- Info Grid -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11.5px; color: #0f172a;">
+          <tr>
+            <td style="padding: 3px 0; width: 85px; font-weight: 600; color: #0f172a;">NO SURAT</td>
+            <td style="padding: 3px 4px; width: 12px; color: #0f172a;">:</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0284c7;">${req.noSurat || '-'}</td>
+            <td style="padding: 3px 0; width: 85px; font-weight: 600; color: #0f172a; text-align: left;">TANGGAL</td>
+            <td style="padding: 3px 4px; width: 12px; color: #0f172a; text-align: center;">:</td>
+            <td style="padding: 3px 0; font-weight: 400; color: #0f172a; width: 120px;">${req.tanggal || '-'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 3px 0; font-weight: 600; color: #0f172a;">TOKO</td>
+            <td style="padding: 3px 4px; color: #0f172a;">:</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0f172a; text-transform: uppercase;">${req.toko || '-'}</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0f172a; text-align: left;">JENIS</td>
+            <td style="padding: 3px 4px; color: #0f172a; text-align: center;">:</td>
+            <td style="padding: 3px 0; text-transform: uppercase; font-weight: 400; color: #0f172a;">${req.jenis || 'DEFAULT'}</td>
+          </tr>
+        </table>
 
-        Tidak ada user / toko yang cocok.
+        <!-- Section Label -->
+        <div style="font-size: 11.5px; font-weight: 700; margin-bottom: 8px; color: #0f172a; text-transform: uppercase;">DETAIL PERMINTAAN:</div>
+
+        <!-- Items Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px; border: 1px solid #cbd5e1;">
+          <thead>
+            <tr style="background: #0284c7; color: #ffffff;">
+              <th style="width: 32px; text-align: center; padding: 7px 4px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600;">NO</th>
+              <th style="width: 110px; padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">TIPE BARANG</th>
+              <th style="width: 110px; padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">NO. SERI</th>
+              <th style="padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">PERMINTAAN BARANG</th>
+              <th style="padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">ALASAN PERMINTAAN</th>
+              <th style="width: 42px; text-align: center; padding: 7px 4px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600;">QTY</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRowsHtml || '<tr><td colspan="6" style="text-align: center; padding: 10px; color: #94a3b8; font-weight: 400;">Tidak ada item</td></tr>'}
+          </tbody>
+        </table>
+
+        <!-- TTD Area Summary -->
+        <div style="display: flex; justify-content: space-around; text-align: center; font-size: 11px; margin-top: 10px; gap: 8px;">
+          <div style="flex: 1; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; background: #f8fafc;">
+            <div style="font-weight: 500; color: #475569; margin-bottom: 2px;">PEMOHON (TOKO)</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center;">
+              ${pemohonTtdImg || '<span style="color: #94a3b8; font-style: italic; font-weight: 400;">ADA</span>'}
+            </div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">${req.pemohonUserName || req.pemohon || 'Pemohon Toko'}</div>
+          </div>
+
+          <div style="flex: 1; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; background: #f8fafc;">
+            <div style="font-weight: 500; color: #0284c7; margin-bottom: 2px;">SERVICE (VERIFIKATOR)</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center;">
+              ${serviceTtdImg}
+            </div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">${req.serviceUserName || 'Service'}</div>
+          </div>
+
+          <div style="flex: 1; border: 1px dashed #16a34a; padding: 6px; border-radius: 4px; background: #f0fdf4;">
+            <div style="font-weight: 500; color: #16a34a; margin-bottom: 2px;">DM (DITANDATANGANI DI BEWAH)</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center; color: #16a34a; font-weight: 500; font-size: 10px;">
+              [ SILAKAN TTD DI CANVAS ]
+            </div>
+            <div style="font-size: 10px; color: #16a34a; font-weight: 500; margin-top: 2px;">${currentUser ? (currentUser.fullName || currentUser.username) : 'DM'}</div>
+          </div>
+        </div>
 
       </div>
-
     `;
 
     return;
@@ -40706,7 +40608,86 @@ function prosesBukaAkun() {
 
     if (typeof updateAkunSelectedSoundBadge === 'function') updateAkunSelectedSoundBadge();
 
+    // TAMPILKAN PENGATURAN KHUSUS KHUSUS USER LOGIN DM
+    const secDm = document.getElementById('sectionDmAutoDownloadSetting');
+    if (secDm) {
+      const isDm = typeof checkIsDMUser === 'function' ? checkIsDMUser() : (role.toUpperCase().includes('DM') || role.toUpperCase().includes('DISTRICT'));
+      if (isDm) {
+        secDm.style.display = 'block';
+        const isEnabled = typeof isDmAutoDownloadPdfEnabled === 'function' ? isDmAutoDownloadPdfEnabled() : true;
+        const toggleEl = document.getElementById('toggleDmAutoDownloadPdf');
+        const labelEl = document.getElementById('labelDmAutoDownloadStatus');
+        if (toggleEl) toggleEl.checked = isEnabled;
+        if (labelEl) {
+          labelEl.innerText = isEnabled ? 'AKTIF' : 'NONAKTIF';
+          labelEl.style.color = isEnabled ? '#0284c7' : '#64748b';
+        }
+      } else {
+        secDm.style.display = 'none';
+      }
+    }
+
   }, 100);
+
+function checkIsDMUser() {
+  if (!currentUser) return false;
+  const role = String(currentUser.category || currentUser.kategori || currentUser.role || currentUser.username || '').toUpperCase();
+  const uname = String(currentUser.username || '').toUpperCase();
+  const name = String(currentUser.fullName || currentUser.nama || '').toUpperCase();
+  return role.includes('DM') || role.includes('DISTRICT') || uname.includes('DM') || name.includes('DISTRICT MANAGER');
+}
+window.checkIsDMUser = checkIsDMUser;
+
+function isDmAutoDownloadPdfEnabled() {
+  const val = appStorage.getItem('DM_AUTO_DOWNLOAD_PDF_ENABLED');
+  if (val === null || val === undefined) return true;
+  return val === 'true' || val === true;
+}
+window.isDmAutoDownloadPdfEnabled = isDmAutoDownloadPdfEnabled;
+
+async function simpanPengaturanDmAutoDownloadPdf(isChecked) {
+  const newStateStr = isChecked ? 'true' : 'false';
+  appStorage.setItem('DM_AUTO_DOWNLOAD_PDF_ENABLED', newStateStr);
+  try { localStorage.setItem('DM_AUTO_DOWNLOAD_PDF_ENABLED', newStateStr); } catch(e) {}
+
+  const labelEl = document.getElementById('labelDmAutoDownloadStatus');
+  if (labelEl) {
+    labelEl.innerText = isChecked ? 'AKTIF' : 'NONAKTIF';
+    labelEl.style.color = isChecked ? '#0284c7' : '#64748b';
+  }
+
+  if (typeof showNotif === 'function') {
+    showNotif(`AUTO-DOWNLOAD PDF DM: ${isChecked ? 'AKTIF & OTOMATIS TERUNDUH' : 'NONAKTIF (HANYA SIMPAN GOOGLE DRIVE & SUPABASE)'}`, isChecked ? 'success' : 'info');
+  }
+
+  const sb1 = (typeof supabase !== 'undefined' && supabase) || window.supabase || window.supabaseClient || window.supabaseAdmin;
+  if (sb1 && typeof sb1.from === 'function') {
+    try {
+      await sb1.from('system_settings').upsert({
+        setting_key: 'dm_auto_download_pdf',
+        setting_value: newStateStr,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'setting_key' });
+    } catch(err1) {}
+
+    try {
+      await sb1.from('permintaan_toko').upsert({
+        id: '__SYSTEM_SETTING_DM_AUTO_DOWNLOAD',
+        no_surat: '__SYSTEM_SETTING_DM_AUTO_DOWNLOAD',
+        catatan: newStateStr,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' });
+      console.log('✅ [SUPABASE REALTIME SYNC SUCCESS]: DM Auto Download setting =', newStateStr);
+    } catch(err2) {
+      console.warn('[SUPABASE REALTIME SYNC ERR]:', err2);
+    }
+  }
+
+  if (typeof broadcastRealtimeDataChange === 'function') {
+    broadcastRealtimeDataChange('__SYSTEM_SETTING_DM_AUTO_DOWNLOAD');
+  }
+}
+window.simpanPengaturanDmAutoDownloadPdf = simpanPengaturanDmAutoDownloadPdf;
 
 
 
@@ -52261,21 +52242,23 @@ window.bukaModalArtemisParsial = bukaModalArtemisParsial;
 
 
 async function cetakPdfSuratParsial(noSurat, partialId) {
-
   if (!noSurat) return;
 
   const requestsCheck = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
-
   const targetReq = requestsCheck.find(r => r && (r.noSurat === noSurat || String(r.noSurat).trim().toUpperCase() === String(noSurat).trim().toUpperCase()));
 
   if (targetReq && typeof isPdfButtonAllowed === 'function' && !isPdfButtonAllowed(targetReq)) {
-
     if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
-
     showNotif('TOMBOL / AKSES CETAK PDF TIDAK TERSEDIA UNTUK DOKUMEN BER-STATUS BATAL / REJECT!', 'warning');
-
     return;
+  }
 
+  const directDriveUrl = targetReq ? (targetReq.pdf_drive_url || targetReq.pdfDriveUrl) : '';
+  if (directDriveUrl) {
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+    const previewUrl = formatGoogleDrivePreviewUrl(directDriveUrl);
+    window.open(previewUrl, '_blank');
+    return;
   }
 
   if (typeof tampilkanLoadingProses === 'function') {
@@ -52406,18 +52389,18 @@ async function cetakPdfSuratParsial(noSurat, partialId) {
 
 
 
-    let dmTTD = req.dmTTD || '';
+    let dmTTD = '';
+    const reqStatusUpper = String(req.status || '').toUpperCase();
+    const isApprovedByDM = reqStatusUpper === 'APPROVE' || reqStatusUpper === 'APPROVED' || reqStatusUpper === 'DONE';
 
-    if ((!dmTTD || (typeof isValidSig === 'function' && !isValidSig(dmTTD))) && typeof getUserRealSignature === 'function') {
-
-      dmTTD = getUserRealSignature('DM', '', '', dmName) || (dmUser ? dmUser.ttd : '');
-
-    }
-
-    if (typeof isValidSig === 'function' && !isValidSig(dmTTD)) {
-
-      dmTTD = '';
-
+    if (isApprovedByDM) {
+      dmTTD = req.dmTTD || '';
+      if ((!dmTTD || (typeof isValidSig === 'function' && !isValidSig(dmTTD))) && typeof getUserRealSignature === 'function') {
+        dmTTD = getUserRealSignature('DM', '', '', dmName) || (dmUser ? dmUser.ttd : '');
+      }
+      if (typeof isValidSig === 'function' && !isValidSig(dmTTD)) {
+        dmTTD = '';
+      }
     }
 
 
@@ -52511,10 +52494,19 @@ async function cetakPdfSuratParsial(noSurat, partialId) {
         ]);
 
         if (pConverted) pemohonTTD = pConverted;
-
         if (sConverted) serviceTTD = sConverted;
-
         if (dConverted) dmTTD = dConverted;
+
+        if (typeof getThickCroppedSignatureBase64 === 'function') {
+          const [pBold, sBold, dBold] = await Promise.all([
+            getThickCroppedSignatureBase64(pemohonTTD),
+            getThickCroppedSignatureBase64(serviceTTD),
+            getThickCroppedSignatureBase64(dmTTD)
+          ]);
+          if (pBold) pemohonTTD = pBold;
+          if (sBold) serviceTTD = sBold;
+          if (dBold) dmTTD = dBold;
+        }
 
         if (Array.isArray(photoConvertedList) && photoConvertedList.length > 0) {
 
@@ -52546,7 +52538,7 @@ async function cetakPdfSuratParsial(noSurat, partialId) {
 
     const pSec = String(nowPrint.getSeconds()).padStart(2, '0');
 
-    const timestampStr = `DICETAK PADA ${pDay}/${pMonth}/${pYear} Pukul ${pHour}:${pMin}:${pSec}`;
+    const timestampStr = ``;
 
 
 
@@ -52803,8 +52795,14 @@ window.cetakPdfSuratParsial = cetakPdfSuratParsial;
 function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
   if (!noSurat) return;
 
-  if (!targetReq && typeof getRequestByNoSurat === 'function') {
-    targetReq = getRequestByNoSurat(noSurat);
+  const targetNoStr = String(noSurat || '').replace(/^#/g, '').trim().toUpperCase();
+
+  if (!targetReq) {
+    const reqList = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
+    targetReq = reqList.find(r => r && (
+      String(r.noSurat || '').replace(/^#/g, '').trim().toUpperCase() === targetNoStr ||
+      String(r.id || '').replace(/^#/g, '').trim().toUpperCase() === targetNoStr
+    ));
   }
 
   // JIKA SURAT BERSTATUS REJECT: BLOKIR DENGAN NOTIFIKASI
@@ -52817,17 +52815,10 @@ function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
   const partials = typeof getPartialBreakdownsFromDB === 'function' ? getPartialBreakdownsFromDB(noSurat) : [];
   const approvedPartials = partials.filter(p => p && (p.status === 'APPROVE' || p.status === 'DONE'));
 
-  // JIKA TIDAK ADA SURAT PARSIAL: JALANKAN PROSES STANDAR (LANGSUNG CETAK BUKTI PDF TER-UPLOAD ATAU SURAT UTAMA INDUK)!
-  if (!approvedPartials || approvedPartials.length === 0) {
-    if (uploadedPdf) {
-      if (typeof cetakPdfUploadedLangsung === 'function') {
-        cetakPdfUploadedLangsung(uploadedPdf, `Dokumen_Bukti_PDF_${(targetReq && targetReq.noSurat) || noSurat}.pdf`);
-      } else if (typeof bukaViewPdfDokumen === 'function') {
-        bukaViewPdfDokumen(uploadedPdf, `Dokumen_Bukti_PDF_${(targetReq && targetReq.noSurat) || noSurat}.pdf`);
-      } else {
-        window.open(uploadedPdf, '_blank');
-      }
-    } else if (typeof bukaPdfModal === 'function') {
+  // JIKA HANYA ADA 1 DOKUMEN (HANYA SURAT UTAMA INDUK): LANGSUNG BUKA SURAT UTAMA
+  const hasMultiplePdfs = Boolean(uploadedPdf) || (approvedPartials && approvedPartials.length > 0);
+  if (!hasMultiplePdfs) {
+    if (typeof bukaPdfModal === 'function') {
       bukaPdfModal(noSurat, true, true);
     }
     return;
@@ -52840,7 +52831,7 @@ function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
   let optionsGridHtml = `
     <div style="display: flex !important; flex-wrap: wrap !important; gap: 10px !important; align-items: stretch !important; justify-content: flex-start !important; width: auto !important; max-width: 100% !important; max-height: calc(80vh - 100px) !important; overflow-y: auto !important;">
       <!-- OPTION 1: SURAT UTAMA INDUK -->
-      <button type="button" onclick="document.getElementById('modalPilihanCetakPdf').remove(); bukaPdfModal('${noSurat}', true, true);" style="flex: 1 1 170px !important; max-width: 210px !important; min-height: 64px !important; padding: 12px 14px !important; border-radius: 4px !important; border: 1.5px solid #0284c7 !important; background: #f0f9ff !important; color: #0369a1 !important; font-weight: 800 !important; font-size: 12.5px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; transition: all 0.15s ease !important; box-shadow: 0 4px 10px rgba(2,132,199,0.12) !important;">
+      <button type="button" onclick="document.getElementById('modalPilihanCetakPdf').remove(); bukaPdfModal('${noSurat}', 'skipChoice', false);" style="flex: 1 1 170px !important; max-width: 210px !important; min-height: 64px !important; padding: 12px 14px !important; border-radius: 4px !important; border: 1.5px solid #0284c7 !important; background: #f0f9ff !important; color: #0369a1 !important; font-weight: 800 !important; font-size: 12.5px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; transition: all 0.15s ease !important; box-shadow: 0 4px 10px rgba(2,132,199,0.12) !important;">
         <span style="display: flex !important; align-items: center !important; gap: 8px !important; text-align: left !important;">
           <span class="material-symbols-rounded" style="color: #0284c7 !important; font-size: 22px !important; flex-shrink: 0 !important;">description</span> 
           <span>
@@ -52868,19 +52859,24 @@ function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
         `;
       }).join('')}
 
-      <!-- OPTION N+1: PDF BUKTI PERMINTAAN TERUNGGAH (JIKA TERSEDIA) -->
-      ${uploadedPdf ? `
-        <button type="button" onclick="document.getElementById('modalPilihanCetakPdf').remove(); if(typeof cetakPdfUploadedLangsung==='function'){ cetakPdfUploadedLangsung('${uploadedPdf}', 'Dokumen_Bukti_PDF_${noSurat}.pdf'); } else { window.open('${uploadedPdf}', '_blank'); }" style="flex: 1 1 170px !important; max-width: 210px !important; min-height: 64px !important; padding: 12px 14px !important; border-radius: 4px !important; border: 1.5px solid #16a34a !important; background: #f0fdf4 !important; color: #15803d !important; font-weight: 800 !important; font-size: 12.5px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; transition: all 0.15s ease !important; box-shadow: 0 4px 10px rgba(22,163,74,0.12) !important;">
-          <span style="display: flex !important; align-items: center !important; gap: 8px !important; text-align: left !important;">
-            <span class="material-symbols-rounded" style="color: #16a34a !important; font-size: 22px !important; flex-shrink: 0 !important;">picture_as_pdf</span> 
-            <span>
-              <div style="font-size: 12px !important; font-weight: 800 !important; color: #15803d !important; line-height: 1.2 !important;">PDF DOKUMEN TERUNGGAH</div>
-              <div style="font-size: 10px !important; color: #166534 !important; font-weight: 700 !important; margin-top: 2px !important;">FILE LAMPIRAN</div>
+      <!-- OPTION N+1: BUKTI PERMINTAAN TERUNGGAH (JIKA TERSEDIA) -->
+      ${(() => {
+        if (!uploadedPdf) return '';
+        const safeUploadedPdf = String(uploadedPdf).replace(/'/g, "\\'");
+        const safeNoSurat = String(noSurat).replace(/'/g, "\\'");
+        return `
+          <button type="button" onclick="document.getElementById('modalPilihanCetakPdf').remove(); if(typeof openBuktiPermintaanPreview==='function'){ openBuktiPermintaanPreview('${safeUploadedPdf}', '${safeNoSurat}'); } else if(typeof cetakPdfUploadedLangsung==='function'){ cetakPdfUploadedLangsung('${safeUploadedPdf}', 'Dokumen_Bukti_PDF_${safeNoSurat}.pdf'); } else { window.open('${safeUploadedPdf}', '_blank'); }" style="flex: 1 1 170px !important; max-width: 210px !important; min-height: 64px !important; padding: 12px 14px !important; border-radius: 4px !important; border: 1.5px solid #16a34a !important; background: #f0fdf4 !important; color: #15803d !important; font-weight: 800 !important; font-size: 12.5px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; transition: all 0.15s ease !important; box-shadow: 0 4px 10px rgba(22,163,74,0.12) !important;">
+            <span style="display: flex !important; align-items: center !important; gap: 8px !important; text-align: left !important;">
+              <span class="material-symbols-rounded" style="color: #16a34a !important; font-size: 22px !important; flex-shrink: 0 !important;">picture_as_pdf</span> 
+              <span>
+                <div style="font-size: 12px !important; font-weight: 800 !important; color: #15803d !important; line-height: 1.2 !important;">BUKTI PERMINTAAN</div>
+                <div style="font-size: 10px !important; color: #166534 !important; font-weight: 700 !important; margin-top: 2px !important;">FILE LAMPIRAN</div>
+              </span>
             </span>
-          </span>
-          <span class="material-symbols-rounded" style="font-size: 18px !important; color: #16a34a !important; flex-shrink: 0 !important;">chevron_right</span>
-        </button>
-      ` : ''}
+            <span class="material-symbols-rounded" style="font-size: 18px !important; color: #16a34a !important; flex-shrink: 0 !important;">chevron_right</span>
+          </button>
+        `;
+      })()}
     </div>
   `;
 
@@ -52913,6 +52909,7 @@ function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
 }
 
 window.tampilkanPilihanCetakPdf = tampilkanPilihanCetakPdf;
+window.bukaModalPilihanCetakPdf = tampilkanPilihanCetakPdf;
 
 
 
@@ -53357,76 +53354,14 @@ window.validatePreApprovalData = validatePreApprovalData;
 // =============================================================================
 
 function tampilkanModalOfflineSafety(customMessage = null) {
-  let modal = document.getElementById('popupOfflineSafetyModal');
-
-  // FAILSAFE: Jika elemen belum ada di DOM, buat secara dinamis langsung di body
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'popupOfflineSafetyModal';
-    modal.className = 'popupOverlay';
-    modal.innerHTML = `
-      <div style="position: relative !important; width: min(350px, 88vw) !important; max-width: 88vw !important; background: #ffffff !important; color: #0f172a !important; border-radius: 4px !important; border: 1px solid #000000 !important; box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; margin: auto !important; box-sizing: border-box !important;">
-        <div style="background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 10px 14px !important; border-radius: 4px 4px 0 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; box-sizing: border-box !important;">
-          <div style="display: flex !important; align-items: center !important; gap: 6px !important;">
-            <span class="material-symbols-rounded" style="font-size: 18px !important; color: #ffffff !important; font-weight: 400 !important;">wifi_off</span>
-            <span style="font-size: 12.5px !important; font-weight: 400 !important; color: #ffffff !important; text-transform: uppercase !important; letter-spacing: 0.3px !important;">KONEKSI INTERNET TERPUTUS</span>
-          </div>
-        </div>
-        <div style="padding: 14px 14px !important; background: #ffffff !important; color: #0f172a !important; display: flex !important; flex-direction: column !important; gap: 10px !important; box-sizing: border-box !important; text-align: center !important; align-items: center !important;">
-          <div style="width: 38px !important; height: 38px !important; border-radius: 4px !important; background: #fef2f2 !important; color: #ef4444 !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-bottom: 2px !important; border: 1px solid #fca5a5 !important;">
-            <span class="material-symbols-rounded" style="font-size: 22px !important; color: #ef4444 !important;">signal_wifi_connected_no_internet_4</span>
-          </div>
-          <p id="popupOfflineMessage" style="font-size: 12px !important; font-weight: 400 !important; color: #1e293b !important; margin: 0 !important; line-height: 1.4 !important;">
-            Koneksi internet perangkat Anda terputus! Silakan periksa Wi-Fi / Data Seluler Anda.
-          </p>
-          <div style="display: flex !important; width: 100% !important; margin-top: 4px !important;">
-            <button type="button" class="btnOkNotif" onclick="cekKoneksiInternetCloudActive(true)" style="width: 100% !important; height: 34px !important; min-height: 34px !important; border-radius: 4px !important; background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; border: 1px solid #000000 !important; font-weight: 700 !important; font-size: 12px !important; cursor: pointer !important; box-sizing: border-box !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">COBA LAGI</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-  } else {
-    // Pindahkan ke paling akhir body agar selalu di urutan rendering terdepan
-    try { document.body.appendChild(modal); } catch(e) {}
-  }
-
-  const msgEl = document.getElementById('popupOfflineMessage');
-  if (msgEl && customMessage) {
-    msgEl.textContent = customMessage;
-  }
-
-  if (modal) {
-    modal.style.setProperty('display', 'flex', 'important');
-    modal.style.setProperty('position', 'fixed', 'important');
-    modal.style.setProperty('inset', '0', 'important');
-    modal.style.setProperty('top', '0', 'important');
-    modal.style.setProperty('left', '0', 'important');
-    modal.style.setProperty('right', '0', 'important');
-    modal.style.setProperty('bottom', '0', 'important');
-    modal.style.setProperty('width', '100vw', 'important');
-    modal.style.setProperty('height', '100vh', 'important');
-    modal.style.setProperty('z-index', '2147483647', 'important');
-    modal.style.setProperty('background', 'rgba(0, 0, 0, 0.85)', 'important');
-    modal.style.setProperty('background-color', 'rgba(0, 0, 0, 0.85)', 'important');
-    modal.style.setProperty('visibility', 'visible', 'important');
-    modal.style.setProperty('opacity', '1', 'important');
-    modal.style.setProperty('pointer-events', 'auto', 'important');
-    modal.classList.add('show');
-  }
+  // Completely disabled as requested by user
+  tutupModalOfflineSafety();
+  return;
 }
 
 window.tampilkanModalOfflineSafety = tampilkanModalOfflineSafety;
 
-
-
 function tutupModalOfflineSafety() {
-  // SAFETY GUARD: Jika perangkat masih offline (misal Mode Pesawat), Modal JANGAN BISA DITUTUP!
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    tampilkanModalOfflineSafety('MODE PESAWAT / INTERNET TERPUTUS! Silakan matikan Mode Pesawat atau aktifkan Wi-Fi / Data Seluler.');
-    return;
-  }
-
   const modal = document.getElementById('popupOfflineSafetyModal');
   if (modal) {
     modal.style.setProperty('display', 'none', 'important');
@@ -54810,8 +54745,80 @@ function renderBuktiPermintaanModalGrid() {
 
   if (totalFiles === 0) {
     container.innerHTML = `
-      <div style="width: 100%; color: #94a3b8; font-size: 11.5px; font-weight: 500; padding: 4px 0; text-align: center;">
-        Belum ada file PDF terpilih
+      <div style="font-family: 'Poppins', Arial, sans-serif; background: #ffffff; color: #0f172a; padding: 18px; border-radius: 4px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        
+        <!-- Header Title: PERMINTAAN TOKO -->
+        <div style="text-align: center; font-size: 18px; font-weight: 800; border-bottom: 2.5px solid #0f172a; padding-bottom: 10px; margin-bottom: 16px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+          PERMINTAAN TOKO
+        </div>
+
+        <!-- Info Grid -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11.5px; color: #0f172a;">
+          <tr>
+            <td style="padding: 3px 0; width: 85px; font-weight: 600; color: #0f172a;">NO SURAT</td>
+            <td style="padding: 3px 4px; width: 12px; color: #0f172a;">:</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0284c7;">${req.noSurat || '-'}</td>
+            <td style="padding: 3px 0; width: 85px; font-weight: 600; color: #0f172a; text-align: left;">TANGGAL</td>
+            <td style="padding: 3px 4px; width: 12px; color: #0f172a; text-align: center;">:</td>
+            <td style="padding: 3px 0; font-weight: 400; color: #0f172a; width: 120px;">${req.tanggal || '-'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 3px 0; font-weight: 600; color: #0f172a;">TOKO</td>
+            <td style="padding: 3px 4px; color: #0f172a;">:</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0f172a; text-transform: uppercase;">${req.toko || '-'}</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0f172a; text-align: left;">JENIS</td>
+            <td style="padding: 3px 4px; color: #0f172a; text-align: center;">:</td>
+            <td style="padding: 3px 0; text-transform: uppercase; font-weight: 400; color: #0f172a;">${req.jenis || 'DEFAULT'}</td>
+          </tr>
+        </table>
+
+        <!-- Section Label -->
+        <div style="font-size: 11.5px; font-weight: 700; margin-bottom: 8px; color: #0f172a; text-transform: uppercase;">DETAIL PERMINTAAN:</div>
+
+        <!-- Items Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px; border: 1px solid #cbd5e1;">
+          <thead>
+            <tr style="background: #0284c7; color: #ffffff;">
+              <th style="width: 32px; text-align: center; padding: 7px 4px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600;">NO</th>
+              <th style="width: 110px; padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">TIPE BARANG</th>
+              <th style="width: 110px; padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">NO. SERI</th>
+              <th style="padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">PERMINTAAN BARANG</th>
+              <th style="padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">ALASAN PERMINTAAN</th>
+              <th style="width: 42px; text-align: center; padding: 7px 4px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600;">QTY</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRowsHtml || '<tr><td colspan="6" style="text-align: center; padding: 10px; color: #94a3b8; font-weight: 400;">Tidak ada item</td></tr>'}
+          </tbody>
+        </table>
+
+        <!-- TTD Area Summary -->
+        <div style="display: flex; justify-content: space-around; text-align: center; font-size: 11px; margin-top: 10px; gap: 8px;">
+          <div style="flex: 1; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; background: #f8fafc;">
+            <div style="font-weight: 500; color: #475569; margin-bottom: 2px;">PEMOHON (TOKO)</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center;">
+              ${pemohonTtdImg || '<span style="color: #94a3b8; font-style: italic; font-weight: 400;">ADA</span>'}
+            </div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">${req.pemohonUserName || req.pemohon || 'Pemohon Toko'}</div>
+          </div>
+
+          <div style="flex: 1; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; background: #f8fafc;">
+            <div style="font-weight: 500; color: #0284c7; margin-bottom: 2px;">SERVICE (VERIFIKATOR)</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center;">
+              ${serviceTtdImg}
+            </div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">${req.serviceUserName || 'Service'}</div>
+          </div>
+
+          <div style="flex: 1; border: 1px dashed #16a34a; padding: 6px; border-radius: 4px; background: #f0fdf4;">
+            <div style="font-weight: 500; color: #16a34a; margin-bottom: 2px;">DM (DITANDATANGANI DI BEWAH)</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center; color: #16a34a; font-weight: 500; font-size: 10px;">
+              [ SILAKAN TTD DI CANVAS ]
+            </div>
+            <div style="font-size: 10px; color: #16a34a; font-weight: 500; margin-top: 2px;">${currentUser ? (currentUser.fullName || currentUser.username) : 'DM'}</div>
+          </div>
+        </div>
+
       </div>
     `;
     return;
@@ -57838,9 +57845,11 @@ window.addEventListener('resize', function () {
    ============================================================================= */
 
 document.addEventListener('input', function (e) {
-
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
-
+    // PENGEQUALIAN KHUSUS: Abaikan kotak paste URL Google Apps Script (#adminScriptUrlInput) atau elemen dengan class no-uppercase / preserve-case
+    if (e.target.id === 'adminScriptUrlInput' || (e.target.classList && (e.target.classList.contains('no-uppercase') || e.target.classList.contains('preserve-case')))) {
+      return;
+    }
     const type = String(e.target.type || '').toLowerCase();
 
     if (type !== 'password' && type !== 'file' && type !== 'checkbox' && type !== 'radio') {
@@ -57967,75 +57976,115 @@ window.isPdfUrl = isPdfUrl;
 
 function getUploadedPdfFromRequest(req) {
   if (!req) return null;
-  const bukP = typeof parsePhotosArray === 'function' ? parsePhotosArray(req.bukti_permintaan || req.buktiPermintaan) : [];
+
+  // 1. Cek bidang khusus Bukti Permintaan (Array atau String URL/Data)
+  const bukP = typeof parsePhotosArray === 'function' 
+    ? parsePhotosArray(req.bukti_permintaan || req.buktiPermintaan || req.bukti_penerimaan || req.buktiPenerimaan || req.file_bukti || req.fileBukti || req.pdf_url || req.pdfUrl) 
+    : [];
+
+  const validBuktiFiles = Array.isArray(bukP) ? bukP.filter(f => f && typeof f === 'string' && f.trim() !== '') : [];
+  if (validBuktiFiles.length > 0) {
+    // Utamakan file berformat PDF jika ada
+    const pdfFile = validBuktiFiles.find(f => typeof isPdfUrl === 'function' && isPdfUrl(f));
+    return pdfFile || validBuktiFiles[0];
+  }
+
+  // 2. Fallback jika tersimpan di req.photos atau req.artemisPhotos
   const regP = typeof parsePhotosArray === 'function' ? parsePhotosArray(req.photos) : [];
   const artP = typeof parsePhotosArray === 'function' ? parsePhotosArray(req.artemisPhotos) : [];
-  const allFiles = [...bukP, ...regP, ...artP];
-  const pdfFile = allFiles.find(f => isPdfUrl(f));
+  const otherFiles = [...regP, ...artP].filter(f => f && typeof f === 'string' && f.trim() !== '');
+  const pdfFile = otherFiles.find(f => typeof isPdfUrl === 'function' && isPdfUrl(f));
   return pdfFile || null;
 }
 window.getUploadedPdfFromRequest = getUploadedPdfFromRequest;
 
-function downloadPdfFile(pdfUrl, fileName = 'Dokumen_Bukti.pdf') {
-
+function downloadPdfFile(pdfUrl, fileName = 'SURAT_PERMINTAAN.pdf') {
   if (!pdfUrl) {
-
     if (typeof showNotif === 'function') showNotif('URL FILE PDF TIDAK VALID!', 'warning');
-
     return;
+  }
 
+  if (typeof tampilkanLoadingProses === 'function') {
+    tampilkanLoadingProses('MENGUNDUH DOKUMEN PDF...');
   }
 
   try {
+    let targetUrl = pdfUrl;
+    let isGDrive = false;
 
-    let dlUrl = pdfUrl;
-
-    if (typeof pdfUrl === 'string' && pdfUrl.startsWith('data:')) {
-
-      const parts = pdfUrl.split(',');
-
-      const mimeMatch = parts[0].match(/:(.*?);/);
-
-      const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
-
-      const bstr = atob(parts[1]);
-
-      let n = bstr.length;
-
-      const u8arr = new Uint8Array(n);
-
-      while (n--) {
-
-        u8arr[n] = bstr.charCodeAt(n);
-
+    if (typeof pdfUrl === 'string' && pdfUrl.includes('drive.google.com')) {
+      isGDrive = true;
+      const match = pdfUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || pdfUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        targetUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
       }
-
-      const blob = new Blob([u8arr], { type: mime });
-
-      dlUrl = URL.createObjectURL(blob);
-
     }
 
-    const a = document.createElement('a');
+    // Gunakan Hidden Iframe agar TAB APLIKASI WEB 100% TIDAK PERNAH TERTINDIH ATAU BERPINDAH HALAMAN
+    let dlIframe = document.getElementById('hiddenPdfDownloadIframeContainer');
+    if (!dlIframe) {
+      dlIframe = document.createElement('iframe');
+      dlIframe.id = 'hiddenPdfDownloadIframeContainer';
+      dlIframe.style.display = 'none';
+      dlIframe.style.width = '0px';
+      dlIframe.style.height = '0px';
+      dlIframe.style.border = 'none';
+      dlIframe.style.position = 'fixed';
+      dlIframe.style.left = '-9999px';
+      dlIframe.style.top = '-9999px';
+      document.body.appendChild(dlIframe);
+    }
 
-    a.href = dlUrl;
+    dlIframe.onload = function() {
+      if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+    };
 
-    a.download = fileName || 'Dokumen_Bukti.pdf';
+    if (isGDrive) {
+      if (typeof tampilkanLoadingProses === 'function') {
+        tampilkanLoadingProses('MENGUNDUH DOKUMEN PDF...');
+      }
+      dlIframe.src = targetUrl;
+      setTimeout(() => {
+        if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+      }, 2200);
+      return;
+    }
 
-    document.body.appendChild(a);
+    if (typeof pdfUrl === 'string' && pdfUrl.startsWith('data:')) {
+      const parts = pdfUrl.split(',');
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      const blob = new Blob([u8arr], { type: mime });
+      const blobUrl = URL.createObjectURL(blob);
 
-    a.click();
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = fileName || 'SURAT_PERMINTAAN.pdf';
+      a.target = '_self';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+      }, 1200);
+      return;
+    }
 
-    setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 150);
-
+    dlIframe.src = targetUrl;
+    setTimeout(() => {
+      if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+    }, 2000);
   } catch (e) {
-
     console.error('Download PDF Error:', e);
-
-    window.open(pdfUrl, '_blank');
-
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
   }
-
 }
 
 window.downloadPdfFile = downloadPdfFile;
@@ -58046,6 +58095,12 @@ function cetakPdfUploadedLangsung(pdfUrl, fileName = 'Dokumen_Bukti.pdf') {
     return;
   }
   if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+
+  if (typeof pdfUrl === 'string' && (pdfUrl.includes('drive.google.com') || pdfUrl.includes('script.google.com') || pdfUrl.startsWith('http://') || pdfUrl.startsWith('https://'))) {
+    const previewUrl = formatGoogleDrivePreviewUrl(pdfUrl);
+    window.open(previewUrl, '_blank');
+    return;
+  }
 
   let blobUrl = pdfUrl;
   if (typeof pdfUrl === 'string' && pdfUrl.startsWith('data:')) {
@@ -58112,6 +58167,10 @@ window.cetakPdfUploadedLangsung = cetakPdfUploadedLangsung;
 
 
 function bukaViewPdfDokumen(pdfUrl, fileName = 'Dokumen_Bukti.pdf', otherImages = null) {
+  if (typeof pdfUrl === 'string' && (pdfUrl.startsWith('http://') || pdfUrl.startsWith('https://')) && (pdfUrl.includes('.pdf') || pdfUrl.includes('/object/public/'))) {
+    window.open(pdfUrl, '_blank');
+    return;
+  }
   if (!pdfUrl) {
     if (typeof showNotif === 'function') showNotif('FILE PDF TIDAK VALID!', 'warning');
     return;
@@ -58969,3 +59028,974 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 500);
 });
 
+
+
+// ============================================================================
+// MODUL OTOMATISASI APPROVAL DM, GENERATE PDF, AUTO-DOWNLOAD & SUPABASE 2 UPLOAD
+// ============================================================================
+
+async function simpanApprovalDMWithTTDAndGDrive() {
+  const targetNoSurat = _dmApprovalCurrentNoSurat;
+  if (!targetNoSurat) return;
+
+  if (typeof isDMCanvasBlank === 'function' && isDMCanvasBlank()) {
+    if (typeof showNotif === 'function') {
+      showNotif('TANDA TANGAN DM MASIH KOSONG! Silakan goreskan tanda tangan Anda atau klik PAKAI TTD PROFILE.', 'warning');
+    }
+    return;
+  }
+
+  const canvas = document.getElementById('canvasTTDDM');
+  let ttdDataUrl = '';
+  if (canvas) {
+    if (typeof getThickCroppedSignatureBase64 === 'function') {
+      ttdDataUrl = await getThickCroppedSignatureBase64(canvas);
+    } else {
+      ttdDataUrl = canvas.toDataURL('image/png');
+    }
+  }
+
+  if (typeof tutupModalApprovalDMCanvas === 'function') tutupModalApprovalDMCanvas();
+
+  if (typeof tampilkanLoadingProses === 'function') tampilkanLoadingProses('MEMPROSES DATA...');
+  else if (typeof showLoading === 'function') showLoading('MEMPROSES DATA...');
+
+  try {
+    // 1. Upload TTD DM ke Supabase Storage
+    let finalTtdUrl = ttdDataUrl;
+    if (typeof uploadSignatureDataUrlToSupabaseStorage === 'function') {
+      try {
+        const storageUrl = await uploadSignatureDataUrlToSupabaseStorage(ttdDataUrl, `TTD_DM_${targetNoSurat}.png`);
+        if (storageUrl) finalTtdUrl = storageUrl;
+      } catch(e) {}
+    }
+
+    // 2. Update Status Request di DB ke APPROVE (Matching robust)
+    const requests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
+    const cleanTarget = String(targetNoSurat).replace(/^#/g, '').trim().toUpperCase();
+    const idx = requests.findIndex(r => {
+      if (!r) return false;
+      const rNo = String(r.noSurat || '').replace(/^#/g, '').trim().toUpperCase();
+      const rId = String(r.id || '').replace(/^#/g, '').trim().toUpperCase();
+      return (rNo && rNo === cleanTarget) || (rId && rId === cleanTarget);
+    });
+
+    let targetReq = null;
+    if (idx !== -1) {
+      requests[idx].status = 'APPROVE';
+      requests[idx].dmUserName = currentUser ? (currentUser.fullName || currentUser.username) : 'DM';
+      requests[idx].dmTTD = ttdDataUrl || finalTtdUrl; // Ambil persis goresan gambar dari canvas DM
+      requests[idx].dm_ttd = finalTtdUrl;
+
+      if (!requests[idx].log) requests[idx].log = [];
+      requests[idx].log.push({
+        action: 'APPROVE_DM',
+        user: currentUser ? (currentUser.fullName || currentUser.username) : 'DM',
+        notes: 'Persetujuan DM dengan TTD Manual',
+        time: `${typeof getFormattedDateDDMMYYYY === 'function' ? getFormattedDateDDMMYYYY() : ''} ${new Date().toLocaleTimeString('id-ID')}`
+      });
+
+      if (typeof saveRequestsToDB === 'function') {
+        saveRequestsToDB(requests, requests[idx], 'UPDATE');
+      }
+      targetReq = requests[idx];
+    }
+
+    // 3. Langsung tutup modal loading & tampilkan notifikasi berhasil (Super Fast UX!)
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+    else if (typeof hideLoading === 'function') hideLoading();
+
+    if (typeof showNotif === 'function') {
+      showNotif(`APPROVAL DM #${targetNoSurat} BERHASIL!`, 'success');
+    }
+
+    if (typeof loadRiwayat === 'function') loadRiwayat();
+    if (typeof loadDashboard === 'function') loadDashboard();
+    if (typeof lihatDetail === 'function') lihatDetail(targetNoSurat);
+
+    // 4. Jalankan Pembuatan PDF & Unggah ke Google Drive di Latar Belakang (Non-blocking Background Task)
+    setTimeout(() => {
+      generateAndBackupApprovedPdf(targetNoSurat, targetReq || findRequestByNoSuratOrId(targetNoSurat)).catch(e => console.warn('[BACKGROUND PDF UPLOAD ERROR]:', e));
+    }, 100);
+
+  } catch (err) {
+    console.error('[SIMPAN APPROVAL DM ERROR]:', err);
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+    else if (typeof hideLoading === 'function') hideLoading();
+    if (typeof showNotif === 'function') showNotif('APPROVAL BERHASIL DISIMPAN!', 'info');
+  }
+}
+window.simpanApprovalDMWithTTDAndGDrive = simpanApprovalDMWithTTDAndGDrive;
+
+async function ensureHtml2PdfLoaded() {
+  const loadScript = (src) => new Promise((resolve) => {
+    if (typeof document === 'undefined') return resolve();
+    const filename = src.split('/').pop();
+    const existing = Array.from(document.querySelectorAll('script')).find(s => s.src && s.src.includes(filename));
+    if (existing) return resolve();
+
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => resolve();
+    document.head.appendChild(s);
+  });
+
+  if (typeof html2canvas === 'undefined') {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  }
+  if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  }
+}
+window.ensureHtml2PdfLoaded = ensureHtml2PdfLoaded;
+
+
+// Helper canggih: Auto-crop margin putih di sekitar TTD + perlebar garis stroke hingga 5x lipat (Ultra Bold)
+function getThickCroppedSignatureBase64(source) {
+  return new Promise((resolve) => {
+    if (!source) return resolve(source);
+
+    const runProcessOnDataUrl = (dataUrl) => {
+      const img = new Image();
+      img.onload = () => process(img);
+      img.onerror = () => resolve(source);
+      img.src = dataUrl;
+    };
+
+    if (typeof source === 'string' && source.startsWith('data:image')) {
+      runProcessOnDataUrl(source);
+    } else if (typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement) {
+      process(source);
+    } else if (typeof source === 'string' && (source.startsWith('http://') || source.startsWith('https://'))) {
+      const targetUrl = typeof formatSupabaseStorageUrl === 'function' ? formatSupabaseStorageUrl(source) : source;
+      fetch(targetUrl)
+        .then(r => r.blob())
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onloadend = () => runProcessOnDataUrl(reader.result);
+          reader.onerror = () => resolve(source);
+          reader.readAsDataURL(blob);
+        })
+        .catch(() => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => process(img);
+          img.onerror = () => resolve(source);
+          img.src = targetUrl;
+        });
+    } else {
+      resolve(source);
+    }
+
+    function process(imageSource) {
+      try {
+        const w = imageSource.width || 700;
+        const h = imageSource.height || 170;
+
+        // 1. Gambar sumber ke canvas temporer transparan
+        const tempC = document.createElement('canvas');
+        tempC.width = w;
+        tempC.height = h;
+        const tempCtx = tempC.getContext('2d');
+        tempCtx.clearRect(0, 0, w, h);
+        tempCtx.drawImage(imageSource, 0, 0, w, h);
+
+        const imgData = tempCtx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        // 2. Cari Bounding Box area goresan TTD (mengabaikan latar transparan / putih murni)
+        let minX = w, minY = h, maxX = 0, maxY = 0;
+        let found = false;
+
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4;
+            const r = data[idx], g = data[idx+1], b = data[idx+2], a = data[idx+3];
+            if (a > 20 && (r < 240 || g < 240 || b < 240)) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+              found = true;
+            }
+          }
+        }
+
+        if (!found) {
+          const emptyC = document.createElement('canvas');
+          emptyC.width = 300; emptyC.height = 100;
+          const eCtx = emptyC.getContext('2d');
+          eCtx.fillStyle = '#ffffff';
+          eCtx.fillRect(0, 0, 300, 100);
+          return resolve(emptyC.toDataURL('image/png'));
+        }
+
+        const pad = 10;
+        minX = Math.max(0, minX - pad);
+        minY = Math.max(0, minY - pad);
+        maxX = Math.min(w - 1, maxX + pad);
+        maxY = Math.min(h - 1, maxY + pad);
+
+        const cropW = Math.max(20, maxX - minX);
+        const cropH = Math.max(20, maxY - minY);
+
+        // 3. Buat canvas target transparan
+        const targetC = document.createElement('canvas');
+        targetC.width = cropW;
+        targetC.height = cropH;
+        const targetCtx = targetC.getContext('2d');
+        targetCtx.clearRect(0, 0, cropW, cropH);
+
+        // 4. Draw image 1:1 natural crop without offset dilation (Halus, Tanpa Bold)
+        targetCtx.drawImage(tempC, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+
+        // 5. Ubah pixel tinta TTD menjadi Hitam-Biru Tua (#0f172a) Halus & seluruh sisanya Transparan 100%
+        const finalImgData = targetCtx.getImageData(0, 0, cropW, cropH);
+        const fData = finalImgData.data;
+        for (let i = 0; i < fData.length; i += 4) {
+          const r = fData[i], g = fData[i+1], b = fData[i+2], a = fData[i+3];
+          if (a > 15 && (r < 240 || g < 240 || b < 240)) {
+            fData[i] = 15;     // R
+            fData[i+1] = 23;   // G
+            fData[i+2] = 42;   // B (#0f172a)
+            fData[i+3] = Math.min(255, Math.round(a * 1.15)); // Soft smooth anti-aliased alpha
+          } else {
+            fData[i] = 0;      // 100% Transparan
+            fData[i+1] = 0;
+            fData[i+2] = 0;
+            fData[i+3] = 0;
+          }
+        }
+        targetCtx.putImageData(finalImgData, 0, 0);
+
+        resolve(targetC.toDataURL('image/png'));
+      } catch(e) {
+        console.warn('[CROP BOLD ERR]:', e);
+        resolve(typeof source === 'string' ? source : '');
+      }
+    }
+  });
+}
+window.getThickCroppedSignatureBase64 = getThickCroppedSignatureBase64;
+window.makeSignatureBoldBase64 = getThickCroppedSignatureBase64;
+
+async function uploadPdfToGoogleDriveViaScript(pdfBlob, noSurat) {
+  try {
+    const scriptUrl = typeof getAdminScriptUrl === 'function' ? getAdminScriptUrl() : '';
+    if (!scriptUrl) {
+      console.warn('[GDRIVE UPLOAD]: URL Google Apps Script belum diisi di Pengaturan!');
+      return null;
+    }
+
+    console.log('[GDRIVE UPLOAD]: Mengirim PDF ukuran asli & jernih ke Google Drive...');
+
+    const base64Data = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result || '';
+        const base64Str = result.includes('base64,') ? result.split('base64,')[1] : result;
+        resolve(base64Str);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(pdfBlob);
+    });
+
+    const cleanNo = String(noSurat || 'SURAT').replace(/[\/\:]/g, '_');
+    const fileName = `SURAT_PERMINTAAN_${cleanNo}.pdf`;
+
+    const payload = {
+      action: 'upload_pdf_gdrive',
+      noSurat: cleanNo,
+      fileName: fileName,
+      fileBase64: base64Data
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // Extended timeout: 120 seconds (2 minutes) for Google Drive PDF upload
+
+    let resp;
+    try {
+      resp = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+    } catch(fetchErr) {
+      console.warn('[GDRIVE UPLOAD FETCH ERROR]:', fetchErr);
+      return null;
+    }
+
+    if (!resp.ok) {
+      console.warn('[GDRIVE UPLOAD HTTP ERROR]:', resp.status, resp.statusText);
+      return null;
+    }
+
+    let resJson = null;
+    try {
+      resJson = await resp.json();
+    } catch(pErr) {
+      console.warn('[GDRIVE UPLOAD PARSE JSON ERROR]:', pErr);
+      return null;
+    }
+
+    const finalUrl = resJson ? (resJson.url || resJson.fileUrl || resJson.downloadUrl || '') : '';
+    if (resJson && resJson.status === 'success' && finalUrl) {
+      console.log('⚡ [GDRIVE UPLOAD SUCCESS]: URL Google Drive =', finalUrl);
+      return finalUrl;
+    } else {
+      console.warn('[GDRIVE UPLOAD RESPONSE FAILED]:', resJson);
+      return null;
+    }
+  } catch (err) {
+    console.error('[GDRIVE UPLOAD EXCEPTION]:', err);
+    return null;
+  }
+}
+window.uploadPdfToGoogleDriveViaScript = uploadPdfToGoogleDriveViaScript;
+
+async function generateAndBackupApprovedPdf(noSurat, reqObj, forceDownload = false) {
+  try {
+    console.log('[PDF STORAGE]: Mengompilasi PDF Dokumen Surat Permintaan Asli (High-Resolution 1:1 A4)...');
+
+    if (typeof ensureHtml2PdfLoaded === 'function') {
+      await ensureHtml2PdfLoaded();
+    }
+
+    const req = reqObj || findRequestByNoSuratOrId(noSurat);
+
+    if (!req) {
+      console.warn('[PDF ERROR]: Data transaksi req tidak ditemukan!');
+      return;
+    }
+
+    const cleanNoSurat = String(req.noSurat || 'SURAT').replace(/[\/\:]/g, '_');
+
+    // Build self-contained HTML Surat Permintaan layout
+    const items = Array.isArray(req.items) ? req.items : [];
+    const isDus = (String(req.jenis || '').toUpperCase() === 'DUS');
+    const dusHeaderTh = isDus ? `<th style="width: 1%; white-space: nowrap; padding: 8px 10px; border: 1px solid #0369a1; background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; font-weight: 700; text-align: center !important;">NO. SERI DUS</th>` : '';
+
+    let itemsRowsHtml = items.map((i, idx) => {
+      const dusVal = i.noSeriDus || i.seriDus || i.snDus || i.dus || '-';
+      const dusStyle = (dusVal && dusVal !== '-') ? 'color: #d97706; font-weight: 600;' : 'color: #94a3b8; font-weight: 400;';
+      const dusTd = isDus ? `<td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 10.5px; white-space: nowrap; ${dusStyle}">${dusVal}</td>` : '';
+      return `
+        <tr style="border-bottom: 1px solid #cbd5e1;">
+          <td style="text-align: center; padding: 6px 6px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 400; white-space: nowrap;">${idx + 1}</td>
+          <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 400; white-space: nowrap;">${i.type || i.tipe || '-'}</td>
+          <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 400; white-space: nowrap;">${i.seri || i.sn || '-'}</td>
+          ${dusTd}
+          <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 400; white-space: normal; word-break: break-word;">${i.barang || i.permintaan || '-'}</td>
+          <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 400; white-space: normal; word-break: break-word;">${i.alasan || i.keterangan || '-'}</td>
+          <td style="text-align: center; padding: 6px 6px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 600; white-space: nowrap;">${i.qty || 1}</td>
+        </tr>
+      `;
+    }).join('');
+
+    // Pre-process gambar TTD untuk membuat stroke TTD tebal & hitam pekat khusus di lembar PDF
+    const reqStatusUpper = String(req.status || '').toUpperCase();
+    const isApprovedByDM = reqStatusUpper === 'APPROVE' || reqStatusUpper === 'APPROVED' || reqStatusUpper === 'DONE';
+    let dmTTDBold = isApprovedByDM ? (req.dmTTD || '') : '';
+    let serviceTTDBold = req.serviceTTD || '';
+    let pemohonTTDBold = req.pemohonTTD || '';
+    if (typeof makeSignatureBoldBase64 === 'function') {
+      try {
+        const [dmB, srvB, pemB] = await Promise.all([
+          makeSignatureBoldBase64(dmTTDBold),
+          makeSignatureBoldBase64(serviceTTDBold),
+          makeSignatureBoldBase64(pemohonTTDBold)
+        ]);
+        if (dmB) dmTTDBold = dmB;
+        if (srvB) serviceTTDBold = srvB;
+        if (pemB) pemohonTTDBold = pemB;
+      } catch(e) {}
+    }
+
+    const dmTtdImg = dmTTDBold ? `<img src="${dmTTDBold}" style="height: 55px; max-width: 170px; object-fit: contain;" />` : '<div style="color: #16a34a; font-weight: bold; padding: 10px 0;">APPROVED (DM)</div>';
+    const serviceTtdImg = serviceTTDBold ? `<img src="${serviceTTDBold}" style="height: 55px; max-width: 170px; object-fit: contain;" />` : (req.serviceApprove ? '<div style="color: #0077b6; font-weight: bold; padding: 10px 0;">APPROVED (SERVICE)</div>' : '-');
+    const pemohonTtdImg = pemohonTTDBold ? `<img src="${pemohonTTDBold}" style="height: 55px; max-width: 170px; object-fit: contain;" />` : '';
+
+    const areaNameMap = { TSM: 'TASIKMALAYA', BDG: 'BANDUNG', BDU: 'BANDUNG UTARA', CRB: 'CIREBON', SKB: 'SUKABUMI', SBN: 'SUBANG' };
+    const cleanAreaKey = String(req.area || '').trim().toUpperCase();
+    const fullAreaName = areaNameMap[cleanAreaKey] || cleanAreaKey || '';
+    const hodsAreaTitle = fullAreaName ? `HODS ${fullAreaName}` : 'HODS';
+
+    const pemohonNameVal = req.toko || req.tokoNama || req.pemohonNama || req.userToko || (req.createdBy && req.createdBy !== req.serviceUserName ? req.createdBy : '') || 'TOKO';
+
+    const printDate = (typeof getFormattedDateDDMMYYYY === 'function') ? getFormattedDateDDMMYYYY() : new Date().toLocaleDateString('id-ID');
+    const printTime = new Date().toLocaleTimeString('id-ID');
+
+    const htmlContent = `
+      <div style="width: 794px; min-height: 1050px; padding: 35px; background: #ffffff !important; color: #0f172a !important; font-family: 'Poppins', Arial, sans-serif; box-sizing: border-box; position: relative; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility;">
+        
+        <!-- HEADER SURAT (CENTERED TITLE WITH DARK UNDERLINE) -->
+        <div style="text-align: center; font-size: 20px; font-weight: 800; border-bottom: 2.5px solid #0f172a; padding-bottom: 16px; margin-bottom: 20px; letter-spacing: 0.5px; color: #0f172a; text-transform: uppercase;">
+          PERMINTAAN TOKO
+        </div>
+
+        <!-- INFO TABLE (PERFECT MATCH WITH REFERENCE IMAGE) -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 11.5px; color: #0f172a; background: transparent; border: none;">
+          <tr>
+            <td style="padding: 3px 0; width: 85px; font-weight: 400; color: #0f172a; border: none; white-space: nowrap;">NO SURAT</td>
+            <td style="padding: 3px 4px; width: 12px; color: #0f172a; border: none; text-align: center;">:</td>
+            <td style="padding: 3px 20px 3px 0; font-weight: 600; color: #0284c7; border: none; width: 100%;">${req.noSurat || '-'}</td>
+            <td style="padding: 3px 0; width: 75px; font-weight: 400; color: #0f172a; border: none; text-align: left; white-space: nowrap;">TANGGAL</td>
+            <td style="padding: 3px 4px; width: 12px; color: #0f172a; border: none; text-align: center;">:</td>
+            <td style="padding: 3px 0; color: #0f172a; border: none; text-align: left; white-space: nowrap;">${req.tanggal || '-'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 3px 0; font-weight: 400; color: #0f172a; border: none; white-space: nowrap;">TOKO</td>
+            <td style="padding: 3px 4px; color: #0f172a; border: none; text-align: center;">:</td>
+            <td style="padding: 3px 20px 3px 0; font-weight: 600; color: #0f172a; text-transform: uppercase; border: none; width: 100%;">${pemohonNameVal}</td>
+            <td style="padding: 3px 0; font-weight: 400; color: #0f172a; border: none; text-align: left; white-space: nowrap;">JENIS</td>
+            <td style="padding: 3px 4px; color: #0f172a; border: none; text-align: center;">:</td>
+            <td style="padding: 3px 0; color: #0f172a; text-transform: uppercase; border: none; text-align: left; white-space: nowrap;">${req.jenis || 'DEFAULT'}</td>
+          </tr>
+        </table>
+
+        <!-- TABLE ITEMS -->
+        <div style="font-size: 11px; font-weight: 800; margin-bottom: 6px; color: #0f172a; text-transform: uppercase;">DETAIL PERMINTAAN:</div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 10.5px; border: 1px solid #cbd5e1; table-layout: auto;">
+          <thead>
+            <tr style="background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important;">
+              <th style="width: 1%; white-space: nowrap; text-align: center !important; padding: 8px 6px; border: 1px solid #0369a1; background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; font-weight: 700;">NO</th>
+              <th style="width: 1%; white-space: nowrap; padding: 8px 10px; border: 1px solid #0369a1; background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; font-weight: 700; text-align: center !important;">TIPE BARANG</th>
+              <th style="width: 1%; white-space: nowrap; padding: 8px 10px; border: 1px solid #0369a1; background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; font-weight: 700; text-align: center !important;">NO. SERI</th>
+              ${dusHeaderTh}
+              <th style="padding: 8px 10px; border: 1px solid #0369a1; background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; font-weight: 700; text-align: center !important; white-space: normal; word-break: break-word;">PERMINTAAN BARANG</th>
+              <th style="padding: 8px 10px; border: 1px solid #0369a1; background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; font-weight: 700; text-align: center !important; white-space: normal; word-break: break-word;">ALASAN PERMINTAAN</th>
+              <th style="width: 1%; white-space: nowrap; text-align: center !important; padding: 8px 6px; border: 1px solid #0369a1; background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; font-weight: 700;">QTY</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRowsHtml}
+          </tbody>
+        </table>
+
+        <!-- TANDA TANGAN SECTION (3 COLUMNS LIKE IMAGE) -->
+        <table style="width: 100%; text-align: center; margin-top: 40px; font-size: 10.5px; color: #0f172a; border: none; page-break-inside: avoid;">
+          <tr>
+            <td style="width: 33%; vertical-align: top; border: none;">
+              <div style="font-weight: 700; text-transform: uppercase; color: #0f172a; margin-bottom: 4px;">PEMOHON</div>
+              <div style="height: 60px; display: flex; align-items: center; justify-content: center; margin: 4px 0;">${pemohonTtdImg}</div>
+              <strong style="text-transform: uppercase; color: #0f172a; font-size: 11px;">${pemohonNameVal}</strong>
+              <div style="font-size: 9.5px; color: #64748b; margin-top: 2px;">TOKO</div>
+            </td>
+            <td style="width: 33%; vertical-align: top; border: none;">
+              <div style="font-weight: 700; text-transform: uppercase; color: #0f172a; margin-bottom: 4px;">DIPERIKSA</div>
+              <div style="height: 60px; display: flex; align-items: center; justify-content: center; margin: 4px 0;">${serviceTtdImg}</div>
+              <strong style="text-transform: uppercase; color: #0f172a; font-size: 11px;">${req.serviceUserName || 'SERVICE'}</strong>
+              <div style="font-size: 9.5px; color: #64748b; margin-top: 2px;">${hodsAreaTitle}</div>
+            </td>
+            <td style="width: 33%; vertical-align: top; border: none;">
+              <div style="font-weight: 700; text-transform: uppercase; color: #0f172a; margin-bottom: 4px;">DISETUJUI</div>
+              <div style="height: 60px; display: flex; align-items: center; justify-content: center; margin: 4px 0;">${dmTtdImg}</div>
+              <strong style="text-transform: uppercase; color: #0f172a; font-size: 11px;">${req.dmUserName || 'DISTRICT MANAGER'}</strong>
+              <div style="font-size: 9.5px; color: #64748b; margin-top: 2px;">DISTRICT MANAGER</div>
+            </td>
+          </tr>
+        </table>
+
+      </div>
+    `;
+
+    // Make container positioned at top:0, left:0 behind opacity/z-index for exact html2canvas coordinate capture
+    let printContainer = document.getElementById('tempPdfBackupContainer');
+    if (printContainer) printContainer.remove();
+
+    printContainer = document.createElement('div');
+    printContainer.id = 'tempPdfBackupContainer';
+    printContainer.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; width: 794px !important; min-height: 1050px !important; background: #ffffff !important; color: #0f172a !important; padding: 0 !important; box-sizing: border-box !important; z-index: -9999 !important; display: block !important; opacity: 0.01 !important; visibility: visible !important; pointer-events: none !important;';
+    printContainer.innerHTML = htmlContent;
+    document.body.appendChild(printContainer);
+
+    // Wait for DOM paint & images to load completely
+    const imgs = printContainer.querySelectorAll('img');
+    await Promise.all(Array.from(imgs).map(img => {
+      if (img.complete) return Promise.resolve();
+      return new Promise(res => {
+        img.onload = res;
+        img.onerror = res;
+      });
+    }));
+    await new Promise(r => setTimeout(r, 400));
+
+    let pdfBlob = null;
+    try {
+      if (typeof html2canvas !== 'undefined') {
+        console.log('[PDF ENGINE]: Memulai html2canvas capture (Scale 2.2 JPEG)...');
+        const canvas = await html2canvas(printContainer, {
+          scale: 2.2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          width: 794,
+          windowWidth: 794,
+          height: printContainer.offsetHeight || 1050,
+          windowHeight: printContainer.offsetHeight || 1050,
+          scrollX: 0,
+          scrollY: 0,
+          x: 0,
+          y: 0,
+          onclone: (clonedDoc) => {
+            const el = clonedDoc.getElementById('tempPdfBackupContainer');
+            if (el) {
+              el.style.position = 'static';
+              el.style.left = '0';
+              el.style.top = '0';
+              el.style.opacity = '1';
+              el.style.zIndex = '99999';
+            }
+          }
+        });
+
+        console.log('[PDF ENGINE]: html2canvas selesai, canvas size =', canvas.width, 'x', canvas.height);
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        const JsPdfClass = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (window.jsPDF || null);
+        if (JsPdfClass) {
+          const pdfDoc = new JsPdfClass('p', 'mm', 'a4');
+          const imgWidth = 210;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          pdfDoc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
+          pdfBlob = pdfDoc.output('blob');
+          console.log('⚡ [PDF ENGINE]: PDF Blob berhasil dibuat, ukuran =', pdfBlob ? pdfBlob.size : 0, 'bytes');
+        }
+      }
+
+      if (!pdfBlob && window.html2pdf) {
+        console.log('[PDF ENGINE]: Trying html2pdf fallback...');
+        const opt = {
+          margin: [0, 0, 0, 0],
+          filename: `SURAT_${cleanNoSurat}.pdf`,
+          image: { type: 'jpeg', quality: 0.92 },
+          html2canvas: { scale: 2.2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false, scrollX: 0, scrollY: 0, x: 0, y: 0 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        pdfBlob = await window.html2pdf().from(printContainer).set(opt).outputPdf('blob');
+      }
+    } catch(pdfErr) {
+      console.error('[PDF ENGINE BLOB ERROR]:', pdfErr);
+    } finally {
+      if (printContainer && printContainer.parentNode) printContainer.parentNode.removeChild(printContainer);
+    }
+
+    if (pdfBlob) {
+      // 1. OTOMATIS DOWNLOAD PDF KE PERANGKAT SETELAH APPROVE JIKA PENGATURAN DM AKTIF
+      const autoDownloadEnabled = forceDownload || (typeof isDmAutoDownloadPdfEnabled === 'function' ? isDmAutoDownloadPdfEnabled() : false);
+      if (autoDownloadEnabled) {
+        if (typeof tampilkanLoadingProses === 'function') {
+          tampilkanLoadingProses('MENGUNDUH DOKUMEN PDF...');
+        }
+        const downloadFileName = `SURAT_PERMINTAAN_${cleanNoSurat}.pdf`;
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const tempLink = document.createElement('a');
+        tempLink.href = blobUrl;
+        tempLink.download = downloadFileName;
+        tempLink.target = '_self';
+        tempLink.rel = 'noopener noreferrer';
+        tempLink.style.display = 'none';
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        setTimeout(() => {
+          if (tempLink.parentNode) tempLink.parentNode.removeChild(tempLink);
+          URL.revokeObjectURL(blobUrl);
+          if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+        }, 1800);
+      } else {
+        console.log('ℹ️ [PDF BACKUP SILENT]: Pengaturan Auto-Download PDF DM NONAKTIF. PDF dibackup di latar belakang tanpa download.');
+      }
+
+      // 2. UNGGAH PDF KE GOOGLE DRIVE VIA GOOGLE APPS SCRIPT (WITH AUTOMATIC SUPABASE 2 STORAGE FALLBACK)
+      try {
+        console.log('[PDF UPLOAD]: Memulai proses unggah PDF...');
+        const uploadTask = (async () => {
+          let finalPdfUrl = await uploadPdfToGoogleDriveViaScript(pdfBlob, cleanNoSurat);
+
+          // FALLBACK OTOMATIS: Jika Google Drive / Apps Script 404/null, upload langsung ke Supabase 2 Storage
+          if (!finalPdfUrl && typeof uploadToSupabaseStorageDirect === 'function') {
+            console.log('⚡ [PDF UPLOAD FALLBACK]: Mengunggah PDF ke Supabase 2 Storage sebagai Cadangan Otomatis...');
+            const storageFileName = `PDF_PERMINTAAN_${cleanNoSurat}.pdf`;
+            finalPdfUrl = await uploadToSupabaseStorageDirect('photos', storageFileName, pdfBlob, 'application/pdf', false);
+          }
+
+          if (finalPdfUrl) {
+            console.log('⚡ [PDF UPLOAD BERHASIL] URL DOKUMEN PDF =', finalPdfUrl);
+            req.pdfDriveUrl = finalPdfUrl;
+            req.pdf_drive_url = finalPdfUrl;
+            req.pdfUrl = finalPdfUrl;
+            req.pdf_url = finalPdfUrl;
+
+            // Simpan link PDF ke Supabase 1 Database 'permintaan_toko'
+            const sb1 = (typeof supabase !== 'undefined' && supabase) || window.supabase || window.supabaseClient || window.supabaseAdmin;
+            if (sb1 && typeof sb1.from === 'function') {
+              try {
+                const targetNo = String(req.noSurat || '').trim();
+                const cleanNo = targetNo.replace(/^#/g, '').trim();
+                await sb1.from('permintaan_toko').update({
+                  pdf_drive_url: finalPdfUrl,
+                  updated_at: new Date().toISOString()
+                }).or(`no_surat.eq.${targetNo},no_surat.eq.${cleanNo},no_surat.eq.#${cleanNo},id.eq.${targetNo}`);
+                console.log('✅ [SUPABASE 1 UPDATE SUCCESS]: Link PDF berhasil ditempel di Database Supabase 1 (tabel permintaan_toko)!');
+              } catch(sErr) {
+                console.warn('[SUPABASE 1 DB UPDATE PDF URL ERROR]:', sErr);
+              }
+            }
+
+            const requests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
+            const cleanTarget = String(req.noSurat || '').replace(/^#/g, '').trim().toUpperCase();
+            const rIdx = requests.findIndex(r => r && (String(r.noSurat || '').replace(/^#/g, '').trim().toUpperCase() === cleanTarget || String(r.id || '').replace(/^#/g, '').trim().toUpperCase() === cleanTarget));
+
+            if (rIdx !== -1) {
+              requests[rIdx].pdfDriveUrl = finalPdfUrl;
+              requests[rIdx].pdf_drive_url = finalPdfUrl;
+              requests[rIdx].pdfUrl = finalPdfUrl;
+              requests[rIdx].pdf_url = finalPdfUrl;
+              if (typeof saveRequestsToDB === 'function') saveRequestsToDB(requests, requests[rIdx], 'UPDATE');
+            }
+          } else {
+            console.warn('[PDF UPLOAD NOTICE]: Upload PDF gagal di seluruh storage');
+          }
+        })();
+
+        // Tunggu maksimal 3 detik di foreground agar modal loading tidak pernah macet
+        await Promise.race([
+          uploadTask,
+          new Promise(r => setTimeout(r, 3000))
+        ]);
+      } catch(err) {
+        console.error('[PDF UPLOAD EXCEPTION]:', err);
+      }
+    }
+  } catch (err) {
+    console.error('[GENERATE & BACKUP APPROVED PDF ERROR]:', err);
+  }
+}
+window.generateAndBackupApprovedPdf = generateAndBackupApprovedPdf;
+window.backupApprovedPdfToGoogleDriveAndSheet = generateAndBackupApprovedPdf;
+
+
+
+// ============================================================================
+// LOGIK POPUP MODAL APPROVAL DM CANVAS & PRATINJAU SURAT (V45 FINAL CLEAN)
+// ============================================================================
+
+var _dmApprovalCurrentNoSurat = null;
+var _isDMCanvasDirty = false;
+
+function getLoggedInUserSignature(req) {
+  const isValid = (s) => (s && typeof s === 'string' && (s.startsWith('data:image/') || s.startsWith('http://') || s.startsWith('https://') || s.startsWith('blob:')));
+
+  // 1. Direct currentUser signature
+  if (typeof currentUser !== 'undefined' && currentUser) {
+    if (isValid(currentUser.ttd)) return currentUser.ttd;
+    if (isValid(currentUser.signature)) return currentUser.signature;
+    if (isValid(currentUser.fotoTTD)) return currentUser.fotoTTD;
+  }
+
+  // 2. LocalStorage currentUser fallback
+  try {
+    const storedUser = localStorage.getItem('currentUser') || localStorage.getItem('user');
+    if (storedUser) {
+      const u = JSON.parse(storedUser);
+      if (u && isValid(u.ttd)) return u.ttd;
+      if (u && isValid(u.signature)) return u.signature;
+    }
+  } catch(e) {}
+
+  // 3. getUserRealSignature with currentUser credentials
+  if (typeof getUserRealSignature === 'function' && typeof currentUser !== 'undefined' && currentUser) {
+    const sig = getUserRealSignature(currentUser.role || 'DM', req ? req.area : '', currentUser.username || '', currentUser.fullName || '');
+    if (isValid(sig)) return sig;
+  }
+
+  // 4. getUserRealSignature with DM role fallback
+  if (typeof getUserRealSignature === 'function') {
+    const area = req ? req.area : '';
+    const toko = req ? req.toko : '';
+    const uname = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.username : '';
+    const fname = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.fullName : '';
+    const sig = getUserRealSignature('DM', area, uname, fname);
+    if (isValid(sig)) return sig;
+  }
+
+  return '';
+}
+window.getLoggedInUserSignature = getLoggedInUserSignature;
+
+function bukaModalApprovalDMCanvas(noSurat) {
+  if (!noSurat) return;
+  _dmApprovalCurrentNoSurat = noSurat;
+  _isDMCanvasDirty = false;
+
+  const requests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
+  const req = requests.find(r => r && String(r.noSurat).trim().toUpperCase() === String(noSurat).trim().toUpperCase());
+
+  if (!req) {
+    if (typeof showNotif === 'function') showNotif('Data permintaan tidak ditemukan!', 'error');
+    return;
+  }
+
+  // Render Surat Permintaan Preview into #dmApprovalDocPreviewContainer
+  const container = document.getElementById('dmApprovalDocPreviewContainer');
+  if (container) {
+    const items = Array.isArray(req.items) ? req.items : [];
+    const isDus = (String(req.jenis || '').toUpperCase() === 'DUS');
+    const dusHeaderTh = isDus ? `<th style="width: 1%; white-space: nowrap !important; padding: 7px 10px; border: 1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight: 700; text-align: center !important;">NO. SERI DUS</th>` : '';
+
+    let itemsRowsHtml = items.map((i, idx) => {
+      const dusVal = i.noSeriDus || i.seriDus || i.snDus || i.dus || '-';
+      const dusStyle = (dusVal && dusVal !== '-') ? 'color: #d97706; font-weight: 600;' : 'color: #94a3b8; font-weight: 400;';
+      const dusTd = isDus ? `<td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 10.5px; white-space: nowrap !important; ${dusStyle}">${dusVal}</td>` : '';
+      return `
+        <tr style="border-bottom: 1px solid #cbd5e1;">
+          <td style="text-align: center !important; padding: 6px 4px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 400; white-space: nowrap !important;">${idx + 1}</td>
+          <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 400; white-space: nowrap !important;">${i.type || i.tipe || '-'}</td>
+          <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 400; white-space: nowrap !important;">${i.seri || i.sn || '-'}</td>
+          ${dusTd}
+          <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 400; white-space: normal !important; word-break: break-word !important; overflow-wrap: break-word !important;">${i.barang || i.permintaan || '-'}</td>
+          <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 400; white-space: normal !important; word-break: break-word !important; overflow-wrap: break-word !important;">${i.alasan || i.keterangan || '-'}</td>
+          <td style="text-align: center !important; padding: 6px 4px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #0f172a; font-weight: 600; white-space: nowrap !important;">${i.qty || 1}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const serviceTtdImg = req.serviceTTD ? `<img src="${req.serviceTTD}" crossOrigin="anonymous" style="max-height: 44px; max-width: 110px; object-fit: contain;" />` : (req.serviceApprove ? '<div style="color: #0077b6; font-weight: 500; padding: 4px 0;">APPROVED (SERVICE)</div>' : '-');
+    const pemohonTtdImg = req.pemohonTTD ? `<img src="${req.pemohonTTD}" crossOrigin="anonymous" style="max-height: 44px; max-width: 110px; object-fit: contain;" />` : '';
+
+    container.innerHTML = `
+      <div style="font-family: 'Poppins', Arial, sans-serif; background: #ffffff; color: #0f172a; padding: 18px; border-radius: 4px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        
+        <!-- Header Title: PERMINTAAN TOKO (CENTERED TITLE WITH DARK UNDERLINE LIKE IMAGE) -->
+        <div style="text-align: center; font-size: 18px; font-weight: 800; border-bottom: 2.5px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px; letter-spacing: 0.5px; color: #0f172a; text-transform: uppercase;">
+          PERMINTAAN TOKO
+        </div>
+
+        <!-- Info Grid -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11.5px; color: #0f172a;">
+          <tr>
+            <td style="padding: 3px 0; width: 85px; font-weight: 400; color: #0f172a;">NO SURAT</td>
+            <td style="padding: 3px 4px; width: 12px; color: #0f172a;">:</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0284c7;">${req.noSurat || '-'}</td>
+            <td style="padding: 3px 0; width: 85px; font-weight: 400; color: #0f172a; text-align: left;">TANGGAL</td>
+            <td style="padding: 3px 4px; width: 12px; color: #0f172a; text-align: center;">:</td>
+            <td style="padding: 3px 0; font-weight: 400; color: #0f172a; width: 120px;">${req.tanggal || '-'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 3px 0; font-weight: 400; color: #0f172a;">TOKO</td>
+            <td style="padding: 3px 4px; color: #0f172a;">:</td>
+            <td style="padding: 3px 0; font-weight: 600; color: #0f172a; text-transform: uppercase;">${req.toko || '-'}</td>
+            <td style="padding: 3px 0; font-weight: 400; color: #0f172a; text-align: left;">JENIS</td>
+            <td style="padding: 3px 4px; color: #0f172a; text-align: center;">:</td>
+            <td style="padding: 3px 0; text-transform: uppercase; font-weight: 400; color: #0f172a;">${req.jenis || 'DEFAULT'}</td>
+          </tr>
+        </table>
+
+        <!-- Section Label -->
+        <div style="font-size: 11.5px; font-weight: 700; margin-bottom: 8px; color: #0f172a; text-transform: uppercase;">DETAIL PERMINTAAN:</div>
+
+        <!-- Items Table (Auto-fit layout with Word Wrap) -->
+        <table style="width: 100% !important; table-layout: auto !important; border-collapse: collapse; margin-bottom: 16px; font-size: 10.5px; border: 1px solid #cbd5e1;">
+          <thead>
+            <tr style="background: #0284c7 !important; color: #ffffff !important;">
+              <th style="width: 1%; white-space: nowrap !important; text-align: center !important; padding: 7px 6px; border: 1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight: 700;">NO</th>
+              <th style="width: 1%; white-space: nowrap !important; padding: 7px 10px; border: 1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight: 700; text-align: center !important;">TIPE BARANG</th>
+              <th style="width: 1%; white-space: nowrap !important; padding: 7px 10px; border: 1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight: 700; text-align: center !important;">NO. SERI</th>
+              ${dusHeaderTh}
+              <th style="padding: 7px 10px; border: 1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight: 700; text-align: center !important; white-space: normal !important; word-break: break-word !important;">PERMINTAAN BARANG</th>
+              <th style="padding: 7px 10px; border: 1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight: 700; text-align: center !important; white-space: normal !important; word-break: break-word !important;">ALASAN PERMINTAAN</th>
+              <th style="width: 1%; white-space: nowrap !important; text-align: center !important; padding: 7px 6px; border: 1px solid #0369a1; background: #0284c7 !important; color: #ffffff !important; font-weight: 700;">QTY</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRowsHtml || '<tr><td colspan="7" style="text-align: center; padding: 10px; color: #94a3b8; font-weight: 400;">Tidak ada item</td></tr>'}
+          </tbody>
+        </table>
+
+        <!-- TTD Area Summary -->
+        <div style="display: flex; justify-content: space-around; text-align: center; font-size: 11px; margin-top: 10px; gap: 8px;">
+          <div style="flex: 1; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; background: #f8fafc;">
+            <div style="font-weight: 600; color: #475569; margin-bottom: 2px;">PEMOHON</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center;">
+              ${pemohonTtdImg || '<span style="color: #94a3b8; font-style: italic; font-weight: 400;">ADA</span>'}
+            </div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">${req.pemohonUserName || req.pemohon || 'Pemohon Toko'}</div>
+          </div>
+
+          <div style="flex: 1; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; background: #f8fafc;">
+            <div style="font-weight: 600; color: #0077b6; margin-bottom: 2px;">SERVICE</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center;">
+              ${serviceTtdImg}
+            </div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">${req.serviceUserName || 'Service'}</div>
+          </div>
+
+          <div style="flex: 1; border: 1px dashed #16a34a; padding: 6px; border-radius: 4px; background: #f0fdf4;">
+            <div style="font-weight: 600; color: #16a34a; margin-bottom: 2px;">DM</div>
+            <div style="height: 44px; display: flex; align-items: center; justify-content: center; color: #16a34a; font-weight: 500; font-size: 10px;">
+              [ SILAKAN TTD DI CANVAS ]
+            </div>
+            <div style="font-size: 10px; color: #16a34a; font-weight: 500; margin-top: 2px;">${currentUser ? (currentUser.fullName || currentUser.username) : 'DM'}</div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  // Display Modal
+  const modal = document.getElementById('modalApprovalDMCanvas');
+  if (modal) {
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.classList.add('show');
+  }
+
+  // Init Canvas after modal is visible - diawali kosong agar DM gores TTD baru
+  setTimeout(() => {
+    initCanvasTTDDM();
+    if (typeof hapusCanvasDM === 'function') {
+      hapusCanvasDM();
+    }
+  }, 100);
+}
+window.bukaModalApprovalDMCanvas = bukaModalApprovalDMCanvas;
+
+function tutupModalApprovalDMCanvas() {
+  const modal = document.getElementById('modalApprovalDMCanvas');
+  if (modal) {
+    modal.style.setProperty('display', 'none', 'important');
+    modal.classList.remove('show');
+  }
+  _dmApprovalCurrentNoSurat = null;
+  _isDMCanvasDirty = false;
+}
+window.tutupModalApprovalDMCanvas = tutupModalApprovalDMCanvas;
+
+function initCanvasTTDDM() {
+  const canvas = document.getElementById('canvasTTDDM');
+  if (!canvas) return;
+
+  const container = canvas.parentElement;
+  canvas.width = container.clientWidth || 700;
+  canvas.height = container.clientHeight || 170;
+
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#0f172a';
+
+  _isDMCanvasDirty = false;
+
+  let isDrawing = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    let clientX = e.clientX;
+    let clientY = e.clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    }
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  }
+
+  function startDrawing(e) {
+    isDrawing = true;
+    const pos = getPos(e);
+    lastX = pos.x;
+    lastY = pos.y;
+    _isDMCanvasDirty = true;
+  }
+
+  function draw(e) {
+    if (!isDrawing) return;
+    if (e.cancelable) e.preventDefault();
+    const pos = getPos(e);
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    lastX = pos.x;
+    lastY = pos.y;
+    _isDMCanvasDirty = true;
+  }
+
+  function stopDrawing() {
+    isDrawing = false;
+  }
+
+  canvas.onmousedown = startDrawing;
+  canvas.onmousemove = draw;
+  canvas.onmouseup = stopDrawing;
+  canvas.onmouseleave = stopDrawing;
+
+  canvas.ontouchstart = (e) => { startDrawing(e); };
+  canvas.ontouchmove = (e) => { draw(e); };
+  canvas.ontouchend = stopDrawing;
+}
+window.initCanvasTTDDM = initCanvasTTDDM;
+
+async function pakaiTtdProfileDM() {
+  if (!_dmApprovalCurrentNoSurat) return;
+  const requests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
+  const req = requests.find(r => r && String(r.noSurat).trim().toUpperCase() === String(_dmApprovalCurrentNoSurat).trim().toUpperCase());
+
+  const dmSig = getLoggedInUserSignature(req);
+
+  if (!dmSig) return;
+
+  const canvas = document.getElementById('canvasTTDDM');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const img = new Image();
+  if (typeof dmSig === 'string' && (dmSig.startsWith('http://') || dmSig.startsWith('https://'))) {
+    img.crossOrigin = 'anonymous';
+  }
+  img.onload = () => {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const scale = Math.min((canvas.width * 0.85) / img.width, (canvas.height * 0.85) / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    const x = (canvas.width - w) / 2;
+    const y = (canvas.height - h) / 2;
+    
+    ctx.drawImage(img, x, y, w, h);
+    _isDMCanvasDirty = true;
+  };
+  img.src = dmSig;
+}
+window.pakaiTtdProfileDM = pakaiTtdProfileDM;
+
+function hapusCanvasDM() {
+  const canvas = document.getElementById('canvasTTDDM');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  _isDMCanvasDirty = false;
+}
+window.hapusCanvasDM = hapusCanvasDM;
+
+function isDMCanvasBlank() {
+  return !_isDMCanvasDirty;
+}
+window.isDMCanvasBlank = isDMCanvasBlank;

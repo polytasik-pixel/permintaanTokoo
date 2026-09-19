@@ -7318,9 +7318,9 @@ button[onclick*="bukaModalRiwayatParsialList"] {
    (ALL INPUTS & APP CONTENT UPPERCASE EXCEPT SIDEBAR MENU OPTIONS)
    ============================================================================= */
 
-/* 1. ALL INPUT FIELDS, TEXTAREAS, SELECTS VISUALLY UPPERCASE */
-input:not([type="password"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]),
-textarea,
+/* 1. ALL INPUT FIELDS, TEXTAREAS, SELECTS VISUALLY UPPERCASE (EXCEPT ADMIN SCRIPT URL INPUT) */
+input:not([type="password"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]):not(#adminScriptUrlInput):not(.no-uppercase),
+textarea:not(#adminScriptUrlInput):not(.no-uppercase),
 select,
 .form-control,
 .form-input,
@@ -7363,7 +7363,10 @@ button:not(.sidebar-item),
   text-transform: uppercase !important;
 }
 
-/* 3. EXPLICIT PRESERVATION: SIDEBAR MENU ITEMS STAY NORMAL CASE */
+/* 3. EXPLICIT PRESERVATION: SIDEBAR MENU & SCRIPT URL INPUT STAY NORMAL CASE */
+#adminScriptUrlInput,
+.no-uppercase,
+.preserve-case,
 .app-sidebar,
 .app-sidebar .sidebar-item,
 .app-sidebar .sidebar-item span,
