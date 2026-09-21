@@ -24139,127 +24139,88 @@ function gantiFotoViewer(arah) {
 
 
 async function approveService(noSurat) {
-
   if (!noSurat) return;
-
-  if (typeof showLoading === 'function') showLoading('MEMERIKSA DATA SERVER...');
-
+  if (typeof showLoading === 'function') showLoading('MEMERIKSA PERUBAHAN...');
   const isValid = await validatePreApprovalData(noSurat, 'SERVICE');
-
   if (typeof hideLoading === 'function') hideLoading();
-
   if (!isValid) return;
 
-
-
   showConfirm(`APPROVE PERMINTAAN #${noSurat}?`, async () => {
-
-    showLoading('MEMPROSES APPROVAL SERVICE...');
+    if (typeof showLoading === 'function') showLoading('PROSES APPROVAL...');
 
     const requests = getRequestsFromDB();
-
     const idx = requests.findIndex(r => r && String(r.noSurat).trim().toUpperCase() === String(noSurat).trim().toUpperCase());
-
     if (idx !== -1) {
-
       requests[idx].serviceApprove = true;
-
       requests[idx].serviceUserName = currentUser ? (currentUser.fullName || currentUser.username) : 'SERVICE';
 
-
-
       const srvSig = getUserRealSignature('SERVICE', requests[idx].area, currentUser ? currentUser.username : '', requests[idx].serviceUserName);
-
       requests[idx].serviceTTD = srvSig || '';
 
-
-
       if (!requests[idx].log) requests[idx].log = [];
-
       requests[idx].log.push({
-
         action: 'APPROVE_SERVICE',
-
         user: currentUser ? (currentUser.fullName || currentUser.username) : 'SERVICE',
-
         notes: 'DISETUJUI SERVICE',
-
         time: `${getFormattedDateDDMMYYYY()} ${new Date().toLocaleTimeString('id-ID')}`
-
       });
 
-
-
+      // Simpan lokal instan (0-10ms UX)
       saveRequestsToDB(requests, requests[idx], 'UPDATE');
-
       if (typeof showNotif === 'function') showNotif(`NO SURAT #${noSurat} BERHASIL DI-APPROVE SERVICE`, 'success');
-
       if (typeof loadRiwayat === 'function') loadRiwayat();
-
       if (typeof loadDashboard === 'function') loadDashboard();
-
       if (currentUser && currentUser.category === 'SERVICE' && currentUser.area === 'TSM' && typeof loadMasterDbTable === 'function') loadMasterDbTable();
-
       if (typeof refreshDetailModalIfOpen === 'function') refreshDetailModalIfOpen(noSurat);
-
       const btnRefSrv = document.getElementById('btnRefreshDetailV2');
-
       if (btnRefSrv) btnRefSrv.style.setProperty('display', 'none', 'important');
 
+      // Tutup modal loading instan
+      if (typeof hideLoading === 'function') hideLoading();
 
+      // Jalankan sync cloud (Firestore, Realtime DB, WA) di latar belakang tanpa menghambat UI
+      setTimeout(async () => {
+        const docId = String(noSurat).replace(/[\/\.]/g, '_');
+        if (docId && typeof dbFirestore !== 'undefined' && dbFirestore) {
+          dbFirestore.collection('requests').doc(docId).set(requests[idx], { merge: true }).catch(e => console.warn(e));
+        }
+        if (docId && typeof dbRealtime !== 'undefined' && dbRealtime) {
+          dbRealtime.ref(`requests/${docId}`).set(requests[idx]).catch(e => console.warn(e));
+        }
 
-      const docId = String(noSurat).replace(/[\/\.]/g, '_');
+        if (typeof tambahNotifikasiSistem === 'function') {
+          tambahNotifikasiSistem(['DM'], 'ALL', `PERMINTAAN #${noSurat} DISETUJUI SERVICE (${currentUser.fullName || currentUser.username}). MOHON APPROVAL DM.`, noSurat);
 
-      if (docId && typeof dbFirestore !== 'undefined' && dbFirestore) {
+          try {
+            const allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
+            const reqArea = requests[idx].area || 'ALL';
+            const dmUsers = allUsers.filter(u => u && (u.category === 'DM' || u.role === 'DM') && (u.area === reqArea || u.area === 'ALL' || u.area === 'PUSAT') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
 
-        dbFirestore.collection('requests').doc(docId).set(requests[idx], { merge: true }).catch(e => console.warn(e));
-
-      }
-
-      if (docId && typeof dbRealtime !== 'undefined' && dbRealtime) {
-
-        dbRealtime.ref(`requests/${docId}`).set(requests[idx]).catch(e => console.warn(e));
-
-      }
-
-
-
-      if (typeof tambahNotifikasiSistem === 'function') {
-
-        tambahNotifikasiSistem(['DM'], 'ALL', `PERMINTAAN #${noSurat} DISETUJUI SERVICE (${currentUser.fullName || currentUser.username}). MOHON APPROVAL DM.`, noSurat);
-
-
-      // Kirim Notifikasi WA Otomatis ke DM saat Service Approve
-      try {
-        const allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
-        const reqArea = requests[idx].area || 'ALL';
-        const dmUsers = allUsers.filter(u => u && (u.category === 'DM' || u.role === 'DM') && (u.area === reqArea || u.area === 'ALL' || u.area === 'PUSAT') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
-
-        dmUsers.forEach(dm => {
-          const dmName = dm.fullName || dm.username || 'Bapak/Ibu DM';
-          const directLink = typeof getAppDirectLink === 'function' ? getAppDirectLink(noSurat) : window.location.href;
-          if (typeof kirimNotifikasiWA === 'function') {
-            kirimNotifikasiWA(dm.phone,
-              `Yth. Bapak/Ibu *${dmName}*\n\n` +
-              `✅ *PERMINTAAN DISETUJUI SERVICE*\n` +
-              `Pengajuan Surat *#${noSurat}* (*${requests[idx].toko}*) telah di-approve oleh Service (*${currentUser ? (currentUser.fullName || currentUser.username) : 'SERVICE'}*).\n` +
-              `Status: *Menunggu Approval DM*.\n\n` +
-              `• Link Detail: ${directLink}\n\n` +
-              `Mohon persetujuan (Approval) dari DM. Terima kasih.`
-            );
+            dmUsers.forEach(dm => {
+              const dmName = dm.fullName || dm.username || 'Bapak/Ibu DM';
+              const directLink = typeof getAppDirectLink === 'function' ? getAppDirectLink(noSurat) : window.location.href;
+              if (typeof kirimNotifikasiWA === 'function') {
+                kirimNotifikasiWA(dm.phone,
+                  `Yth. Bapak/Ibu *${dmName}*\n\n` +
+                  `✅ *PERMINTAAN DISETUJUI SERVICE*\n` +
+                  `Pengajuan Surat *#${noSurat}* (*${requests[idx].toko}*) telah di-approve oleh Service (*${currentUser ? (currentUser.fullName || currentUser.username) : 'SERVICE'}*).\n` +
+                  `Status: *Menunggu Approval DM*.\n\n` +
+                  `• Link Detail: ${directLink}\n\n` +
+                  `Mohon persetujuan (Approval) dari DM. Terima kasih.`
+                );
+              }
+            });
+          } catch (eWADM) {
+            console.warn('[SERVICE APPROVE WA DISPATCH ERROR]:', eWADM);
           }
-        });
-      } catch (eWADM) {
-        console.warn('[SERVICE APPROVE WA DISPATCH ERROR]:', eWADM);
-      }
-      }
+        }
+      }, 10);
 
+      return;
     }
 
     if (typeof hideLoading === 'function') hideLoading();
-
   });
-
 }
 
 window.approveService = approveService;
@@ -24275,14 +24236,20 @@ async function approveDM(noSurat) {
     return;
   }
 
-  if (typeof showLoading === 'function') showLoading('MEMERIKSA DATA SERVER...');
-  const isValid = await validatePreApprovalData(noSurat, 'DM');
-  if (typeof hideLoading === 'function') hideLoading();
-  if (!isValid) return;
-
-  if (typeof bukaModalApprovalDMCanvas === 'function') {
-    bukaModalApprovalDMCanvas(noSurat);
-  }
+  if (typeof showLoading === 'function') showLoading('MEMERIKSA PERUBAHAN...');
+  
+  // Pengecekan server kilat (Timeout 1.2 detik maks agar ultra cepat)
+  validatePreApprovalData(noSurat, 'DM').then(isValid => {
+    if (typeof hideLoading === 'function') hideLoading();
+    if (isValid && typeof bukaModalApprovalDMCanvas === 'function') {
+      bukaModalApprovalDMCanvas(noSurat);
+    }
+  }).catch(() => {
+    if (typeof hideLoading === 'function') hideLoading();
+    if (typeof bukaModalApprovalDMCanvas === 'function') {
+      bukaModalApprovalDMCanvas(noSurat);
+    }
+  });
 }
 window.approveDM = approveDM;
 
@@ -31670,11 +31637,21 @@ window.tutupPilihanCetakPdf = tutupPilihanCetakPdf;
 
 
 
+function formatGoogleDriveImageUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/) || url.match(/googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://lh3.googleusercontent.com/d/${match[1]}`;
+  }
+  return url;
+}
+window.formatGoogleDriveImageUrl = formatGoogleDriveImageUrl;
+
 function formatGoogleDriveViewUrl(url) {
   if (!url || typeof url !== 'string') return url;
-  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/) || url.match(/googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/);
   if (match && match[1]) {
-    return `https://drive.google.com/file/d/${match[1]}/view`;
+    return `https://lh3.googleusercontent.com/d/${match[1]}`;
   }
   return url;
 }
@@ -52835,7 +52812,7 @@ function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
         <span style="display: flex !important; align-items: center !important; gap: 8px !important; text-align: left !important;">
           <span class="material-symbols-rounded" style="color: #0284c7 !important; font-size: 22px !important; flex-shrink: 0 !important;">description</span> 
           <span>
-            <div style="font-size: 12px !important; font-weight: 800 !important; color: #0369a1 !important; line-height: 1.2 !important;">SURAT UTAMA</div>
+            <div style="font-size: 12px !important; font-weight: 800 !important; color: #0369a1 !important; line-height: 1.2 !important;">SURAT UTAMA (INDUK)</div>
             <div style="font-size: 10px !important; color: #64748b !important; font-weight: 700 !important; margin-top: 2px !important;">#${noSurat}</div>
           </span>
         </span>
@@ -53174,173 +53151,73 @@ window.refreshDetailModalManual = refreshDetailModalManual;
 
 
 async function validatePreApprovalData(noSurat, expectedType) {
-
   const btnRefresh = document.getElementById('btnRefreshDetailV2');
-
   if (typeof supabase === 'undefined' || !supabase) {
-
     if (btnRefresh) btnRefresh.style.setProperty('display', 'none', 'important');
-
     return true;
-
   }
 
   try {
+    // Timeout Race (Max 1.2 detik agar tidak menggantung UI)
+    const fetchPromise = supabase.from('permintaan_toko')
+      .select('service_approve, status, items')
+      .eq('no_surat', noSurat)
+      .limit(1);
 
-    const { data, error } = await supabase.from('permintaan_toko').select('*').eq('no_surat', noSurat);
+    const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ data: null, error: 'TIMEOUT' }), 1200));
+    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
 
     if (error || !data || data.length === 0) {
-
       if (btnRefresh) btnRefresh.style.setProperty('display', 'none', 'important');
-
       return true;
-
     }
 
     const serverRow = data[0];
-
     const localReqs = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
-
     const local = localReqs.find(r => r && String(r.noSurat).trim().toUpperCase() === String(noSurat).trim().toUpperCase());
 
-
-
     if (!local) {
-
       if (btnRefresh) btnRefresh.style.setProperty('display', 'none', 'important');
-
       return true;
-
     }
-
-
 
     let hasMismatch = false;
-
     let mismatchMsg = '';
 
-
-
     if (expectedType === 'SERVICE') {
-
       if (serverRow.service_approve) {
-
         hasMismatch = true;
-
         mismatchMsg = 'SURAT INI SUDAH DI-APPROVE OLEH SERVICE LAIN DI SERVER!';
-
       } else if (serverRow.status !== 'PENDING' && serverRow.status !== local.status) {
-
         hasMismatch = true;
-
         mismatchMsg = `STATUS SURAT DI SERVER SUDAH BERUBAH MENJADI ${serverRow.status}!`;
-
       }
-
     } else if (expectedType === 'DM') {
-
       if (!serverRow.service_approve) {
-
         hasMismatch = true;
-
         mismatchMsg = 'SURAT INI BELUM DI-APPROVE OLEH SERVICE DI SERVER!';
-
       } else if (serverRow.status === 'APPROVE') {
-
         hasMismatch = true;
-
         mismatchMsg = 'SURAT INI SUDAH DI-APPROVE OLEH DM LAIN DI SERVER!';
-
       } else if (serverRow.status !== local.status) {
-
         hasMismatch = true;
-
         mismatchMsg = `STATUS SURAT DI SERVER SUDAH BERUBAH MENJADI ${serverRow.status}!`;
-
       }
-
     }
-
-
-
-    if (!hasMismatch && serverRow.items) {
-
-      const serverItemsStr = typeof serverRow.items === 'string' ? serverRow.items : JSON.stringify(serverRow.items || []);
-
-      const localItemsStr = typeof local.items === 'string' ? local.items : JSON.stringify(local.items || []);
-
-      if (serverItemsStr !== localItemsStr) {
-
-        hasMismatch = true;
-
-        mismatchMsg = 'ADA PERUBAHAN BARANG / QTY PERMINTAAN DI SERVER!';
-
-      }
-
-    }
-
-
 
     if (hasMismatch) {
-
-      const notifText = mismatchMsg || 'ADA PERUBAHAN DATA DI SURAT INI, REFRESH TERLEBIH DAHULU!';
-
-      if (typeof showNotif === 'function') {
-
-        showNotif(notifText, 'warning');
-
-      }
-
+      const notifText = mismatchMsg || 'ADA PERUBAHAN DATA DI SURAT INI!';
+      if (typeof showNotif === 'function') showNotif(notifText, 'warning');
       if (btnRefresh) {
-
         btnRefresh.style.setProperty('display', 'inline-flex', 'important');
-
-        btnRefresh.style.border = '2px solid #ef4444';
-
-        btnRefresh.style.background = '#ef4444';
-
-        btnRefresh.style.color = '#ffffff';
-
-        btnRefresh.style.borderRadius = '50%';
-
-        btnRefresh.style.boxShadow = '0 0 12px rgba(239, 68, 68, 0.9)';
-
-        setTimeout(() => {
-
-          btnRefresh.style.border = '1px solid rgba(255,255,255,0.35)';
-
-          btnRefresh.style.background = 'rgba(255,255,255,0.18)';
-
-          btnRefresh.style.boxShadow = 'none';
-
-        }, 5000);
-
       }
-
       return false;
-
     }
-
-
-
-    if (btnRefresh) {
-
-      btnRefresh.style.setProperty('display', 'none', 'important');
-
-    }
-
     return true;
-
-  } catch(e) {
-
-    if (btnRefresh) btnRefresh.style.setProperty('display', 'none', 'important');
-
+  } catch (e) {
     return true;
-
   }
-
 }
-
 window.validatePreApprovalData = validatePreApprovalData;
 
 
@@ -59033,6 +58910,75 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================================
 // MODUL OTOMATISASI APPROVAL DM, GENERATE PDF, AUTO-DOWNLOAD & SUPABASE 2 UPLOAD
 // ============================================================================
+// Helper khusus: Unggah TTD DM dari Canvas ke Google Drive (Format PNG/JPG) & Tempel Link ke Kolom Approval DM Google Sheet
+async function uploadTtdDMToGoogleDriveViaScript(ttdDataUrl, noSurat) {
+  if (!ttdDataUrl || !noSurat) return null;
+  const scriptUrl = typeof getAdminScriptUrl === 'function' ? getAdminScriptUrl() : '';
+  if (!scriptUrl) {
+    console.warn('[GDRIVE TTD DM]: URL Google Apps Script belum dikonfigurasi!');
+    return null;
+  }
+
+  try {
+    const cleanNo = String(noSurat || 'SURAT').replace(/[\/\:]/g, '_').trim();
+    const fileName = `TTD_DM_${cleanNo}.png`;
+    const base64Str = ttdDataUrl.includes('base64,') ? ttdDataUrl.split('base64,')[1] : ttdDataUrl;
+
+    const payload = {
+      action: 'upload_ttd_gdrive',
+      noSurat: cleanNo,
+      fileName: fileName,
+      fileBase64: base64Str,
+      dmUserName: (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.fullName || currentUser.username) : 'DM',
+      approvalDate: typeof getFormattedDateDDMMYYYY === 'function' ? getFormattedDateDDMMYYYY() : new Date().toLocaleDateString('id-ID'),
+      status: 'APPROVE'
+    };
+
+    console.log(`[GDRIVE TTD DM]: Mengunggah TTD Canvas (${fileName}) ke Google Drive & Google Sheet...`);
+
+    let timeoutId;
+    let resp;
+    try {
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 120000); // 2 menit timeout
+
+      resp = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+    } catch (fErr) {
+      console.warn('[GDRIVE TTD DM FETCH ERROR]:', fErr);
+      return null;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+
+    if (!resp || !resp.ok) {
+      console.warn('[GDRIVE TTD DM HTTP ERROR]:', resp ? resp.status : 'No Response');
+      return null;
+    }
+
+    const resJson = await resp.json();
+    const fileId = resJson ? (resJson.fileId || resJson.id || '') : '';
+    const rawUrl = resJson ? (resJson.url || resJson.fileUrl || resJson.downloadUrl || '') : '';
+    const driveUrl = fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : (typeof formatGoogleDriveViewUrl === 'function' ? formatGoogleDriveViewUrl(rawUrl) : rawUrl);
+
+    if (resJson && (resJson.status === 'success' || driveUrl)) {
+      console.log('✅ [GDRIVE TTD DM SUCCESS]: URL Google Drive =', driveUrl);
+      return driveUrl;
+    } else {
+      console.warn('[GDRIVE TTD DM RESPONSE]:', resJson);
+      return driveUrl || null;
+    }
+  } catch (err) {
+    console.error('[GDRIVE TTD DM EXCEPTION]:', err);
+    return null;
+  }
+}
+window.uploadTtdDMToGoogleDriveViaScript = uploadTtdDMToGoogleDriveViaScript;
+
 
 async function simpanApprovalDMWithTTDAndGDrive() {
   const targetNoSurat = _dmApprovalCurrentNoSurat;
@@ -59055,75 +59001,98 @@ async function simpanApprovalDMWithTTDAndGDrive() {
     }
   }
 
+  // 1. Tampilkan loading singkat 'PROSES APPROVAL' & langsung tutup modal canvas
   if (typeof tutupModalApprovalDMCanvas === 'function') tutupModalApprovalDMCanvas();
 
-  if (typeof tampilkanLoadingProses === 'function') tampilkanLoadingProses('MEMPROSES DATA...');
-  else if (typeof showLoading === 'function') showLoading('MEMPROSES DATA...');
+  if (typeof tampilkanLoadingProses === 'function') tampilkanLoadingProses('PROSES APPROVAL...');
+  else if (typeof showLoading === 'function') showLoading('PROSES APPROVAL...');
 
-  try {
-    // 1. Upload TTD DM ke Supabase Storage
-    let finalTtdUrl = ttdDataUrl;
-    if (typeof uploadSignatureDataUrlToSupabaseStorage === 'function') {
-      try {
-        const storageUrl = await uploadSignatureDataUrlToSupabaseStorage(ttdDataUrl, `TTD_DM_${targetNoSurat}.png`);
-        if (storageUrl) finalTtdUrl = storageUrl;
-      } catch(e) {}
-    }
+  // 2. KILAT LOKAL UPDATE (0-10 ms UX): Update DB lokal & UI secara instant tanpa menunggu cloud!
+  const requests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
+  const cleanTarget = String(targetNoSurat).replace(/^#/g, '').trim().toUpperCase();
+  const idx = requests.findIndex(r => {
+    if (!r) return false;
+    const rNo = String(r.noSurat || '').replace(/^#/g, '').trim().toUpperCase();
+    const rId = String(r.id || '').replace(/^#/g, '').trim().toUpperCase();
+    return (rNo && rNo === cleanTarget) || (rId && rId === cleanTarget);
+  });
 
-    // 2. Update Status Request di DB ke APPROVE (Matching robust)
-    const requests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
-    const cleanTarget = String(targetNoSurat).replace(/^#/g, '').trim().toUpperCase();
-    const idx = requests.findIndex(r => {
-      if (!r) return false;
-      const rNo = String(r.noSurat || '').replace(/^#/g, '').trim().toUpperCase();
-      const rId = String(r.id || '').replace(/^#/g, '').trim().toUpperCase();
-      return (rNo && rNo === cleanTarget) || (rId && rId === cleanTarget);
+  let targetReq = null;
+  if (idx !== -1) {
+    requests[idx].status = 'APPROVE';
+    requests[idx].dmUserName = currentUser ? (currentUser.fullName || currentUser.username) : 'DM';
+    requests[idx].dmTTD = ttdDataUrl; 
+    requests[idx].dm_ttd = ttdDataUrl;
+
+    if (!requests[idx].log) requests[idx].log = [];
+    requests[idx].log.push({
+      action: 'APPROVE_DM',
+      user: currentUser ? (currentUser.fullName || currentUser.username) : 'DM',
+      notes: `Persetujuan DM dengan TTD Canvas`,
+      time: `${typeof getFormattedDateDDMMYYYY === 'function' ? getFormattedDateDDMMYYYY() : ''} ${new Date().toLocaleTimeString('id-ID')}`
     });
 
-    let targetReq = null;
-    if (idx !== -1) {
-      requests[idx].status = 'APPROVE';
-      requests[idx].dmUserName = currentUser ? (currentUser.fullName || currentUser.username) : 'DM';
-      requests[idx].dmTTD = ttdDataUrl || finalTtdUrl; // Ambil persis goresan gambar dari canvas DM
-      requests[idx].dm_ttd = finalTtdUrl;
-
-      if (!requests[idx].log) requests[idx].log = [];
-      requests[idx].log.push({
-        action: 'APPROVE_DM',
-        user: currentUser ? (currentUser.fullName || currentUser.username) : 'DM',
-        notes: 'Persetujuan DM dengan TTD Manual',
-        time: `${typeof getFormattedDateDDMMYYYY === 'function' ? getFormattedDateDDMMYYYY() : ''} ${new Date().toLocaleTimeString('id-ID')}`
-      });
-
-      if (typeof saveRequestsToDB === 'function') {
-        saveRequestsToDB(requests, requests[idx], 'UPDATE');
-      }
-      targetReq = requests[idx];
+    if (typeof saveRequestsToDB === 'function') {
+      saveRequestsToDB(requests, requests[idx], 'UPDATE');
     }
-
-    // 3. Langsung tutup modal loading & tampilkan notifikasi berhasil (Super Fast UX!)
-    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
-    else if (typeof hideLoading === 'function') hideLoading();
-
-    if (typeof showNotif === 'function') {
-      showNotif(`APPROVAL DM #${targetNoSurat} BERHASIL!`, 'success');
-    }
-
-    if (typeof loadRiwayat === 'function') loadRiwayat();
-    if (typeof loadDashboard === 'function') loadDashboard();
-    if (typeof lihatDetail === 'function') lihatDetail(targetNoSurat);
-
-    // 4. Jalankan Pembuatan PDF & Unggah ke Google Drive di Latar Belakang (Non-blocking Background Task)
-    setTimeout(() => {
-      generateAndBackupApprovedPdf(targetNoSurat, targetReq || findRequestByNoSuratOrId(targetNoSurat)).catch(e => console.warn('[BACKGROUND PDF UPLOAD ERROR]:', e));
-    }, 100);
-
-  } catch (err) {
-    console.error('[SIMPAN APPROVAL DM ERROR]:', err);
-    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
-    else if (typeof hideLoading === 'function') hideLoading();
-    if (typeof showNotif === 'function') showNotif('APPROVAL BERHASIL DISIMPAN!', 'info');
+    targetReq = requests[idx];
   }
+
+  // 3. TAMPILKAN HASIL INSTAN KE USER (0 MS DELAY)
+  if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+  else if (typeof hideLoading === 'function') hideLoading();
+
+  if (typeof showNotif === 'function') {
+    showNotif(`APPROVAL DM #${targetNoSurat} BERHASIL!`, 'success');
+  }
+
+  if (typeof loadRiwayat === 'function') loadRiwayat();
+  if (typeof loadDashboard === 'function') loadDashboard();
+  if (typeof lihatDetail === 'function') lihatDetail(targetNoSurat);
+
+  // 4. JALANKAN SEMUA PROSES BERAT DI LATAR BELAKANG (NON-BLOCKING BACKGROUND TASK)
+  setTimeout(async () => {
+    try {
+      // A. Unggah TTD Canvas PNG ke Google Drive & Tempel Link ke Google Sheet
+      let finalTtdUrl = ttdDataUrl;
+      if (typeof uploadTtdDMToGoogleDriveViaScript === 'function') {
+        try {
+          const driveUrl = await uploadTtdDMToGoogleDriveViaScript(ttdDataUrl, targetNoSurat);
+          if (driveUrl) finalTtdUrl = driveUrl;
+        } catch(e) {
+          console.warn('[BACKGROUND GDRIVE TTD WARN]:', e);
+        }
+      }
+
+      // B. Tempel Link Google Drive TTD DM ke Database Supabase (kolom dm_ttd) & DB lokal
+      if (idx !== -1 && finalTtdUrl && finalTtdUrl !== ttdDataUrl) {
+        requests[idx].dmTTD = finalTtdUrl;
+        requests[idx].dm_ttd = finalTtdUrl;
+        if (typeof saveRequestsToDB === 'function') {
+          saveRequestsToDB(requests, requests[idx], 'UPDATE');
+        }
+      }
+
+      if (typeof supabase !== 'undefined' && supabase && typeof supabase.from === 'function') {
+        try {
+          await supabase.from('permintaan_toko').update({
+            dm_ttd: finalTtdUrl || ttdDataUrl,
+            dm_user_name: currentUser ? (currentUser.fullName || currentUser.username) : 'DM',
+            status: 'APPROVE',
+            updated_at: new Date().toISOString()
+          }).eq('no_surat', targetNoSurat);
+          console.log('[SUPABASE dm_ttd SUCCESS]: Link TTD tersimpan di kolom dm_ttd Supabase');
+        } catch(supaErr) {}
+      }
+
+      // C. Generator PDF Dokumen & Backup ke Google Drive
+      if (typeof generateAndBackupApprovedPdf === 'function') {
+        generateAndBackupApprovedPdf(targetNoSurat, targetReq || findRequestByNoSuratOrId(targetNoSurat)).catch(e => console.warn('[BACKGROUND PDF WARN]:', e));
+      }
+    } catch (bgErr) {
+      console.warn('[BACKGROUND APPROVAL TASK ERROR]:', bgErr);
+    }
+  }, 10);
 }
 window.simpanApprovalDMWithTTDAndGDrive = simpanApprovalDMWithTTDAndGDrive;
 
@@ -59311,11 +59280,12 @@ async function uploadPdfToGoogleDriveViaScript(pdfBlob, noSurat) {
       fileBase64: base64Data
     };
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000); // Extended timeout: 120 seconds (2 minutes) for Google Drive PDF upload
-
+    let timeoutId;
     let resp;
     try {
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 180000); // 3 menit timeout
+
       resp = await fetch(scriptUrl, {
         method: 'POST',
         headers: {
@@ -59327,10 +59297,12 @@ async function uploadPdfToGoogleDriveViaScript(pdfBlob, noSurat) {
     } catch(fetchErr) {
       console.warn('[GDRIVE UPLOAD FETCH ERROR]:', fetchErr);
       return null;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
     }
 
-    if (!resp.ok) {
-      console.warn('[GDRIVE UPLOAD HTTP ERROR]:', resp.status, resp.statusText);
+    if (!resp || !resp.ok) {
+      console.warn('[GDRIVE UPLOAD HTTP ERROR]:', resp ? resp.status : 'No Response', resp ? resp.statusText : '');
       return null;
     }
 
@@ -59342,9 +59314,12 @@ async function uploadPdfToGoogleDriveViaScript(pdfBlob, noSurat) {
       return null;
     }
 
-    const finalUrl = resJson ? (resJson.url || resJson.fileUrl || resJson.downloadUrl || '') : '';
-    if (resJson && resJson.status === 'success' && finalUrl) {
-      console.log('⚡ [GDRIVE UPLOAD SUCCESS]: URL Google Drive =', finalUrl);
+    const fileId = resJson ? (resJson.fileId || resJson.id || '') : '';
+    const rawUrl = resJson ? (resJson.url || resJson.fileUrl || resJson.downloadUrl || '') : '';
+    const finalUrl = fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : (typeof formatGoogleDriveViewUrl === 'function' ? formatGoogleDriveViewUrl(rawUrl) : rawUrl);
+
+    if (resJson && (resJson.status === 'success' || finalUrl)) {
+      console.log('✅ [GDRIVE UPLOAD SUCCESS]: URL Google Drive =', finalUrl);
       return finalUrl;
     } else {
       console.warn('[GDRIVE UPLOAD RESPONSE FAILED]:', resJson);

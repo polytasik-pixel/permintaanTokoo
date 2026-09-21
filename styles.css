@@ -8788,9 +8788,7 @@ th.sortable-th.active-sort .sort-icon {
 #masterDbPage .historyTable td {
   height: auto !important;
   max-height: none !important;
-  white-space: normal !important;
-  word-break: break-word !important;
-  overflow-wrap: break-word !important;
+  white-space: nowrap !important;
   padding: 8px 10px !important;
   vertical-align: middle !important;
   font-size: 12px !important;
@@ -8803,12 +8801,19 @@ th.sortable-th.active-sort .sort-icon {
   font-weight: 800 !important;
   text-align: left !important;
   border-bottom: 2px solid #cbd5e1 !important;
+  white-space: nowrap !important;
 }
 
-#masterDbPage .historyTable td div,
-#masterDbPage .historyTable td span,
-#masterDbPage .historyTable td small,
-#masterDbPage .historyTable td strong {
+/* HEADER KOLOM 7 TETAP 1 BARIS (th), HANYA ISI CELL (td) YANG BOLEH WRAP TEXT */
+#masterDbPage .historyTable th:nth-child(7) {
+  white-space: nowrap !important;
+}
+
+#masterDbPage .historyTable td:nth-child(7),
+#masterDbPage .historyTable td:nth-child(7) div,
+#masterDbPage .historyTable td:nth-child(7) span,
+#masterDbPage .historyTable td:nth-child(7) small,
+#masterDbPage .historyTable td:nth-child(7) strong {
   white-space: normal !important;
   word-break: break-word !important;
   overflow-wrap: break-word !important;

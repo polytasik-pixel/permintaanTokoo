@@ -859,28 +859,6 @@
         </div>
       </div>
 
-      <!-- ADMIN CONTROL: UNDUH / KELOLA FOTO CLOUD LANGSUNG KE FOLDER -->
-      <div id="containerDownloadFotoZipAdmin" class="box" style="border-left: 4px solid #0284c7; margin-bottom: 1mm !important; background: var(--bg-card);">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          <div>
-            <h3 style="color: #0284c7; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 900;">
-              <span class="material-symbols-rounded">folder_open</span> UNDUH / KELOLA PENYIMPANAN FOTO CLOUD
-            </h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
-              SIMPAN SELURUH FOTO PERMINTAAN LANGSUNG KE FOLDER KOMPUTER ATAU BERSIHKAN PENYIMPANAN CLOUD.
-            </p>
-          </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-            <button type="button" class="btnDownload" style="background: #e2e8f0 !important; color: #0f172a !important; border: 1px solid #000000 !important; padding: 10px 16px !important; font-weight: 800 !important; border-radius: 6px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important;" onclick="downloadSemuaFotoZipAdmin()">
-              <span class="material-symbols-rounded" style="font-size: 18px;">folder_open</span> SIMPAN SEMUA FOTO KE FOLDER
-            </button>
-            <button type="button" class="btnDownload" style="background: #dc2626 !important; color: #ffffff !important; border: 1px solid #991b1b !important; padding: 10px 16px !important; font-weight: 800 !important; border-radius: 6px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important;" onclick="hapusSemuaFotoBiasa()">
-              <span class="material-symbols-rounded" style="font-size: 18px; color: #ffffff !important;">delete_forever</span> HAPUS SEMUA FOTO
-            </button>
-          </div>
-        </div>
-      </div>
-
       <!-- ADMIN CONTROL: PENGATURAN UPLOAD FOTO (GLOBAL ON / OFF) -->
       <div id="adminPhotoControlContainer" class="box" style="border-left: 4px solid #0284c7; margin-bottom: 1mm !important; background: var(--bg-card); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div>
@@ -971,41 +949,6 @@
         </div>
       </div>
 
-      <!-- ADMIN CONTROL: PENGATURAN TEMA & BACKGROUND GLOBAL (SINKRON KE SEMUA USER) -->
-      <div id="containerAdminGlobalThemeBg" class="box" style="border-left: 4px solid #ec4899; margin-bottom: 1mm !important; background: var(--bg-card);">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          <div>
-            <h3 style="color: #ec4899; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 900;">
-              <span class="material-symbols-rounded">palette</span> PENGATURAN TEMA, BACKGROUND & TRANSPARANSI GLOBAL (SEMUA USER)
-            </h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
-              ATUR & SINKRONKAN TEMA WARNA, GAMBAR BACKGROUND, DAN TINGKAT TRANSPARANSI KE SELURUH PERANGKAT USER SECARA REAL-TIME DARI CLOUD.
-            </p>
-          </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-            <button type="button" class="btnDownload" style="background: linear-gradient(135deg, #ec4899, #db2777); height: 42px; padding: 0 16px; font-weight: 800; border: none; border-radius: 5px; color: #ffffff; cursor: pointer; box-shadow: 0 2px 6px rgba(236, 72, 153, 0.25); display: flex; align-items: center; gap: 6px;" onclick="toggleTheme()">
-              <span class="material-symbols-rounded">palette</span> GANTI TEMA GLOBAL
-            </button>
-            <button type="button" class="btnDownload" style="background: linear-gradient(135deg, #059669, #047857); height: 42px; padding: 0 16px; font-weight: 800; border: none; border-radius: 5px; color: #ffffff; cursor: pointer; box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25); display: flex; align-items: center; gap: 6px;" onclick="gantiBackgroundApp()">
-              <span class="material-symbols-rounded">wallpaper</span> GANTI BACKGROUND GLOBAL
-            </button>
-          </div>
-        </div>
-
-        <!-- BARIS CONTROL TRANSPARANSI BACKGROUND GLOBAL ADMIN -->
-        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-          <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 260px;">
-            <span class="material-symbols-rounded" style="font-size: 18px; color: #ec4899; line-height: 1;">opacity</span>
-            <span style="font-size: 11.5px; font-weight: 800; color: var(--text-main); white-space: nowrap;">TRANSPARANSI GLOBAL BG:</span>
-            <input type="range" id="adminGlobalBgOpacityRange" min="0" max="100" value="48" oninput="adminUbahTransparansiGlobalPreview(this.value)" style="flex: 1; accent-color: #ec4899; cursor: pointer; height: 6px; border-radius: 3px; display: block; margin: 0;">
-            <span id="adminGlobalBgOpacityValText" style="font-size: 12px; font-weight: 900; color: #ec4899; min-width: 42px; text-align: right; line-height: 1;">48%</span>
-          </div>
-          <button type="button" class="btnDownload" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); height: 38px; padding: 0 14px; font-weight: 800; border: none; border-radius: 5px; color: #ffffff; cursor: pointer; box-shadow: 0 2px 6px rgba(139, 92, 246, 0.25); display: flex; align-items: center; gap: 6px; font-size: 11.5px; white-space: nowrap;" onclick="simpanTransparansiGlobalAdmin()">
-            <span class="material-symbols-rounded" style="font-size: 17px;">cloud_upload</span> TERAPKAN TRANSPARANSI GLOBAL
-          </button>
-        </div>
-      </div>
-
       <!-- ADMIN CONTROL: HAPUS PENYIMPANAN LOKAL & CACHE GLOBAL (SEMUA PERANGKAT USER) -->
       <div id="containerHapusPenyimpananLokalAdmin" class="box" style="border-left: 4px solid #ef4444; margin-bottom: 1mm !important; background: var(--bg-card);">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
@@ -1057,27 +1000,7 @@
         </div>
       </div>
 
-      <!-- PENGATURAN MODEL TEMPLATE PDF SURAT PERMINTAAN (5 MODEL WITH LARGE POPUP MODAL) -->
-      <div class="box" style="border-left: 4px solid #7c3aed; margin-bottom: 1mm !important; background: var(--bg-card);">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          <div>
-            <h3 style="color: #0284c7; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-weight: 900;">
-              <span class="material-symbols-rounded" style="font-size: 24px;">picture_as_pdf</span> PENGATURAN MODEL TEMPLATE SURAT PDF (5 MODEL DESAIN)
-            </h3>
-            <p style="font-size: 12.5px; color: var(--text-muted); margin: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-              STATUS MODEL TERPASANG: 
-              <span id="activePdfModelBadge" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; padding: 4px 12px; border-radius: 5px; font-weight: 900; font-size: 11px; letter-spacing: 0.5px; box-shadow: 0 3px 8px rgba(124, 58, 237, 0.25);">
-                MODE 1 (STANDAR KLASIK)
-              </span>
-            </p>
-          </div>
-          <button type="button" class="btnTambahBarang" style="background: linear-gradient(135deg, #0284c7, #0369a1); height: 44px; padding: 0 22px; font-weight: 800; border-radius: 5px; box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);" onclick="bukaModalPdfModels()">
-            <span class="material-symbols-rounded">style</span> PILIH & PRATINJAU MODEL PDF (MODE 1 - 5)
-          </button>
-        </div>
-      </div>
-
-            <!-- PENGATURAN HAK AKSES DOWNLOAD EXCEL (BY ROLE / KATEGORI LOGIN) -->
+      <!-- PENGATURAN HAK AKSES DOWNLOAD EXCEL (BY ROLE / KATEGORI LOGIN) -->
       <div id="excelRoleConfigCard" class="box" style="border-left: 4px solid #0284c7; margin-bottom: 1mm !important; background: var(--bg-card);">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px; color: #0284c7;">
@@ -1461,12 +1384,12 @@
               <span class="material-symbols-rounded" style="font-size: 20px;">save</span> SIMPAN PROFIL
             </button>
             
-            <!-- 2. TOMBOL BERSIH CACHE GLOBAL (DITUKAR KEPOSISI KE-2) -->
+            <!-- 2. TOMBOL BERSIH CACHE GLOBAL -->
             <button type="button" onclick="hapusPenyimpananLokalAkun()" class="btn" style="height: 42px; background: linear-gradient(135deg, #f59e0b, #d97706) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);">
               <span class="material-symbols-rounded" style="font-size: 20px;">cleaning_services</span> BERSIH CACHE GLOBAL
             </button>
 
-            <!-- 3. TOMBOL LOGOUT PERANGKAT (DITUKAR KEPOSISI KE-3) -->
+            <!-- 3. TOMBOL LOGOUT PERANGKAT -->
             <button type="button" onclick="logoutSemuaPerangkat()" class="btn" style="height: 42px; background: linear-gradient(135deg, #ef4444, #dc2626) !important; color: #ffffff !important; font-weight: 700; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);">
               <span class="material-symbols-rounded" style="font-size: 20px;">phonelink_off</span> LOGOUT PERANGKAT
             </button>
