@@ -53012,7 +53012,7 @@ function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
         <span style="display: flex !important; align-items: center !important; gap: 8px !important; text-align: left !important;">
           <span class="material-symbols-rounded" style="color: #0284c7 !important; font-size: 22px !important; flex-shrink: 0 !important;">description</span> 
           <span>
-            <div style="font-size: 12px !important; font-weight: 800 !important; color: #0369a1 !important; line-height: 1.2 !important;">SURAT UTAMA (INDUK)</div>
+            <div style="font-size: 12px !important; font-weight: 800 !important; color: #0369a1 !important; line-height: 1.2 !important;">SURAT UTAMA</div>
             <div style="font-size: 10px !important; color: #64748b !important; font-weight: 700 !important; margin-top: 2px !important;">#${noSurat}</div>
           </span>
         </span>
