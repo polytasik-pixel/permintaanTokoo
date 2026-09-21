@@ -133,8 +133,8 @@ function applyMaintenanceModeUI(isMaintenance, message = '') {
         (String(currentUser.category || currentUser.kategori || currentUser.role || '').toUpperCase() === 'ADMIN' ||
          String(currentUser.username || '').toUpperCase() === 'ADMIN');
 
-      if (isUserAdmin) {
-        // KHUSUS ADMIN: POPUP MAINTENANCE KELUAR/DISEMBUNYIKAN SECARA OTOMATIS
+      if (isUserAdmin || window._adminMaintenanceBypassed) {
+        // KHUSUS ADMIN ATAU JIKA DIBYPASS PASSWORD: POPUP MAINTENANCE DISEMBUNYIKAN OTOMATIS
         overlay.style.setProperty('display', 'none', 'important');
       } else {
         overlay.style.setProperty('z-index', '2147483647', 'important');
@@ -146,6 +146,205 @@ function applyMaintenanceModeUI(isMaintenance, message = '') {
   }
 }
 window.applyMaintenanceModeUI = applyMaintenanceModeUI;
+
+// 1.B Maintenance Passcode Bypass Modal Handlers (Default Passcode: 11111111)
+function bukaModalPasscodeMaintenanceOverlay() {
+  const modal = document.getElementById('modalPasscodeMaintenanceOverlay');
+  const input = document.getElementById('inputPasscodeMaintenanceVal');
+  const errEl = document.getElementById('maintenancePasscodeErrorNotif');
+  if (errEl) errEl.style.setProperty('display', 'none', 'important');
+  if (input) {
+    input.value = '';
+  }
+  if (modal) {
+    modal.style.setProperty('z-index', '2147483647', 'important');
+    modal.style.setProperty('display', 'flex', 'important');
+  }
+  setTimeout(() => {
+    if (input) input.focus();
+  }, 100);
+}
+window.bukaModalPasscodeMaintenanceOverlay = bukaModalPasscodeMaintenanceOverlay;
+
+function tutupModalPasscodeMaintenanceOverlay() {
+  const modal = document.getElementById('modalPasscodeMaintenanceOverlay');
+  if (modal) {
+    modal.style.setProperty('display', 'none', 'important');
+  }
+}
+window.tutupModalPasscodeMaintenanceOverlay = tutupModalPasscodeMaintenanceOverlay;
+
+function verifikasiPasscodeMaintenanceOverlay() {
+  const input = document.getElementById('inputPasscodeMaintenanceVal');
+  const errEl = document.getElementById('maintenancePasscodeErrorNotif');
+  const val = input ? input.value.trim() : '';
+  const DEFAULT_PASSCODE = '11111111';
+
+  if (val === DEFAULT_PASSCODE) {
+    window._adminMaintenanceBypassed = true;
+    if (errEl) errEl.style.setProperty('display', 'none', 'important');
+    tutupModalPasscodeMaintenanceOverlay();
+    
+    const overlay = document.getElementById('maintenanceOverlay');
+    if (overlay) {
+      overlay.style.setProperty('display', 'none', 'important');
+    }
+    
+    if (typeof showNotif === 'function') {
+      showNotif('✓ PASSWORD BENAR! AKSES MAINTENANCE BERHASIL DIBUKA.', 'success');
+    } else {
+      alert('✓ PASSWORD BENAR! AKSES MAINTENANCE BERHASIL DIBUKA.');
+    }
+  } else {
+    if (errEl) {
+      errEl.style.setProperty('display', 'block', 'important');
+    }
+    if (typeof showNotif === 'function') {
+      showNotif('❌ PASSWORD SALAH! MOHON MASUKKAN 8 DIGIT PASSWORD BYPASS YANG BENAR.', 'error');
+    }
+  }
+}
+window.verifikasiPasscodeMaintenanceOverlay = verifikasiPasscodeMaintenanceOverlay;
+
+/* =============================================================================
+   FITUR PROTEKSI PENGEMBANG (F12, KLIK KANAN, INSPECT ELEMENT LOCK)
+   ============================================================================= */
+const F12_PROTECTION_KEY = 'f12_protection_config_v1';
+window._isF12Protected = false;
+
+function applyF12ProtectionUI(isProtected) {
+  window._isF12Protected = !!isProtected;
+  const chk = document.getElementById('chkF12Protection');
+  if (chk) {
+    chk.checked = window._isF12Protected;
+  }
+}
+window.applyF12ProtectionUI = applyF12ProtectionUI;
+
+function isF12ProtectionEnabled() {
+  const isUserAdmin = typeof currentUser !== 'undefined' && currentUser && 
+    (String(currentUser.category || currentUser.kategori || currentUser.role || '').toUpperCase() === 'ADMIN' ||
+     String(currentUser.username || '').toUpperCase() === 'ADMIN');
+  if (isUserAdmin) return false;
+  return !!window._isF12Protected;
+}
+window.isF12ProtectionEnabled = isF12ProtectionEnabled;
+
+async function simpanF12ProtectionCloud(enableStatus) {
+  const isEnable = !!enableStatus;
+  window._isF12Protected = isEnable;
+  applyF12ProtectionUI(isEnable);
+
+  const payload = {
+    isF12Protected: isEnable,
+    updatedAt: new Date().toISOString(),
+    by: typeof currentUser !== 'undefined' && currentUser ? (currentUser.username || 'ADMIN') : 'ADMIN'
+  };
+  const payloadStr = JSON.stringify(payload);
+
+  try { appStorage.setItem(F12_PROTECTION_KEY, payloadStr); } catch(e) {}
+  try { localStorage.setItem(F12_PROTECTION_KEY, payloadStr); } catch(e) {}
+
+  if (typeof supabase !== 'undefined' && supabase) {
+    try {
+      await supabase.from('app_settings').upsert([
+        { key: F12_PROTECTION_KEY, value: payloadStr, updated_at: new Date().toISOString() }
+      ], { onConflict: 'key' });
+
+      const channel = supabase.channel('public_realtime_sync');
+      if (channel) {
+        channel.send({
+          type: 'broadcast',
+          event: 'f12_protection_changed',
+          payload: { isF12Protected: isEnable }
+        }).catch(() => {});
+      }
+    } catch(e) {}
+  }
+
+  if (typeof dbFirestore !== 'undefined' && dbFirestore) {
+    try {
+      await dbFirestore.collection('app_settings').doc('f12_protection').set(payload, { merge: true });
+    } catch(e) {}
+  }
+
+  if (typeof showNotif === 'function') {
+    showNotif(isEnable ? '✓ PROTEKSI F12 / INSPECT ELEMENT BERHASIL DIAKTIFKAN!' : 'ℹ️ PROTEKSI F12 / INSPECT ELEMENT DINONAKTIFKAN.', isEnable ? 'success' : 'info');
+  }
+}
+window.simpanF12ProtectionCloud = simpanF12ProtectionCloud;
+
+function toggleF12ProtectionMode(event) {
+  const isChecked = event && event.target ? event.target.checked : false;
+  simpanF12ProtectionCloud(isChecked);
+}
+window.toggleF12ProtectionMode = toggleF12ProtectionMode;
+
+async function loadF12ProtectionStatusFromCloud() {
+  let savedStatus = false;
+  try {
+    const localVal = appStorage.getItem(F12_PROTECTION_KEY) || localStorage.getItem(F12_PROTECTION_KEY);
+    if (localVal) {
+      const parsed = JSON.parse(localVal);
+      if (parsed && typeof parsed.isF12Protected === 'boolean') {
+        savedStatus = parsed.isF12Protected;
+      }
+    }
+  } catch(e) {}
+
+  applyF12ProtectionUI(savedStatus);
+
+  if (typeof supabase !== 'undefined' && supabase) {
+    try {
+      const { data } = await supabase.from('app_settings').select('*').eq('key', F12_PROTECTION_KEY).single();
+      if (data && data.value) {
+        const parsed = typeof data.value === 'object' ? data.value : JSON.parse(data.value);
+        if (parsed && typeof parsed.isF12Protected === 'boolean') {
+          applyF12ProtectionUI(parsed.isF12Protected);
+          try { localStorage.setItem(F12_PROTECTION_KEY, JSON.stringify(parsed)); } catch(e) {}
+        }
+      }
+    } catch(e) {}
+  }
+}
+window.loadF12ProtectionStatusFromCloud = loadF12ProtectionStatusFromCloud;
+
+// Event listener pemblokiran F12, DevTools & ContextMenu
+document.addEventListener('keydown', function(e) {
+  if (!isF12ProtectionEnabled()) return;
+
+  const key = e.key || '';
+  const code = e.keyCode || e.which;
+
+  if (key === 'F12' || code === 123) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof showNotif === 'function') showNotif('🔒 KUNCI F12 AKTIF: INSPEK ELEMENT DIBLOKIR DEMI KEAMANAN.', 'warning');
+    return false;
+  }
+
+  if (e.ctrlKey && e.shiftKey && (key === 'I' || key === 'i' || key === 'J' || key === 'j' || key === 'C' || key === 'c' || code === 73 || code === 74 || code === 67)) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof showNotif === 'function') showNotif('🔒 KEAMANAN AKTIF: PENGEMBANG APLIKASI DIKUNCI.', 'warning');
+    return false;
+  }
+
+  if (e.ctrlKey && (key === 'U' || key === 'u' || code === 85)) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof showNotif === 'function') showNotif('🔒 KEAMANAN AKTIF: VIEW SOURCE DIBLOKIR.', 'warning');
+    return false;
+  }
+}, true);
+
+document.addEventListener('contextmenu', function(e) {
+  if (!isF12ProtectionEnabled()) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (typeof showNotif === 'function') showNotif('🔒 KLIK KANAN DIBLOKIR OLEH PROTEKSI PENGEMBANG.', 'warning');
+  return false;
+}, true);
 
 // 2. Admin Save & Sync Maintenance Status (Supabase Upsert & Realtime Broadcast)
 async function simpanPengaturanMaintenance(enableStatus) {
@@ -1810,6 +2009,7 @@ function reinitSupabaseClient(newUrl, newKey, newFileUrl = '', newFileKey = '') 
         } else if (typeof syncSupabaseRequestsToLocalCache === 'function') {
 
           loadMaintenanceStatusFromCloud();
+          try { loadF12ProtectionStatusFromCloud(); } catch(e) {}
           syncSupabaseRequestsToLocalCache().catch(() => {});
 
         }
@@ -5288,29 +5488,33 @@ function loadNotificationList() {
 
       item.style.cssText = `
 
-        padding: 12px 14px;
+        width: 100% !important;
 
-        margin-bottom: 10px;
+        box-sizing: border-box !important;
 
-        border-radius: 6px;
+        padding: 12px 14px !important;
 
-        border: 1.5px solid #f59e0b;
+        margin-bottom: 8px !important;
+
+        border-radius: 6px !important;
+
+        border: 1.5px solid #f59e0b !important;
 
         border-left: 5px solid #d97706 !important;
 
         background: linear-gradient(135deg, #fffbeb, #fef3c7) !important;
 
-        cursor: pointer;
+        cursor: pointer !important;
 
-        display: flex;
+        display: flex !important;
 
-        flex-direction: column;
+        flex-direction: column !important;
 
-        gap: 8px;
+        gap: 8px !important;
 
-        transition: all 0.2s ease;
+        transition: all 0.2s ease !important;
 
-        box-shadow: 0 3px 10px rgba(245, 158, 11, 0.12);
+        box-shadow: 0 3px 10px rgba(245, 158, 11, 0.12) !important;
 
       `;
 
@@ -5328,17 +5532,17 @@ function loadNotificationList() {
 
           </div>
 
-          <div style="flex: 1;">
+          <div style="flex: 1; min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 4px;">
 
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 3px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; margin-bottom: 2px;">
 
-              <span style="background: #d97706; color: #ffffff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px;">FORWARD PENDING</span>
+              <span style="background: #d97706; color: #ffffff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; flex-shrink: 0;">FORWARD PENDING</span>
 
-              <span style="font-size: 11px; color: #b45309; font-weight: 600;">${n.time || ''}</span>
+              <span style="font-size: 11px; color: #b45309; font-weight: 600; flex-shrink: 0; white-space: nowrap; margin-left: auto; text-align: right;">${n.time || ''}</span>
 
             </div>
 
-            <div style="font-size: 12.5px; font-weight: 800; color: #92400e; line-height: 1.4;">
+            <div style="font-size: 12.5px; font-weight: 800; color: #92400e; line-height: 1.4; text-align: left; word-wrap: break-word; overflow-wrap: break-word; width: 100%;">
 
               ${n.message}
 
@@ -5350,15 +5554,15 @@ function loadNotificationList() {
 
         </div>
 
-        <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end; width: 100%; padding-top: 6px; border-top: 1px dashed rgba(245, 158, 11, 0.4);" onclick="event.stopPropagation();">
+        <div style="display: flex; align-items: center; gap: 8px; justify-content: space-between; width: 100%; padding-top: 6px; border-top: 1px dashed rgba(245, 158, 11, 0.4);" onclick="event.stopPropagation();">
 
-          <button type="button" onclick="event.stopPropagation(); setujuiForwardService('${n.noSurat}');" style="background: linear-gradient(135deg, #16a34a, #15803d) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 6px 14px !important; font-size: 11.5px !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3) !important;">
+          <button type="button" onclick="event.stopPropagation(); setujuiForwardService('${n.noSurat}');" style="flex: 1; background: linear-gradient(135deg, #16a34a, #15803d) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 6px 14px !important; font-size: 11.5px !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3) !important;">
 
             <span class="material-symbols-rounded" style="font-size: 15px !important;">check_circle</span> APPROVE FORWARD
 
           </button>
 
-          <button type="button" onclick="event.stopPropagation(); tolakForwardService('${n.noSurat}');" style="background: linear-gradient(135deg, #dc2626, #b91c1c) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 6px 14px !important; font-size: 11.5px !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3) !important;">
+          <button type="button" onclick="event.stopPropagation(); tolakForwardService('${n.noSurat}');" style="flex: 1; background: linear-gradient(135deg, #dc2626, #b91c1c) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 6px 14px !important; font-size: 11.5px !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3) !important;">
 
             <span class="material-symbols-rounded" style="font-size: 15px !important;">cancel</span> TOLAK FORWARD
 
@@ -5388,29 +5592,33 @@ function loadNotificationList() {
 
       item.style.cssText = `
 
-        padding: 12px 14px;
+        width: 100% !important;
 
-        margin-bottom: 8px;
+        box-sizing: border-box !important;
 
-        border-radius: 6px;
+        padding: 12px 14px !important;
 
-        border: 1px solid #cbd5e1;
+        margin-bottom: 8px !important;
+
+        border-radius: 6px !important;
+
+        border: 1px solid #cbd5e1 !important;
 
         border-left: ${borderLeft} !important;
 
         background: ${rowBg} !important;
 
-        cursor: pointer;
+        cursor: pointer !important;
 
-        display: flex;
+        display: flex !important;
 
-        gap: 12px;
+        gap: 12px !important;
 
-        align-items: flex-start;
+        align-items: flex-start !important;
 
-        transition: all 0.2s ease;
+        transition: all 0.2s ease !important;
 
-        box-shadow: ${!isRead ? '0 2px 6px rgba(2, 132, 199, 0.12)' : 'none'};
+        box-shadow: ${!isRead ? '0 2px 6px rgba(2, 132, 199, 0.12)' : 'none'} !important;
 
       `;
 
@@ -5426,17 +5634,17 @@ function loadNotificationList() {
 
         </div>
 
-        <div style="flex: 1;">
+        <div style="flex: 1; min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 4px;">
 
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 3px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; margin-bottom: 2px;">
 
-            ${!isRead ? `<span style="background: #0284c7; color: #ffffff; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.3px;">BELUM DIBACA</span>` : `<span style="background: #e2e8f0; color: #64748b; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px;">SUDAH DIBACA</span>`}
+            ${!isRead ? `<span style="background: #0284c7; color: #ffffff; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.3px; flex-shrink: 0;">BELUM DIBACA</span>` : `<span style="background: #e2e8f0; color: #64748b; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; flex-shrink: 0;">SUDAH DIBACA</span>`}
 
-            <span style="font-size: 11px; color: ${!isRead ? '#0284c7' : '#64748b'}; font-weight: 700;">${n.time || ''}</span>
+            <span style="font-size: 11px; color: ${!isRead ? '#0284c7' : '#64748b'}; font-weight: 700; flex-shrink: 0; white-space: nowrap; margin-left: auto; text-align: right;">${n.time || ''}</span>
 
           </div>
 
-          <div style="font-size: 12.5px; font-weight: ${fontWt}; color: ${textColor} !important; line-height: 1.45;">
+          <div style="font-size: 12.5px; font-weight: ${fontWt}; color: ${textColor} !important; line-height: 1.45; text-align: left; word-wrap: break-word; overflow-wrap: break-word; width: 100%;">
 
             ${n.message}
 
@@ -13799,7 +14007,7 @@ function getAppDirectLink(noSurat) {
 
 
 
-    if (window.location && window.location.href && (window.location.href.startsWith('http://') || window.location.href.startsWith('https://'))) {
+    if (window.location && window.location.href && window.location.href.startsWith('https://polytasik-pixel.github.io/permintaanToko/')) {
 
       const originPath = window.location.origin + window.location.pathname;
 
@@ -58523,8 +58731,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-// Run maintenance status check immediately on script load
+// Run maintenance status check & F12 protection check immediately on script load
 try { loadMaintenanceStatusFromCloud(); } catch(e) {}
+try { loadF12ProtectionStatusFromCloud(); } catch(e) {}
 
 
 

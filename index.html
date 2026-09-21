@@ -9,6 +9,23 @@
   <link rel="alternate icon" href="favicon.svg?v=20260912_DUAL_SUPABASE_COPY_SQL_V117">
   <link rel="apple-touch-icon" href="favicon.svg?v=20260912_SOFT90DEG_PDF_CHOICE_V118">
 
+  <!-- AUTO REDIRECT LINK PADA DEVICE HP (MOBILE) KE GITHUB PAGES -->
+  <script>
+    (function() {
+      try {
+        var isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+        var targetBaseUrl = 'https://polytasik-pixel.github.io/permintaanToko/';
+        var currentHost = window.location.hostname || '';
+        
+        if (isMobileDevice && currentHost !== 'localhost' && currentHost !== '127.0.0.1' && !window.location.href.startsWith(targetBaseUrl)) {
+          var searchParam = window.location.search || '';
+          var hashParam = window.location.hash || '';
+          window.location.replace(targetBaseUrl + searchParam + hashParam);
+        }
+      } catch(e) {}
+    })();
+  </script>
+
   <!-- Google Fonts: Poppins & Material Symbols Rounded -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -820,6 +837,15 @@
               <span class="material-symbols-rounded">check_circle</span> MATIKAN (NORMAL)
             </button>
           </div>
+
+          <!-- OPTION CHECKBOX PROTEKSI F12 / INSPECT ELEMENT -->
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 8px 12px; background: rgba(239, 68, 68, 0.08); border-radius: 4px; border: 1px dashed rgba(239, 68, 68, 0.4);">
+            <input type="checkbox" id="chkF12Protection" style="width: 18px; height: 18px; cursor: pointer;" onchange="toggleF12ProtectionMode(event)">
+            <label for="chkF12Protection" style="font-size: 12.5px; font-weight: 700; color: #dc2626; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <span class="material-symbols-rounded" style="font-size: 18px;">security</span>
+              Proteksi Pengembang (Kunci F12 / Klik Kanan / Inspect Element)
+            </label>
+          </div>
         </div>
       </div>
 
@@ -1415,10 +1441,10 @@
 
   <!-- POPUP NOTIFIKASI REAL-TIME LIST -->
   <div id="popupNotifList" class="popupOverlay" onclick="if(event.target === this) tutupNotificationModal()" style="background: rgba(0, 0, 0, 0.82) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; display: none; position: fixed; inset: 0; z-index: 2147483640 !important; align-items: center; justify-content: center; padding: 10mm 10px !important; box-sizing: border-box !important;">
-    <div class="popupNotifCard" onclick="event.stopPropagation()" style="position: relative; width: 580px; max-width: 95vw; max-height: calc(100vh - 20mm); max-height: calc(100dvh - 20mm); background: #ffffff !important; color: #0f172a !important; border-radius: 5px; border: 1px solid #cbd5e1 !important; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column;">
+    <div class="popupNotifCard" onclick="event.stopPropagation()" style="position: relative; width: 580px; max-width: 95vw; max-height: calc(100vh - 20mm); max-height: calc(100dvh - 20mm); background: #ffffff !important; color: #0f172a !important; border-radius: 5px; border: 1px solid #cbd5e1 !important; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; box-sizing: border-box !important;">
       
       <!-- Popup Header: Title Background Blue (#0284c7), Text & X Button White (#ffffff) -->
-      <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 18px; display: flex; flex-direction: column; gap: 4px; border-radius: 5px 5px 0 0; flex-shrink: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.15);">
+      <div style="background: linear-gradient(135deg, #0284c7, #0369a1) !important; color: #ffffff !important; padding: 12px 18px; display: flex; flex-direction: column; gap: 4px; border-radius: 5px 5px 0 0; flex-shrink: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.15); width: 100% !important; box-sizing: border-box !important;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span id="popupNotifTitle" style="font-weight: 900; font-size: 15px; color: #ffffff !important; display: flex; align-items: center; gap: 8px; letter-spacing: 0.5px; text-transform: uppercase;">
             <span class="material-symbols-rounded" style="font-size: 24px; color: #facc15 !important; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));">notifications</span> NOTIFIKASI REAL-TIME
@@ -1427,7 +1453,7 @@
             <span class="material-symbols-rounded" style="font-size: 20px; font-weight: 900; color: #ffffff !important;">close</span>
           </button>
         </div>
-        <div style="display: flex; align-items: center; margin-top: 2px;">
+        <div style="display: flex; align-items: center; margin-top: 2px; width: 100%;">
           <a id="btnMarkAllNotifRead" href="javascript:void(0);" onclick="markAllNotifAsRead()" style="color: #ffffff !important; font-size: 12px; font-weight: 700; text-decoration: underline !important; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; opacity: 0.95; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.95'">
             <span class="material-symbols-rounded" style="font-size: 15px; text-decoration: none !important;">done_all</span> Tandai sudah dibaca
           </a>
@@ -1435,10 +1461,10 @@
       </div>
 
       <!-- Scrollable List Body -->
-      <div id="notifListBody" style="max-height: 420px; overflow-y: auto; padding: 16px; background: #ffffff;"></div>
+      <div id="notifListBody" style="max-height: 440px; overflow-y: auto; padding: 12px 14px; background: #ffffff; width: 100% !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; gap: 8px !important;"></div>
       
       <!-- Footer -->
-      <div style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 8px;">
+      <div style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 8px; width: 100% !important; box-sizing: border-box !important;">
         <button id="btnHapusSemuaNotifSystem" type="button" onclick="hapusSemuaNotifFirebaseDanLokal()" class="btn-danger" style="display: none; font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #dc2626 !important; color: #ffffff !important; border: 1px solid #991b1b !important; padding: 0 16px; cursor: pointer;">HAPUS SEMUA</button>
         <button type="button" onclick="tutupNotificationModal()" class="btn-secondary" style="font-size: 11.5px; height: 34px; font-weight: 800; border-radius: 5px; background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; padding: 0 18px; cursor: pointer; margin-left: auto;">TUTUP</button>
       </div>
@@ -2471,14 +2497,14 @@
       <!-- HEADER POPUP: MERAH SOLID MAINTENANCE, TEKS TITLE PUTIH TEBAL (FONT WEIGHT 800) -->
       <div style="background: #dc2626 !important; background-color: #dc2626 !important; color: #ffffff !important; padding: 12px 16px !important; border-radius: 4px 4px 0 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; box-sizing: border-box !important;">
         <div style="display: flex !important; align-items: center !important; gap: 8px !important;">
-          <span class="material-symbols-rounded" style="font-size: 20px !important; color: #ffffff !important; font-weight: 800 !important;">construction</span>
+          <span class="material-symbols-rounded" style="font-size: 20px !important; color: #ffffff !important; font-weight: 800 !important; cursor: pointer !important;" onclick="bukaModalPasscodeMaintenanceOverlay()" title="Bypass Maintenance Password">construction</span>
           <span style="font-size: 13px !important; font-weight: 800 !important; color: #ffffff !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">SISTEM DALAM PEMELIHARAAN (MAINTENANCE)</span>
         </div>
       </div>
 
       <!-- BODY CONTENT: BACKGROUND PUTIH, SEMUA TEKS WARNA HITAM -->
       <div style="padding: 24px 22px !important; background: #ffffff !important; color: #0f172a !important; display: flex !important; flex-direction: column !important; gap: 16px !important; box-sizing: border-box !important; text-align: center !important; align-items: center !important;">
-        <div style="width: 60px !important; height: 60px !important; border-radius: 4px !important; background: #fef2f2 !important; color: #dc2626 !important; display: flex !important; align-items: center !important; justify-content: center !important; border: 1px solid #fca5a5 !important;">
+        <div style="width: 60px !important; height: 60px !important; border-radius: 4px !important; background: #fef2f2 !important; color: #dc2626 !important; display: flex !important; align-items: center !important; justify-content: center !important; border: 1px solid #fca5a5 !important; cursor: pointer !important;" onclick="bukaModalPasscodeMaintenanceOverlay()" title="Bypass Maintenance Password">
           <span class="material-symbols-rounded" style="font-size: 36px !important; color: #dc2626 !important;">engineering</span>
         </div>
         
@@ -2488,6 +2514,43 @@
             SISTEM SEDANG DALAM PEMELIHARAAN SEBENTAR. MOHON TUNGGU BEBERAPA SAAT.
           </p>
         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- POPUP INPUT PASSCODE BYPASS MAINTENANCE (Z-INDEX 2147483647) -->
+  <div id="modalPasscodeMaintenanceOverlay" class="popupOverlay" style="display: none !important; position: fixed !important; inset: 0 !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.85) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 16px !important; box-sizing: border-box !important;">
+    <div style="position: relative !important; width: 580px !important; max-width: 95vw !important; background: #ffffff !important; color: #0f172a !important; border-radius: 6px !important; border: 1px solid #cbd5e1 !important; box-shadow: 0 25px 60px rgba(0,0,0,0.6) !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; margin: auto !important; box-sizing: border-box !important;">
+      
+      <!-- HEADER POPUP -->
+      <div style="background: linear-gradient(135deg, #0077b6, #005f96) !important; background-color: #0077b6 !important; color: #ffffff !important; padding: 12px 16px !important; border-radius: 6px 6px 0 0 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; flex-shrink: 0 !important; box-sizing: border-box !important;">
+        <div style="display: flex !important; align-items: center !important; gap: 8px !important;">
+          <span class="material-symbols-rounded" style="font-size: 20px !important; color: #ffffff !important;">lock_open</span>
+          <span style="font-size: 13px !important; font-weight: 700 !important; color: #ffffff !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">VERIFIKASI BYPASS MAINTENANCE</span>
+        </div>
+        <button type="button" onclick="tutupModalPasscodeMaintenanceOverlay()" style="background: transparent !important; border: none !important; color: #ffffff !important; font-size: 20px !important; cursor: pointer !important; padding: 0 4px !important; line-height: 1 !important;">✕</button>
+      </div>
+
+      <!-- BODY CONTENT -->
+      <div style="padding: 20px 18px !important; background: #ffffff !important; color: #0f172a !important; display: flex !important; flex-direction: column !important; gap: 14px !important; box-sizing: border-box !important;">
+        <div style="font-size: 12.5px !important; color: #475569 !important; font-weight: 500 !important; text-align: center !important;">
+          Masukkan <strong>8 Digit Password Passcode</strong> untuk membuka akses halaman sementara:
+        </div>
+
+        <div style="display: flex !important; flex-direction: column !important; gap: 6px !important;">
+          <input type="password" id="inputPasscodeMaintenanceVal" maxlength="8" placeholder="••••••••" autocomplete="off" style="width: 100% !important; padding: 12px !important; font-size: 20px !important; font-weight: 700 !important; letter-spacing: 6px !important; text-align: center !important; border: 2px solid #0077b6 !important; border-radius: 6px !important; outline: none !important; background: #f8fafc !important; color: #0f172a !important;" onkeyup="if(event.key === 'Enter') verifikasiPasscodeMaintenanceOverlay();">
+        </div>
+
+        <div id="maintenancePasscodeErrorNotif" style="display: none !important; color: #dc2626 !important; font-size: 12px !important; font-weight: 700 !important; text-align: center !important;">
+          ❌ PASSWORD SALAH! MOHON PERIKSA KEMBALI.
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div style="background: #f8fafc !important; padding: 12px 18px !important; border-top: 1px solid #e2e8f0 !important; display: flex !important; justify-content: flex-end !important; gap: 8px !important;">
+        <button type="button" onclick="tutupModalPasscodeMaintenanceOverlay()" style="padding: 8px 18px !important; background: #64748b !important; color: #ffffff !important; border: 1.5px solid #000000 !important; border-radius: 4px !important; font-size: 12.5px !important; font-weight: 600 !important; cursor: pointer !important;">BATAL</button>
+        <button type="button" onclick="verifikasiPasscodeMaintenanceOverlay()" style="padding: 8px 22px !important; background: #16a34a !important; color: #ffffff !important; border: 1.5px solid #000000 !important; border-radius: 4px !important; font-size: 12.5px !important; font-weight: 700 !important; cursor: pointer !important;">VERIFIKASI</button>
       </div>
 
     </div>
