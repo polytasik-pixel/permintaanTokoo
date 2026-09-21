@@ -222,10 +222,6 @@ function applyF12ProtectionUI(isProtected) {
 window.applyF12ProtectionUI = applyF12ProtectionUI;
 
 function isF12ProtectionEnabled() {
-  const isUserAdmin = typeof currentUser !== 'undefined' && currentUser && 
-    (String(currentUser.category || currentUser.kategori || currentUser.role || '').toUpperCase() === 'ADMIN' ||
-     String(currentUser.username || '').toUpperCase() === 'ADMIN');
-  if (isUserAdmin) return false;
   return !!window._isF12Protected;
 }
 window.isF12ProtectionEnabled = isF12ProtectionEnabled;
@@ -319,21 +315,18 @@ document.addEventListener('keydown', function(e) {
   if (key === 'F12' || code === 123) {
     e.preventDefault();
     e.stopPropagation();
-    if (typeof showNotif === 'function') showNotif('🔒 KUNCI F12 AKTIF: INSPEK ELEMENT DIBLOKIR DEMI KEAMANAN.', 'warning');
     return false;
   }
 
   if (e.ctrlKey && e.shiftKey && (key === 'I' || key === 'i' || key === 'J' || key === 'j' || key === 'C' || key === 'c' || code === 73 || code === 74 || code === 67)) {
     e.preventDefault();
     e.stopPropagation();
-    if (typeof showNotif === 'function') showNotif('🔒 KEAMANAN AKTIF: PENGEMBANG APLIKASI DIKUNCI.', 'warning');
     return false;
   }
 
   if (e.ctrlKey && (key === 'U' || key === 'u' || code === 85)) {
     e.preventDefault();
     e.stopPropagation();
-    if (typeof showNotif === 'function') showNotif('🔒 KEAMANAN AKTIF: VIEW SOURCE DIBLOKIR.', 'warning');
     return false;
   }
 }, true);
@@ -342,7 +335,6 @@ document.addEventListener('contextmenu', function(e) {
   if (!isF12ProtectionEnabled()) return;
   e.preventDefault();
   e.stopPropagation();
-  if (typeof showNotif === 'function') showNotif('🔒 KLIK KANAN DIBLOKIR OLEH PROTEKSI PENGEMBANG.', 'warning');
   return false;
 }, true);
 
@@ -53020,7 +53012,7 @@ function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
         <span style="display: flex !important; align-items: center !important; gap: 8px !important; text-align: left !important;">
           <span class="material-symbols-rounded" style="color: #0284c7 !important; font-size: 22px !important; flex-shrink: 0 !important;">description</span> 
           <span>
-            <div style="font-size: 12px !important; font-weight: 800 !important; color: #0369a1 !important; line-height: 1.2 !important;">SURAT UTAMA</div>
+            <div style="font-size: 12px !important; font-weight: 800 !important; color: #0369a1 !important; line-height: 1.2 !important;">SURAT UTAMA (INDUK)</div>
             <div style="font-size: 10px !important; color: #64748b !important; font-weight: 700 !important; margin-top: 2px !important;">#${noSurat}</div>
           </span>
         </span>
