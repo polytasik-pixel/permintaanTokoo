@@ -15856,7 +15856,7 @@ function loadRememberedCredentials() {
 window.loadRememberedCredentials = loadRememberedCredentials;
 
 /* =============================================================================
-   FITUR SINGLE SIGN-ON (SSO) JWT SUPABASE AUTO-LOGIN
+   FITUR SINGLE SIGN-ON (SSO) JWT SUPABASE & PORTAL AUTO-LOGIN
    ============================================================================= */
 
 function parseJwtPayload(token) {
@@ -15874,7 +15874,7 @@ function parseJwtPayload(token) {
     }).join(''));
     return JSON.parse(jsonPayload);
   } catch (e) {
-    console.warn('[SSO JWT PARSE ERROR]:', e);
+    console.error("Gagal membaca Token JWT Supabase", e);
     return null;
   }
 }
@@ -15882,109 +15882,111 @@ window.parseJwtPayload = parseJwtPayload;
 
 async function processSupabaseSSOJWT(rawJwtToken) {
   if (!rawJwtToken || typeof rawJwtToken !== 'string') return false;
-  const token = rawJwtToken.trim();
-  if (!token) return false;
+  const tokenSSO = rawJwtToken.trim();
+  if (!tokenSSO) return false;
 
   try {
-    const payload = parseJwtPayload(token);
-    if (!payload) return false;
+    const payloadJson = parseJwtPayload(tokenSSO);
+    if (!payloadJson) return false;
 
     // Check expiration if exp claim is present
-    if (payload.exp && (payload.exp * 1000) < Date.now()) {
+    if (payloadJson.exp && (payloadJson.exp * 1000) < Date.now()) {
       if (typeof showNotif === 'function') showNotif('⚠️ TOKEN SSO SUPABASE SUDAH KADALUWARSA (EXPIRED). SILAKAN LOGIN ULANG.', 'warning');
       return false;
     }
 
-    // Extract identify info: username, sub, email, or user_metadata
-    let targetUsername = payload.username || payload.user_username || payload.sub || '';
-    if (payload.user_metadata && payload.user_metadata.username) {
-      targetUsername = payload.user_metadata.username;
-    }
-    if (!targetUsername && payload.email) {
-      targetUsername = payload.email.split('@')[0];
-    }
-    targetUsername = String(targetUsername).trim().toUpperCase();
+    // Mengambil identitas email / username dari payload JWT
+    const emailUser = (payloadJson.email || '').trim().toLowerCase();
+    const usernameUser = (payloadJson.username || (payloadJson.user_metadata && payloadJson.user_metadata.username) || payloadJson.sub || '').trim().toLowerCase();
+    const fullNameUser = (payloadJson.fullName || payloadJson.name || '').trim().toLowerCase();
 
-    let foundUser = null;
-    let allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
+    console.log("Mencoba login otomatis via SSO untuk Email/Username:", emailUser || usernameUser);
 
-    if (targetUsername) {
-      foundUser = allUsers.find(u => u && String(u.username || '').toUpperCase() === targetUsername);
-    }
+    // 1. Baca daftar Karyawan / Users yang ada di DB lokal
+    const dataMasterUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
 
-    // If not found in local cache, search Supabase users table
-    if (!foundUser && typeof supabase !== 'undefined' && supabase) {
+    // 2. Cari apakah email / username dari Portal SSO ada di dalam daftar Karyawan/User
+    let userFound = dataMasterUsers.find(u => {
+      if (!u) return false;
+      const uEmail = (u.email || '').trim().toLowerCase();
+      const uUsername = (u.username || '').trim().toLowerCase();
+      const uFullName = (u.fullName || u.nama || '').trim().toLowerCase();
+
+      return (emailUser && uEmail === emailUser) ||
+             (usernameUser && uUsername === usernameUser) ||
+             (emailUser && uUsername === emailUser) ||
+             (fullNameUser && uFullName === fullNameUser);
+    });
+
+    // 3. Jika belum ditemukan di lokal cache, cek ke Supabase Database table 'users'
+    if (!userFound && typeof supabase !== 'undefined' && supabase) {
       try {
         let query = supabase.from('users').select('*');
-        if (targetUsername) {
-          query = query.ilike('username', targetUsername);
-        } else if (payload.sub) {
-          query = query.eq('id', payload.sub);
+        if (emailUser && usernameUser) {
+          query = query.or(`email.eq.${emailUser},username.eq.${usernameUser},username.eq.${emailUser}`);
+        } else if (emailUser) {
+          query = query.or(`email.eq.${emailUser},username.eq.${emailUser}`);
+        } else if (usernameUser) {
+          query = query.eq('username', usernameUser);
         }
         const { data, error } = await query.limit(1);
         if (!error && Array.isArray(data) && data.length > 0) {
-          foundUser = data[0];
-          if (allUsers.length > 0 && typeof saveUsersToDB === 'function') {
-            const idx = allUsers.findIndex(u => u && String(u.username || '').toUpperCase() === String(foundUser.username || '').toUpperCase());
-            if (idx !== -1) allUsers[idx] = foundUser;
-            else allUsers.push(foundUser);
-            saveUsersToDB(allUsers);
+          userFound = data[0];
+          // Simpan ke memori lokal
+          if (dataMasterUsers.length > 0 && typeof saveUsersToDB === 'function') {
+            const idx = dataMasterUsers.findIndex(u => u && String(u.username || '').toLowerCase() === String(userFound.username || '').toLowerCase());
+            if (idx !== -1) dataMasterUsers[idx] = userFound;
+            else dataMasterUsers.push(userFound);
+            saveUsersToDB(dataMasterUsers);
           }
         }
+      } catch(e) {
+        console.warn("[SSO SUPABASE DB SEARCH WARN]:", e);
+      }
+    }
+
+    if (userFound) {
+      // Jika user DITEMUKAN di database aplikasi: Set session login
+      currentUser = userFound;
+      const sessionStr = JSON.stringify(currentUser);
+      try { sessionStorage.setItem(SESSION_KEY, sessionStr); } catch(e) {}
+      try { localStorage.setItem(SESSION_KEY, sessionStr); } catch(e) {}
+      try { localStorage.setItem('aktiva_logged_user', sessionStr); } catch(e) {}
+      if (typeof appStorage !== 'undefined' && appStorage) {
+        try { appStorage.setItem(SESSION_KEY, sessionStr); } catch(e) {}
+      }
+
+      // Bersihkan URL parameter agar token tidak terekspos di browser
+      try {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete('token');
+        currentUrl.searchParams.delete('jwt');
+        currentUrl.searchParams.delete('sso');
+        currentUrl.searchParams.delete('portal');
+        currentUrl.searchParams.delete('access_token');
+        currentUrl.searchParams.delete('sso_token');
+        currentUrl.hash = '';
+        window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search);
       } catch(e) {}
-    }
 
-    // Fallback: If user is not registered in DB yet but JWT contains complete SSO user details
-    if (!foundUser && (payload.username || payload.name || payload.email || payload.role || payload.category)) {
-      foundUser = {
-        id: payload.sub || 'SSO_' + Date.now(),
-        username: targetUsername || (payload.name || 'USER_SSO').toUpperCase(),
-        fullName: payload.fullName || payload.name || payload.username || 'SSO USER',
-        category: (payload.category || payload.role || payload.kategori || 'TOKO').toUpperCase(),
-        area: (payload.area || 'BDG').toUpperCase(),
-        role: (payload.role || 'USER').toUpperCase(),
-        can_print_pdf: true,
-        can_forward_service: true,
-        can_download_excel: true,
-        can_upload_bukti: true,
-        can_upload_smart: true
-      };
-    }
-
-    if (!foundUser) {
-      if (typeof showNotif === 'function') showNotif('❌ GAGAL SSO: DATA USER TIDAK DITEMUKAN DI SISTEM.', 'error');
+      // Tampilkan aplikasi utama
+      bukaMainApp(true);
+      if (typeof showNotif === 'function') {
+        showNotif(`✓ LOGIN SSO BERHASIL! Selamat datang, ${currentUser.fullName || currentUser.username}.`, 'success');
+      }
+      return true;
+    } else {
+      // Jika email / username TIDAK DITEMUKAN di database sama sekali
+      window.pendingSSOEmail = emailUser || usernameUser;
+      if (typeof showNotif === 'function') {
+        showNotif(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR DI DATABASE SYSTEM!`, 'error');
+      } else {
+        alert(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR DI DATABASE SYSTEM!`);
+      }
       return false;
     }
-
-    // Save session
-    currentUser = foundUser;
-    const sessionStr = JSON.stringify(currentUser);
-    try { sessionStorage.setItem(SESSION_KEY, sessionStr); } catch(e) {}
-    try { localStorage.setItem(SESSION_KEY, sessionStr); } catch(e) {}
-    if (typeof appStorage !== 'undefined' && appStorage) {
-      try { appStorage.setItem(SESSION_KEY, sessionStr); } catch(e) {}
-    }
-
-    // Clean URL parameters for security so token is not exposed in address bar
-    try {
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.delete('token');
-      currentUrl.searchParams.delete('jwt');
-      currentUrl.searchParams.delete('sso');
-      currentUrl.searchParams.delete('access_token');
-      currentUrl.searchParams.delete('sso_token');
-      currentUrl.hash = '';
-      window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search);
-    } catch(e) {}
-
-    // Show main app & notify
-    bukaMainApp(true);
-    if (typeof showNotif === 'function') {
-      showNotif(`✓ SSO LOGIN SUPABASE BERHASIL! Selamat datang, ${currentUser.fullName || currentUser.username}.`, 'success');
-    }
-    return true;
-  } catch(err) {
-    console.error('[PROCESS SSO JWT ERROR]:', err);
+  } catch(e) {
+    console.error("Gagal membaca Token JWT Supabase", e);
     return false;
   }
 }
@@ -15993,20 +15995,33 @@ window.processSupabaseSSOJWT = processSupabaseSSOJWT;
 function checkAndHandleSupabaseSSOUrl() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
-    let token = urlParams.get('token') || urlParams.get('jwt') || urlParams.get('sso') || urlParams.get('access_token') || urlParams.get('sso_token');
+    const tokenSSO = urlParams.get('token') || urlParams.get('jwt') || urlParams.get('sso') || urlParams.get('access_token') || urlParams.get('sso_token');
+    const portalUrl = urlParams.get('portal');
 
-    if (!token && window.location.hash) {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      token = hashParams.get('access_token') || hashParams.get('token') || hashParams.get('jwt');
+    if (portalUrl) {
+      try { localStorage.setItem('sso_return_url', portalUrl); } catch(e) {}
     }
 
-    if (token) {
-      return processSupabaseSSOJWT(token);
+    let targetToken = tokenSSO;
+    if (!targetToken && window.location.hash) {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      targetToken = hashParams.get('access_token') || hashParams.get('token') || hashParams.get('jwt');
+    }
+
+    if (targetToken) {
+      return processSupabaseSSOJWT(targetToken);
     }
   } catch(e) {}
   return false;
 }
 window.checkAndHandleSupabaseSSOUrl = checkAndHandleSupabaseSSOUrl;
+
+// Self-executing IIFE untuk menangani SSO sejak awal muat halaman
+(function() {
+  try {
+    checkAndHandleSupabaseSSOUrl();
+  } catch(e) {}
+})();
 
 function autoLogin() {
   if (typeof checkAndHandleSupabaseSSOUrl === 'function' && checkAndHandleSupabaseSSOUrl()) {
