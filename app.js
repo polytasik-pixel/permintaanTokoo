@@ -538,7 +538,7 @@ function ensurePinHapusLokalModalInDOM() {
   const div = document.createElement('div');
   div.id = 'popupSecurityPinHapusLokal';
   div.className = 'popupOverlay';
-  div.style.cssText = 'z-index: 2147483647 !important; display: none;';
+  div.style.cssText = 'background: rgba(0, 0, 0, 0.82) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; display: none !important; position: fixed !important; inset: 0 !important; z-index: 2147483647 !important; align-items: center !important; justify-content: center !important; padding: 16px !important; box-sizing: border-box !important;';
   div.innerHTML = `
     <div class="rejectBoxPopup" style="width: min(420px, 92vw) !important; max-width: 92vw !important; background: var(--bg-box) !important; border-radius: 4px !important; overflow: hidden !important; border: 1px solid var(--border-color) !important; box-shadow: 0 20px 50px rgba(0,0,0,0.45) !important; box-sizing: border-box !important; margin: auto !important;">
       <div class="rejectHeaderPopup" style="background: #0284c7 !important; background-color: #0284c7 !important; color: #ffffff !important; padding: 12px 16px !important; border-radius: 4px 4px 0 0 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; box-sizing: border-box !important;">
@@ -15978,10 +15978,18 @@ async function processSupabaseSSOJWT(rawJwtToken) {
     } else {
       // Jika email / username TIDAK DITEMUKAN di database sama sekali
       window.pendingSSOEmail = emailUser || usernameUser;
+      const portalUrl = localStorage.getItem('sso_return_url');
+
       if (typeof showNotif === 'function') {
-        showNotif(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR DI DATABASE SYSTEM!`, 'error');
+        showNotif(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR DI DATABASE SYSTEM!${portalUrl ? ' Mengalihkan ke Portal...' : ''}`, 'error');
       } else {
         alert(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR DI DATABASE SYSTEM!`);
+      }
+
+      if (portalUrl && String(portalUrl).trim().length > 0) {
+        setTimeout(function() {
+          window.location.href = String(portalUrl).trim();
+        }, 1200);
       }
       return false;
     }
@@ -16022,6 +16030,25 @@ window.checkAndHandleSupabaseSSOUrl = checkAndHandleSupabaseSSOUrl;
     checkAndHandleSupabaseSSOUrl();
   } catch(e) {}
 })();
+
+function redirectPortalIfFromSSOOrGoLogin() {
+  try {
+    const portalUrl = localStorage.getItem('sso_return_url');
+    if (portalUrl && String(portalUrl).trim().length > 0) {
+      localStorage.removeItem('sso_return_url');
+      window.location.href = String(portalUrl).trim();
+      return true;
+    }
+  } catch(e) {}
+  if (typeof pindahHalaman === 'function') {
+    pindahHalaman('loginPage');
+  }
+  if (typeof loadRememberedCredentials === 'function') {
+    loadRememberedCredentials();
+  }
+  return false;
+}
+window.redirectPortalIfFromSSOOrGoLogin = redirectPortalIfFromSSOOrGoLogin;
 
 function autoLogin() {
   if (typeof checkAndHandleSupabaseSSOUrl === 'function' && checkAndHandleSupabaseSSOUrl()) {
@@ -16069,9 +16096,7 @@ function autoLogin() {
 
   } else {
 
-    pindahHalaman('loginPage');
-
-    loadRememberedCredentials();
+    redirectPortalIfFromSSOOrGoLogin();
 
   }
 
@@ -16572,12 +16597,13 @@ async function logout() {
 
 
 
-      pindahHalaman('loginPage');
-
-      if (typeof loadRememberedCredentials === 'function') {
-
-        loadRememberedCredentials();
-
+      if (typeof redirectPortalIfFromSSOOrGoLogin === 'function') {
+        redirectPortalIfFromSSOOrGoLogin();
+      } else {
+        pindahHalaman('loginPage');
+        if (typeof loadRememberedCredentials === 'function') {
+          loadRememberedCredentials();
+        }
       }
 
       if (typeof updateNotifBellCounter === 'function') updateNotifBellCounter();
@@ -16968,12 +16994,13 @@ function forceLogoutThisDevice(customMsg = 'AKUN ANDA TELAH DI-LOGOUT. SILAHKAN 
 
 
 
-  pindahHalaman('loginPage');
-
-  if (typeof loadRememberedCredentials === 'function') {
-
-    loadRememberedCredentials();
-
+  if (typeof redirectPortalIfFromSSOOrGoLogin === 'function') {
+    redirectPortalIfFromSSOOrGoLogin();
+  } else {
+    pindahHalaman('loginPage');
+    if (typeof loadRememberedCredentials === 'function') {
+      loadRememberedCredentials();
+    }
   }
 
   if (typeof updateNotifBellCounter === 'function') updateNotifBellCounter();
