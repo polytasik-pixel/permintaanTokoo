@@ -15902,39 +15902,52 @@ async function processSupabaseSSOJWT(rawJwtToken) {
 
     console.log("Mencoba login otomatis via SSO untuk Email/Username:", emailUser || usernameUser);
 
-    // 1. Baca daftar Karyawan / Users yang ada di DB lokal
+    let userFound = null;
     const dataMasterUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
 
-    // 2. Cari apakah email / username dari Portal SSO ada di dalam daftar Karyawan/User
-    let userFound = dataMasterUsers.find(u => {
-      if (!u) return false;
-      const uEmail = (u.email || '').trim().toLowerCase();
-      const uUsername = (u.username || '').trim().toLowerCase();
-      const uFullName = (u.fullName || u.nama || '').trim().toLowerCase();
-
-      return (emailUser && uEmail === emailUser) ||
-             (usernameUser && uUsername === usernameUser) ||
-             (emailUser && uUsername === emailUser) ||
-             (fullNameUser && uFullName === fullNameUser);
-    });
-
-    // 3. Jika belum ditemukan di lokal cache, cek ke Supabase Database table 'users'
-    if (!userFound && typeof supabase !== 'undefined' && supabase) {
+    // 1. Cek DULU ke Supabase Database table 'users' untuk data paling up-to-date (Fresh Verification)
+    if (typeof supabase !== 'undefined' && supabase) {
       try {
         let query = supabase.from('users').select('*');
         if (emailUser && usernameUser) {
-          query = query.or(`email.eq.${emailUser},username.eq.${usernameUser},username.eq.${emailUser}`);
+          query = query.or(`email.ilike.${emailUser},username.ilike.${usernameUser},username.ilike.${emailUser}`);
         } else if (emailUser) {
-          query = query.or(`email.eq.${emailUser},username.eq.${emailUser}`);
+          query = query.or(`email.ilike.${emailUser},username.ilike.${emailUser}`);
         } else if (usernameUser) {
-          query = query.eq('username', usernameUser);
+          query = query.or(`username.ilike.${usernameUser},email.ilike.${usernameUser}`);
         }
-        const { data, error } = await query.limit(1);
-        if (!error && Array.isArray(data) && data.length > 0) {
-          userFound = data[0];
-          // Simpan ke memori lokal
-          if (dataMasterUsers.length > 0 && typeof saveUsersToDB === 'function') {
-            const idx = dataMasterUsers.findIndex(u => u && String(u.username || '').toLowerCase() === String(userFound.username || '').toLowerCase());
+        const { data: supaUsers, error } = await query.limit(1);
+        if (!error && Array.isArray(supaUsers) && supaUsers.length > 0) {
+          const su = supaUsers[0];
+          let canPrint = (su.can_print_pdf === true || su.can_print_pdf === 'true' || su.can_print_pdf === 1 || su.canPrintPdf === true);
+          let canForward = (su.can_forward === true || su.can_forward === 'true' || su.can_forward === 1 || su.canForward === true);
+          let canDownloadExcel = (su.can_download_excel === true || su.can_download_excel === 'true' || su.can_download_excel === 1 || su.canDownloadExcel === true);
+          let canUploadBukti = (su.can_upload_bukti === true || su.can_upload_bukti === 'true' || su.can_upload_bukti === 1 || su.canUploadBukti === true);
+
+          userFound = {
+            id: su.id,
+            username: String(su.username || '').trim(),
+            password: String(su.password || '').trim(),
+            fullName: String(su.full_name || su.fullName || '').trim(),
+            storeCode: String(su.store_code || su.storeCode || '').trim(),
+            phone: String(su.phone || '').trim(),
+            category: String(su.category || 'TOKO').trim().toUpperCase(),
+            area: String(su.area || 'BDG').trim().toUpperCase(),
+            email: String(su.email || emailUser || '').trim().toLowerCase(),
+            canPrintPdf: canPrint,
+            canForward: canForward,
+            can_forward: canForward,
+            canDownloadExcel: canDownloadExcel,
+            can_download_excel: canDownloadExcel,
+            canUploadBukti: canUploadBukti,
+            can_upload_bukti: canUploadBukti,
+            theme: su.theme || '',
+            createdAt: su.created_at || (typeof getFormattedDateDDMMYYYY === 'function' ? getFormattedDateDDMMYYYY() : '')
+          };
+
+          // Simpan / perbarui ke cache lokal
+          if (typeof saveUsersToDB === 'function') {
+            const idx = dataMasterUsers.findIndex(u => u && (String(u.username || '').toLowerCase() === String(userFound.username || '').toLowerCase() || (u.email && String(u.email).toLowerCase() === String(userFound.email).toLowerCase())));
             if (idx !== -1) dataMasterUsers[idx] = userFound;
             else dataMasterUsers.push(userFound);
             saveUsersToDB(dataMasterUsers);
@@ -15943,6 +15956,19 @@ async function processSupabaseSSOJWT(rawJwtToken) {
       } catch(e) {
         console.warn("[SSO SUPABASE DB SEARCH WARN]:", e);
       }
+    }
+
+    // 2. Jika Supabase offline atau query gagal, fallback ke DB lokal (pencocokan ketat Email/Username saja)
+    if (!userFound && dataMasterUsers.length > 0) {
+      userFound = dataMasterUsers.find(u => {
+        if (!u) return false;
+        const uEmail = (u.email || '').trim().toLowerCase();
+        const uUsername = (u.username || '').trim().toLowerCase();
+
+        return (emailUser && uEmail === emailUser) ||
+               (usernameUser && uUsername === usernameUser) ||
+               (emailUser && uUsername === emailUser);
+      });
     }
 
     if (userFound) {
@@ -15972,7 +15998,7 @@ async function processSupabaseSSOJWT(rawJwtToken) {
       // Tampilkan aplikasi utama
       bukaMainApp(true);
       if (typeof showNotif === 'function') {
-        showNotif(`✓ LOGIN BERHASIL! Selamat datang, ${currentUser.fullName || currentUser.username}.`, 'success');
+        showNotif(`✓ LOGIN SSO BERHASIL! Selamat datang, ${currentUser.fullName || currentUser.username}.`, 'success');
       }
       return true;
     } else {
@@ -15981,9 +16007,9 @@ async function processSupabaseSSOJWT(rawJwtToken) {
       const portalUrl = localStorage.getItem('sso_return_url');
 
       if (typeof showNotif === 'function') {
-        showNotif(`❌ LOGIN GAGAL: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR!${portalUrl ? ' Mengalihkan ke Portal...' : ''}`, 'error');
+        showNotif(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR DI DATABASE SYSTEM!${portalUrl ? ' Mengalihkan ke Portal...' : ''}`, 'error');
       } else {
-        alert(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR!`);
+        alert(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR DI DATABASE SYSTEM!`);
       }
 
       if (portalUrl && String(portalUrl).trim().length > 0) {
@@ -16151,175 +16177,101 @@ async function prosesLogin() {
   showLoading('LOADING...');
 
   try {
+    let user = null;
+    let checkedSupabase = false;
 
-    // 1. CEK DULU DI PENYIMPANAN LOKAL (0 ms INSTANT)
-
-    let users = getUsersFromDB();
-
-    let user = users.find(x => x && x.username && String(x.username).trim().toUpperCase() === u && String(x.password).trim() === p);
-
-
-
-    // 2. JIKA BELUM ADA DI LOKAL, CEK KE SUPABASE
-
-    if (!user && typeof supabase !== 'undefined' && supabase) {
-
+    // 1. CEK DULU KE SUPABASE (UNTUK MENDAPATKAN USERNAME & PASSWORD VERIFIED TERBARU)
+    if (typeof supabase !== 'undefined' && supabase) {
       try {
-
         const { data: supaUsers, error } = await supabase
-
           .from('users')
-
           .select('*')
-
-          .ilike('username', u)
-
+          .or(`username.ilike.${u},email.ilike.${u}`)
           .limit(1);
 
+        if (!error && Array.isArray(supaUsers)) {
+          checkedSupabase = true;
+          if (supaUsers.length > 0) {
+            const su = supaUsers[0];
+            if (String(su.password || '').trim() === p) {
+              const existingUserLocal = getUsersFromDB().find(x => x && String(x.username).toUpperCase() === u.toUpperCase());
 
+              let canPrint = false;
+              if (su.can_print_pdf !== undefined && su.can_print_pdf !== null) {
+                canPrint = (su.can_print_pdf === true || su.can_print_pdf === 'true' || su.can_print_pdf === 1);
+              } else if (su.canPrintPdf !== undefined && su.canPrintPdf !== null) {
+                canPrint = (su.canPrintPdf === true || su.canPrintPdf === 'true' || su.canPrintPdf === 1);
+              } else if (existingUserLocal && existingUserLocal.canPrintPdf !== undefined) {
+                canPrint = (existingUserLocal.canPrintPdf === true || existingUserLocal.canPrintPdf === 'true' || existingUserLocal.canPrintPdf === 1);
+              }
 
-        if (!error && Array.isArray(supaUsers) && supaUsers.length > 0) {
+              let canForward = true;
+              if (su.can_forward !== undefined && su.can_forward !== null) {
+                canForward = (su.can_forward === true || su.can_forward === 'true' || su.can_forward === 1);
+              } else if (su.canForward !== undefined && su.canForward !== null) {
+                canForward = (su.canForward === true || su.canForward === 'true' || su.canForward === 1);
+              } else if (existingUserLocal && existingUserLocal.canForward !== undefined) {
+                canForward = (existingUserLocal.canForward === true || existingUserLocal.canForward === 'true' || existingUserLocal.canForward === 1);
+              }
 
-          const su = supaUsers[0];
+              let canDownloadExcel = true;
+              if (su.can_download_excel !== undefined && su.can_download_excel !== null) {
+                canDownloadExcel = (su.can_download_excel === true || su.can_download_excel === 'true' || su.can_download_excel === 1);
+              } else if (su.canDownloadExcel !== undefined && su.canDownloadExcel !== null) {
+                canDownloadExcel = (su.canDownloadExcel === true || su.canDownloadExcel === 'true' || su.canDownloadExcel === 1);
+              } else if (existingUserLocal && existingUserLocal.canDownloadExcel !== undefined) {
+                canDownloadExcel = (existingUserLocal.canDownloadExcel === true || existingUserLocal.canDownloadExcel === 'true' || existingUserLocal.canDownloadExcel === 1);
+              }
 
-          if (String(su.password).trim() === p) {
+              let canUploadBukti = true;
+              if (su.can_upload_bukti !== undefined && su.can_upload_bukti !== null) {
+                canUploadBukti = (su.can_upload_bukti === true || su.can_upload_bukti === 'true' || su.can_upload_bukti === 1);
+              } else if (su.canUploadBukti !== undefined && su.canUploadBukti !== null) {
+                canUploadBukti = (su.canUploadBukti === true || su.canUploadBukti === 'true' || su.canUploadBukti === 1);
+              } else if (existingUserLocal && existingUserLocal.canUploadBukti !== undefined) {
+                canUploadBukti = (existingUserLocal.canUploadBukti === true || existingUserLocal.canUploadBukti === 'true' || existingUserLocal.canUploadBukti === 1);
+              }
 
-            const existingUserLocal = getUsersFromDB().find(x => x && String(x.username).toUpperCase() === u.toUpperCase());
+              user = {
+                id: su.id,
+                username: String(su.username || '').trim(),
+                password: String(su.password || '').trim(),
+                fullName: String(su.full_name || su.fullName || '').trim(),
+                storeCode: String(su.store_code || su.storeCode || '').trim(),
+                phone: String(su.phone || '').trim(),
+                category: String(su.category || 'TOKO').trim().toUpperCase(),
+                area: String(su.area || 'BDG').trim().toUpperCase(),
+                email: String(su.email || '').trim().toLowerCase(),
+                canPrintPdf: canPrint,
+                canForward: canForward,
+                can_forward: canForward,
+                canDownloadExcel: canDownloadExcel,
+                can_download_excel: canDownloadExcel,
+                canUploadBukti: canUploadBukti,
+                can_upload_bukti: canUploadBukti,
+                theme: su.theme || '',
+                createdAt: su.created_at || (typeof getFormattedDateDDMMYYYY === 'function' ? getFormattedDateDDMMYYYY() : '')
+              };
 
-            let canPrint = false;
-
-            if (su.can_print_pdf !== undefined && su.can_print_pdf !== null) {
-
-              canPrint = (su.can_print_pdf === true || su.can_print_pdf === 'true' || su.can_print_pdf === 1);
-
-            } else if (su.canPrintPdf !== undefined && su.canPrintPdf !== null) {
-
-              canPrint = (su.canPrintPdf === true || su.canPrintPdf === 'true' || su.canPrintPdf === 1);
-
-            } else if (existingUserLocal && existingUserLocal.canPrintPdf !== undefined && existingUserLocal.canPrintPdf !== null) {
-
-              canPrint = (existingUserLocal.canPrintPdf === true || existingUserLocal.canPrintPdf === 'true' || existingUserLocal.canPrintPdf === 1);
-
+              // Simpan / update ke cache lokal
+              const localUsers = getUsersFromDB();
+              const uIdx = localUsers.findIndex(x => x && (x.id === user.id || String(x.username).toUpperCase() === user.username.toUpperCase()));
+              if (uIdx !== -1) localUsers[uIdx] = user;
+              else localUsers.push(user);
+              saveUsersToDB(localUsers);
             }
-
-
-
-            let canForward = true;
-
-            if (su.can_forward !== undefined && su.can_forward !== null) {
-
-              canForward = (su.can_forward === true || su.can_forward === 'true' || su.can_forward === 1);
-
-            } else if (su.canForward !== undefined && su.canForward !== null) {
-
-              canForward = (su.canForward === true || su.canForward === 'true' || su.canForward === 1);
-
-            } else if (existingUserLocal && existingUserLocal.canForward !== undefined && existingUserLocal.canForward !== null) {
-
-              canForward = (existingUserLocal.canForward === true || existingUserLocal.canForward === 'true' || existingUserLocal.canForward === 1);
-
-            }
-
-
-
-            let canDownloadExcel = true;
-
-            if (su.can_download_excel !== undefined && su.can_download_excel !== null) {
-
-              canDownloadExcel = (su.can_download_excel === true || su.can_download_excel === 'true' || su.can_download_excel === 1);
-
-            } else if (su.canDownloadExcel !== undefined && su.canDownloadExcel !== null) {
-
-              canDownloadExcel = (su.canDownloadExcel === true || su.canDownloadExcel === 'true' || su.canDownloadExcel === 1);
-
-            } else if (existingUserLocal && existingUserLocal.canDownloadExcel !== undefined && existingUserLocal.canDownloadExcel !== null) {
-
-              canDownloadExcel = (existingUserLocal.canDownloadExcel === true || existingUserLocal.canDownloadExcel === 'true' || existingUserLocal.canDownloadExcel === 1);
-
-            }
-
-
-
-            let canUploadBukti = true;
-
-            if (su.can_upload_bukti !== undefined && su.can_upload_bukti !== null) {
-
-              canUploadBukti = (su.can_upload_bukti === true || su.can_upload_bukti === 'true' || su.can_upload_bukti === 1);
-
-            } else if (su.canUploadBukti !== undefined && su.canUploadBukti !== null) {
-
-              canUploadBukti = (su.canUploadBukti === true || su.canUploadBukti === 'true' || su.canUploadBukti === 1);
-
-            } else if (existingUserLocal && existingUserLocal.canUploadBukti !== undefined && existingUserLocal.canUploadBukti !== null) {
-
-              canUploadBukti = (existingUserLocal.canUploadBukti === true || existingUserLocal.canUploadBukti === 'true' || existingUserLocal.canUploadBukti === 1);
-
-            }
-
-
-
-            user = {
-
-              id: su.id,
-
-              username: String(su.username || '').trim(),
-
-              password: String(su.password || '').trim(),
-
-              fullName: String(su.full_name || su.fullName || '').trim(),
-
-              storeCode: String(su.store_code || su.storeCode || '').trim(),
-
-              phone: String(su.phone || '').trim(),
-
-              category: String(su.category || 'TOKO').trim().toUpperCase(),
-
-              area: String(su.area || 'BDG').trim().toUpperCase(),
-
-              canPrintPdf: canPrint,
-
-              canForward: canForward,
-
-              can_forward: canForward,
-
-              canDownloadExcel: canDownloadExcel,
-
-              can_download_excel: canDownloadExcel,
-
-              canUploadBukti: canUploadBukti,
-
-              can_upload_bukti: canUploadBukti,
-
-              theme: su.theme || '',
-
-              createdAt: su.created_at || (typeof getFormattedDateDDMMYYYY === 'function' ? getFormattedDateDDMMYYYY() : '')
-
-            };
-
-
-
-            // Simpan ke cache lokal
-
-            const localUsers = getUsersFromDB();
-
-            const uIdx = localUsers.findIndex(x => x && (x.id === user.id || String(x.username).toUpperCase() === user.username.toUpperCase()));
-
-            if (uIdx !== -1) localUsers[uIdx] = user;
-
-            else localUsers.push(user);
-
-            saveUsersToDB(localUsers);
-
           }
-
         }
-
       } catch (sbErr) {
-
         console.warn('[SUPABASE LOGIN QUERY NOTICE]:', sbErr);
-
+        checkedSupabase = false;
       }
+    }
 
+    // 2. JIKA OFFLINE / QUERY SUPABASE GAGAL, FALLBACK KE LOKAL
+    if (!user && !checkedSupabase) {
+      let users = getUsersFromDB();
+      user = users.find(x => x && x.username && (String(x.username).trim().toUpperCase() === u || (x.email && String(x.email).trim().toUpperCase() === u)) && String(x.password).trim() === p);
     }
 
 
