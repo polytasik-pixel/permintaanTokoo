@@ -15855,9 +15855,163 @@ function loadRememberedCredentials() {
 
 window.loadRememberedCredentials = loadRememberedCredentials;
 
+/* =============================================================================
+   FITUR SINGLE SIGN-ON (SSO) JWT SUPABASE AUTO-LOGIN
+   ============================================================================= */
 
+function parseJwtPayload(token) {
+  try {
+    if (!token || typeof token !== 'string') return null;
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    let base64Url = parts[1];
+    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.warn('[SSO JWT PARSE ERROR]:', e);
+    return null;
+  }
+}
+window.parseJwtPayload = parseJwtPayload;
+
+async function processSupabaseSSOJWT(rawJwtToken) {
+  if (!rawJwtToken || typeof rawJwtToken !== 'string') return false;
+  const token = rawJwtToken.trim();
+  if (!token) return false;
+
+  try {
+    const payload = parseJwtPayload(token);
+    if (!payload) return false;
+
+    // Check expiration if exp claim is present
+    if (payload.exp && (payload.exp * 1000) < Date.now()) {
+      if (typeof showNotif === 'function') showNotif('⚠️ TOKEN SSO SUPABASE SUDAH KADALUWARSA (EXPIRED). SILAKAN LOGIN ULANG.', 'warning');
+      return false;
+    }
+
+    // Extract identify info: username, sub, email, or user_metadata
+    let targetUsername = payload.username || payload.user_username || payload.sub || '';
+    if (payload.user_metadata && payload.user_metadata.username) {
+      targetUsername = payload.user_metadata.username;
+    }
+    if (!targetUsername && payload.email) {
+      targetUsername = payload.email.split('@')[0];
+    }
+    targetUsername = String(targetUsername).trim().toUpperCase();
+
+    let foundUser = null;
+    let allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
+
+    if (targetUsername) {
+      foundUser = allUsers.find(u => u && String(u.username || '').toUpperCase() === targetUsername);
+    }
+
+    // If not found in local cache, search Supabase users table
+    if (!foundUser && typeof supabase !== 'undefined' && supabase) {
+      try {
+        let query = supabase.from('users').select('*');
+        if (targetUsername) {
+          query = query.ilike('username', targetUsername);
+        } else if (payload.sub) {
+          query = query.eq('id', payload.sub);
+        }
+        const { data, error } = await query.limit(1);
+        if (!error && Array.isArray(data) && data.length > 0) {
+          foundUser = data[0];
+          if (allUsers.length > 0 && typeof saveUsersToDB === 'function') {
+            const idx = allUsers.findIndex(u => u && String(u.username || '').toUpperCase() === String(foundUser.username || '').toUpperCase());
+            if (idx !== -1) allUsers[idx] = foundUser;
+            else allUsers.push(foundUser);
+            saveUsersToDB(allUsers);
+          }
+        }
+      } catch(e) {}
+    }
+
+    // Fallback: If user is not registered in DB yet but JWT contains complete SSO user details
+    if (!foundUser && (payload.username || payload.name || payload.email || payload.role || payload.category)) {
+      foundUser = {
+        id: payload.sub || 'SSO_' + Date.now(),
+        username: targetUsername || (payload.name || 'USER_SSO').toUpperCase(),
+        fullName: payload.fullName || payload.name || payload.username || 'SSO USER',
+        category: (payload.category || payload.role || payload.kategori || 'TOKO').toUpperCase(),
+        area: (payload.area || 'BDG').toUpperCase(),
+        role: (payload.role || 'USER').toUpperCase(),
+        can_print_pdf: true,
+        can_forward_service: true,
+        can_download_excel: true,
+        can_upload_bukti: true,
+        can_upload_smart: true
+      };
+    }
+
+    if (!foundUser) {
+      if (typeof showNotif === 'function') showNotif('❌ GAGAL SSO: DATA USER TIDAK DITEMUKAN DI SISTEM.', 'error');
+      return false;
+    }
+
+    // Save session
+    currentUser = foundUser;
+    const sessionStr = JSON.stringify(currentUser);
+    try { sessionStorage.setItem(SESSION_KEY, sessionStr); } catch(e) {}
+    try { localStorage.setItem(SESSION_KEY, sessionStr); } catch(e) {}
+    if (typeof appStorage !== 'undefined' && appStorage) {
+      try { appStorage.setItem(SESSION_KEY, sessionStr); } catch(e) {}
+    }
+
+    // Clean URL parameters for security so token is not exposed in address bar
+    try {
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.delete('token');
+      currentUrl.searchParams.delete('jwt');
+      currentUrl.searchParams.delete('sso');
+      currentUrl.searchParams.delete('access_token');
+      currentUrl.searchParams.delete('sso_token');
+      currentUrl.hash = '';
+      window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search);
+    } catch(e) {}
+
+    // Show main app & notify
+    bukaMainApp(true);
+    if (typeof showNotif === 'function') {
+      showNotif(`✓ SSO LOGIN SUPABASE BERHASIL! Selamat datang, ${currentUser.fullName || currentUser.username}.`, 'success');
+    }
+    return true;
+  } catch(err) {
+    console.error('[PROCESS SSO JWT ERROR]:', err);
+    return false;
+  }
+}
+window.processSupabaseSSOJWT = processSupabaseSSOJWT;
+
+function checkAndHandleSupabaseSSOUrl() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    let token = urlParams.get('token') || urlParams.get('jwt') || urlParams.get('sso') || urlParams.get('access_token') || urlParams.get('sso_token');
+
+    if (!token && window.location.hash) {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      token = hashParams.get('access_token') || hashParams.get('token') || hashParams.get('jwt');
+    }
+
+    if (token) {
+      return processSupabaseSSOJWT(token);
+    }
+  } catch(e) {}
+  return false;
+}
+window.checkAndHandleSupabaseSSOUrl = checkAndHandleSupabaseSSOUrl;
 
 function autoLogin() {
+  if (typeof checkAndHandleSupabaseSSOUrl === 'function' && checkAndHandleSupabaseSSOUrl()) {
+    return;
+  }
 
   if (!currentUser) {
 
@@ -53012,7 +53166,7 @@ function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
         <span style="display: flex !important; align-items: center !important; gap: 8px !important; text-align: left !important;">
           <span class="material-symbols-rounded" style="color: #0284c7 !important; font-size: 22px !important; flex-shrink: 0 !important;">description</span> 
           <span>
-            <div style="font-size: 12px !important; font-weight: 800 !important; color: #0369a1 !important; line-height: 1.2 !important;">SURAT UTAMA</div>
+            <div style="font-size: 12px !important; font-weight: 800 !important; color: #0369a1 !important; line-height: 1.2 !important;">SURAT UTAMA (INDUK)</div>
             <div style="font-size: 10px !important; color: #64748b !important; font-weight: 700 !important; margin-top: 2px !important;">#${noSurat}</div>
           </span>
         </span>
