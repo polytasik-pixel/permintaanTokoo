@@ -15972,7 +15972,7 @@ async function processSupabaseSSOJWT(rawJwtToken) {
       // Tampilkan aplikasi utama
       bukaMainApp(true);
       if (typeof showNotif === 'function') {
-        showNotif(`✓ LOGIN SSO BERHASIL! Selamat datang, ${currentUser.fullName || currentUser.username}.`, 'success');
+        showNotif(`✓ LOGIN BERHASIL! Selamat datang, ${currentUser.fullName || currentUser.username}.`, 'success');
       }
       return true;
     } else {
@@ -15981,9 +15981,9 @@ async function processSupabaseSSOJWT(rawJwtToken) {
       const portalUrl = localStorage.getItem('sso_return_url');
 
       if (typeof showNotif === 'function') {
-        showNotif(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR DI DATABASE SYSTEM!${portalUrl ? ' Mengalihkan ke Portal...' : ''}`, 'error');
+        showNotif(`❌ LOGIN GAGAL: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR!${portalUrl ? ' Mengalihkan ke Portal...' : ''}`, 'error');
       } else {
-        alert(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR DI DATABASE SYSTEM!`);
+        alert(`❌ GAGAL SSO: AKUN '${emailUser || usernameUser}' TIDAK TERDAFTAR!`);
       }
 
       if (portalUrl && String(portalUrl).trim().length > 0) {
