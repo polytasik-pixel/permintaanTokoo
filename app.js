@@ -16016,9 +16016,6 @@ async function processSupabaseSSOJWT(rawJwtToken) {
 
       // Tampilkan aplikasi utama
       bukaMainApp(true);
-      if (typeof showNotif === 'function') {
-        showNotif(`✓ LOGIN SSO BERHASIL! Selamat datang, ${currentUser.fullName || currentUser.username}.`, 'success');
-      }
       return true;
     } else {
       // Jika email / username TIDAK DITEMUKAN di database sama sekali
