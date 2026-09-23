@@ -15895,12 +15895,16 @@ async function processSupabaseSSOJWT(rawJwtToken) {
       return false;
     }
 
-    // Mengambil identitas email / username dari payload JWT
-    const emailUser = (payloadJson.email || '').trim().toLowerCase();
-    const usernameUser = (payloadJson.username || (payloadJson.user_metadata && payloadJson.user_metadata.username) || payloadJson.sub || '').trim().toLowerCase();
-    const fullNameUser = (payloadJson.fullName || payloadJson.name || '').trim().toLowerCase();
+    // Mengambil identitas email / username / nama dari payload JWT
+    const emailUser = (payloadJson.email || payloadJson.user_email || (payloadJson.user_metadata && payloadJson.user_metadata.email) || '').trim().toLowerCase();
+    let rawUsername = payloadJson.username || payloadJson.user_name || payloadJson.preferred_username || (payloadJson.user_metadata && payloadJson.user_metadata.username);
+    if (!rawUsername && payloadJson.sub && !String(payloadJson.sub).includes('-')) {
+      rawUsername = payloadJson.sub;
+    }
+    const usernameUser = (rawUsername || '').trim().toLowerCase();
+    const fullNameUser = (payloadJson.fullName || payloadJson.full_name || payloadJson.name || payloadJson.nama || (payloadJson.user_metadata && (payloadJson.user_metadata.full_name || payloadJson.user_metadata.name)) || '').trim().toLowerCase();
 
-    console.log("Mencoba login otomatis via SSO untuk Email/Username:", emailUser || usernameUser);
+    console.log("Mencoba login otomatis via SSO untuk Email/Username/Nama:", emailUser || usernameUser || fullNameUser);
 
     let userFound = null;
     const dataMasterUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
@@ -15908,16 +15912,29 @@ async function processSupabaseSSOJWT(rawJwtToken) {
     // 1. Cek DULU ke Supabase Database table 'users' untuk data paling up-to-date (Fresh Verification)
     if (typeof supabase !== 'undefined' && supabase) {
       try {
-        let query = supabase.from('users').select('*');
-        if (emailUser && usernameUser) {
-          query = query.or(`email.ilike.${emailUser},username.ilike.${usernameUser},username.ilike.${emailUser}`);
-        } else if (emailUser) {
-          query = query.or(`email.ilike.${emailUser},username.ilike.${emailUser}`);
-        } else if (usernameUser) {
-          query = query.or(`username.ilike.${usernameUser},email.ilike.${usernameUser}`);
+        let supaUsers = [];
+        // A. Cek berdasarkan Username
+        if (usernameUser) {
+          const { data, error } = await supabase.from('users').select('*').ilike('username', usernameUser).limit(1);
+          if (!error && Array.isArray(data) && data.length > 0) supaUsers = data;
         }
-        const { data: supaUsers, error } = await query.limit(1);
-        if (!error && Array.isArray(supaUsers) && supaUsers.length > 0) {
+        // B. Cek berdasarkan Email jika belum ketemu
+        if (supaUsers.length === 0 && emailUser) {
+          const { data, error } = await supabase.from('users').select('*').ilike('email', emailUser).limit(1);
+          if (!error && Array.isArray(data) && data.length > 0) supaUsers = data;
+        }
+        // C. Cek username = emailUser
+        if (supaUsers.length === 0 && emailUser) {
+          const { data, error } = await supabase.from('users').select('*').ilike('username', emailUser).limit(1);
+          if (!error && Array.isArray(data) && data.length > 0) supaUsers = data;
+        }
+        // D. Cek berdasarkan Nama Lengkap
+        if (supaUsers.length === 0 && fullNameUser) {
+          const { data, error } = await supabase.from('users').select('*').ilike('full_name', fullNameUser).limit(1);
+          if (!error && Array.isArray(data) && data.length > 0) supaUsers = data;
+        }
+
+        if (supaUsers.length > 0) {
           const su = supaUsers[0];
           let canPrint = (su.can_print_pdf === true || su.can_print_pdf === 'true' || su.can_print_pdf === 1 || su.canPrintPdf === true);
           let canForward = (su.can_forward === true || su.can_forward === 'true' || su.can_forward === 1 || su.canForward === true);
@@ -15958,16 +15975,18 @@ async function processSupabaseSSOJWT(rawJwtToken) {
       }
     }
 
-    // 2. Jika Supabase offline atau query gagal, fallback ke DB lokal (pencocokan ketat Email/Username saja)
+    // 2. Fallback DB lokal jika Supabase offline atau query belum mendapat hasil
     if (!userFound && dataMasterUsers.length > 0) {
       userFound = dataMasterUsers.find(u => {
         if (!u) return false;
         const uEmail = (u.email || '').trim().toLowerCase();
         const uUsername = (u.username || '').trim().toLowerCase();
+        const uFullName = (u.fullName || u.nama || u.full_name || '').trim().toLowerCase();
 
-        return (emailUser && uEmail === emailUser) ||
-               (usernameUser && uUsername === usernameUser) ||
-               (emailUser && uUsername === emailUser);
+        return (usernameUser && uUsername === usernameUser) ||
+               (emailUser && uEmail === emailUser) ||
+               (emailUser && uUsername === emailUser) ||
+               (fullNameUser && uFullName === fullNameUser);
       });
     }
 
