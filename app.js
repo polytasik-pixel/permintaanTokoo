@@ -59340,13 +59340,25 @@ async function simpanApprovalDMWithTTDAndGDrive() {
     }
   }
 
-  // 1. Tampilkan loading singkat 'PROSES APPROVAL' & langsung tutup modal canvas
+  // 1. Tampilkan modal loading 'PROSES APPROVAL...' & tutup canvas modal
   if (typeof tutupModalApprovalDMCanvas === 'function') tutupModalApprovalDMCanvas();
 
   if (typeof tampilkanLoadingProses === 'function') tampilkanLoadingProses('PROSES APPROVAL...');
   else if (typeof showLoading === 'function') showLoading('PROSES APPROVAL...');
 
-  // 2. KILAT LOKAL UPDATE (0-10 ms UX): Update DB lokal & UI secara instant tanpa menunggu cloud!
+  // 2. UNGGAH FOTO TTD CANVAS PNG KE GOOGLE DRIVE & DAPATKAN LINK VIEW (https://lh3.googleusercontent.com/d/FILE_ID)
+  let driveUrl = '';
+  if (typeof uploadTtdDMToGoogleDriveViaScript === 'function' && ttdDataUrl) {
+    try {
+      driveUrl = await uploadTtdDMToGoogleDriveViaScript(ttdDataUrl, targetNoSurat);
+    } catch (e) {
+      console.warn('[GDRIVE TTD DM UPLOAD WARN]:', e);
+    }
+  }
+
+  const finalTtdUrl = (driveUrl && String(driveUrl).startsWith('http')) ? driveUrl : '';
+
+  // 3. SIMPAN HANYA LINK GOOGLE DRIVE KE KOLOM dm_ttd & dmTTD (JANGAN BASE64!)
   const requests = typeof getRequestsFromDB === 'function' ? getRequestsFromDB() : [];
   const cleanTarget = String(targetNoSurat).replace(/^#/g, '').trim().toUpperCase();
   const idx = requests.findIndex(r => {
@@ -59360,14 +59372,15 @@ async function simpanApprovalDMWithTTDAndGDrive() {
   if (idx !== -1) {
     requests[idx].status = 'APPROVE';
     requests[idx].dmUserName = currentUser ? (currentUser.fullName || currentUser.username) : 'DM';
-    requests[idx].dmTTD = ttdDataUrl; 
-    requests[idx].dm_ttd = ttdDataUrl;
+    requests[idx].dmTTD = finalTtdUrl; // HANYA LINK GOOGLE DRIVE
+    requests[idx].dm_ttd = finalTtdUrl; // HANYA LINK GOOGLE DRIVE
+    requests[idx]._tempCanvasBase64 = ttdDataUrl; // Cadangan rendering lokal instan
 
     if (!requests[idx].log) requests[idx].log = [];
     requests[idx].log.push({
       action: 'APPROVE_DM',
       user: currentUser ? (currentUser.fullName || currentUser.username) : 'DM',
-      notes: `Persetujuan DM dengan TTD Canvas`,
+      notes: `Persetujuan DM dengan TTD Canvas (Drive URL: ${finalTtdUrl || 'Pending'})`,
       time: `${typeof getFormattedDateDDMMYYYY === 'function' ? getFormattedDateDDMMYYYY() : ''} ${new Date().toLocaleTimeString('id-ID')}`
     });
 
@@ -59377,7 +59390,22 @@ async function simpanApprovalDMWithTTDAndGDrive() {
     targetReq = requests[idx];
   }
 
-  // 3. TAMPILKAN HASIL INSTAN KE USER (0 MS DELAY)
+  // 4. UPDATE SUPABASE DATABASE (KOLOM dm_ttd HANYA DIISI LINK GOOGLE DRIVE)
+  if (typeof supabase !== 'undefined' && supabase && typeof supabase.from === 'function') {
+    try {
+      await supabase.from('permintaan_toko').update({
+        dm_ttd: finalTtdUrl, // HANYA LINK GOOGLE DRIVE!
+        dm_user_name: currentUser ? (currentUser.fullName || currentUser.username) : 'DM',
+        status: 'APPROVE',
+        updated_at: new Date().toISOString()
+      }).eq('no_surat', targetNoSurat);
+      console.log('[SUPABASE dm_ttd SUCCESS]: Link Google Drive TTD tersimpan di kolom dm_ttd Supabase');
+    } catch(supaErr) {
+      console.warn('[SUPABASE dm_ttd UPDATE ERR]:', supaErr);
+    }
+  }
+
+  // 5. SELESAI PROSES & TAMPILKAN HASIL KE USER
   if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
   else if (typeof hideLoading === 'function') hideLoading();
 
@@ -59389,47 +59417,10 @@ async function simpanApprovalDMWithTTDAndGDrive() {
   if (typeof loadDashboard === 'function') loadDashboard();
   if (typeof lihatDetail === 'function') lihatDetail(targetNoSurat);
 
-  // 4. JALANKAN SEMUA PROSES BERAT DI LATAR BELAKANG (NON-BLOCKING BACKGROUND TASK)
-  setTimeout(async () => {
-    try {
-      // A. Unggah TTD Canvas PNG ke Google Drive & Tempel Link ke Google Sheet
-      let finalTtdUrl = ttdDataUrl;
-      if (typeof uploadTtdDMToGoogleDriveViaScript === 'function') {
-        try {
-          const driveUrl = await uploadTtdDMToGoogleDriveViaScript(ttdDataUrl, targetNoSurat);
-          if (driveUrl) finalTtdUrl = driveUrl;
-        } catch(e) {
-          console.warn('[BACKGROUND GDRIVE TTD WARN]:', e);
-        }
-      }
-
-      // B. Tempel Link Google Drive TTD DM ke Database Supabase (kolom dm_ttd) & DB lokal
-      if (idx !== -1 && finalTtdUrl && finalTtdUrl !== ttdDataUrl) {
-        requests[idx].dmTTD = finalTtdUrl;
-        requests[idx].dm_ttd = finalTtdUrl;
-        if (typeof saveRequestsToDB === 'function') {
-          saveRequestsToDB(requests, requests[idx], 'UPDATE');
-        }
-      }
-
-      if (typeof supabase !== 'undefined' && supabase && typeof supabase.from === 'function') {
-        try {
-          await supabase.from('permintaan_toko').update({
-            dm_ttd: finalTtdUrl || ttdDataUrl,
-            dm_user_name: currentUser ? (currentUser.fullName || currentUser.username) : 'DM',
-            status: 'APPROVE',
-            updated_at: new Date().toISOString()
-          }).eq('no_surat', targetNoSurat);
-          console.log('[SUPABASE dm_ttd SUCCESS]: Link TTD tersimpan di kolom dm_ttd Supabase');
-        } catch(supaErr) {}
-      }
-
-      // C. Generator PDF Dokumen & Backup ke Google Drive
-      if (typeof generateAndBackupApprovedPdf === 'function') {
-        generateAndBackupApprovedPdf(targetNoSurat, targetReq || findRequestByNoSuratOrId(targetNoSurat)).catch(e => console.warn('[BACKGROUND PDF WARN]:', e));
-      }
-    } catch (bgErr) {
-      console.warn('[BACKGROUND APPROVAL TASK ERROR]:', bgErr);
+  // 6. GENERATE PDF DOKUMEN & BACKUP KE GOOGLE DRIVE (BACKGROUND)
+  setTimeout(() => {
+    if (typeof generateAndBackupApprovedPdf === 'function') {
+      generateAndBackupApprovedPdf(targetNoSurat, targetReq || findRequestByNoSuratOrId(targetNoSurat)).catch(e => console.warn('[BACKGROUND PDF WARN]:', e));
     }
   }, 10);
 }
