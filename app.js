@@ -32069,27 +32069,7 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
     return;
   }
 
-  // 2. JIKA HANYA ADA PDF_DRIVE_URL SAJA (TANPA LAMPIRAN BUKTI & TANPA PARSIAL): LANGSUNG UNDUH FILE PDF
-  if (includePhotos !== 'skipChoice' && hasDriveUrl && !hasUploadedPdf && !hasPartials) {
-    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
-    const cleanNoSurat = targetNoStr.replace(/[\/\\:\*\?"<>\|]/g, '_');
-    const fileName = `SURAT_PERMINTAAN_${cleanNoSurat}.pdf`;
-    if (typeof downloadPdfFile === 'function') {
-      downloadPdfFile(directPdfUrl, fileName);
-    } else {
-      const dlUrl = typeof formatGoogleDriveDownloadUrl === 'function' ? formatGoogleDriveDownloadUrl(directPdfUrl) : directPdfUrl;
-      const a = document.createElement('a');
-      a.href = dlUrl;
-      a.download = fileName;
-      a.target = '_self';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 300);
-    }
-    return;
-  }
-
-  // 3. JIKA TIDAK ADA PDF_DRIVE_URL ATAU DIPILIH SURAT UTAMA DARI MODAL PILIHAN: LANGSUNG BUKA DIALOG CETAK BROWSER ASLI (WINDOW.PRINT)
+  // 2. SURAT UTAMA SELALU DICETAK MELALUI DIALOG CETAK BROWSER CHROME ASLI (WINDOW.PRINT)
   autoPrint = true;
 
   if (typeof tampilkanLoadingProses === 'function') {
@@ -52578,13 +52558,7 @@ async function cetakPdfSuratParsial(noSurat, partialId) {
     return;
   }
 
-  const directDriveUrl = targetReq ? (targetReq.pdf_drive_url || targetReq.pdfDriveUrl) : '';
-  if (directDriveUrl) {
-    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
-    const previewUrl = formatGoogleDrivePreviewUrl(directDriveUrl);
-    window.open(previewUrl, '_blank');
-    return;
-  }
+  // Surat Parsial dicetak langsung via dialog cetak browser Chrome (window.print)
 
   if (typeof tampilkanLoadingProses === 'function') {
 
