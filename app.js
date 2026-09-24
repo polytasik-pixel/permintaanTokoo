@@ -23384,13 +23384,16 @@ function bukaRiwayat(status) {
 
 
 function isPdfButtonAllowed(req) {
-
   if (!req || !currentUser) return false;
 
+  // VALIDASI UTAMA: Tombol PDF HANYA MUNCUL APABILA KOLOM TTD DM SUDAH ADA ISINYA!
+  const dmTtdVal = req.dm_ttd || req.dmTTD || req._tempCanvasBase64 || '';
+  if (!dmTtdVal || !String(dmTtdVal).trim()) {
+    return false;
+  }
+
   const role = String(currentUser.category || '').toUpperCase();
-
   const isAdmin = typeof checkIsAdminUser === 'function' ? checkIsAdminUser() : (role === 'ADMIN' || (currentUser.username && currentUser.username.toUpperCase() === 'ADMIN'));
-
   const stUpper = String(req.status || '').toUpperCase();
 
 
@@ -32051,6 +32054,16 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
     String(r.noSurat || '').replace(/^#/g, '').trim().toUpperCase() === targetNoStr ||
     String(r.id || '').replace(/^#/g, '').trim().toUpperCase() === targetNoStr
   ));
+
+  // VALIDASI UTAMA: PDF HANYA DAPAT DIBUKA JIKA TTD DM SUDAH ADA ISINYA
+  const dmTtdVal = matchedReq ? (matchedReq.dm_ttd || matchedReq.dmTTD || matchedReq._tempCanvasBase64 || '') : '';
+  if (!dmTtdVal || !String(dmTtdVal).trim()) {
+    if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
+    if (typeof showNotif === 'function') {
+      showNotif('DOKUMEN PDF BELUM DAPAT DICETAK KARENA TANDA TANGAN DM MASIH KOSONG!', 'warning');
+    }
+    return;
+  }
 
   let directPdfUrl = (matchedReq && (matchedReq.pdf_drive_url || matchedReq.pdfDriveUrl)) || '';
 
@@ -53123,6 +53136,13 @@ function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
   // JIKA SURAT BERSTATUS REJECT: BLOKIR DENGAN NOTIFIKASI
   if (targetReq && (targetReq.status === 'REJECT' || targetReq.status === 'BATAL')) {
     showNotif('TOMBOL / AKSES CETAK PDF TIDAK TERSEDIA UNTUK DOKUMEN BER-STATUS BATAL / REJECT!', 'warning');
+    return;
+  }
+
+  // VALIDASI UTAMA: TOMBOL / AKSES CETAK PDF BELUM TERSEDIA KARENA TANDA TANGAN DM MASIH KOSONG
+  const dmTtdVal = targetReq ? (targetReq.dm_ttd || targetReq.dmTTD || targetReq._tempCanvasBase64 || '') : '';
+  if (!dmTtdVal || !String(dmTtdVal).trim()) {
+    showNotif('TOMBOL / AKSES CETAK PDF BELUM TERSEDIA KARENA TANDA TANGAN DM MASIH KOSONG!', 'warning');
     return;
   }
 
