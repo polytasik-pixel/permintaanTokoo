@@ -23386,8 +23386,8 @@ function bukaRiwayat(status) {
 function isPdfButtonAllowed(req) {
   if (!req || !currentUser) return false;
 
-  // VALIDASI UTAMA: Tombol PDF HANYA MUNCUL APABILA KOLOM TTD DM SUDAH ADA ISINYA!
-  const dmTtdVal = req.dm_ttd || req.dmTTD || req._tempCanvasBase64 || '';
+  // VALIDASI AWAL PENTING: TOMBOL CETAK PDF TIDAK MUNCUL SAMA SEKALI SELAMA KOLOM TTD DM MASIH KOSONG!
+  const dmTtdVal = req.dm_ttd || req.dmTTD || '';
   if (!dmTtdVal || !String(dmTtdVal).trim()) {
     return false;
   }
@@ -32139,14 +32139,10 @@ async function bukaPdfModal(noSurat, includePhotos = null, autoPrint = true) {
 
     const isAdmUser = (typeof checkIsAdminUser === 'function') ? checkIsAdminUser() : (userCat === 'ADMIN' || (currentUser && currentUser.username && currentUser.username.toUpperCase() === 'ADMIN'));
 
-    if (!isAdmUser && typeof isPdfButtonAllowed === 'function' && !isPdfButtonAllowed(req)) {
-
+    if (typeof isPdfButtonAllowed === 'function' && !isPdfButtonAllowed(req)) {
       if (typeof tutupLoadingProses === 'function') tutupLoadingProses();
-
-      showNotif('TOMBOL / AKSES CETAK PDF TIDAK TERSEDIA UNTUK DOKUMEN BER-STATUS DONE / BATAL / REJECT!', 'warning');
-
+      showNotif('TOMBOL / AKSES CETAK PDF BELUM TERSEDIA KARENA TANDA TANGAN DM MASIH KOSONG!', 'warning');
       return;
-
     }
 
 
@@ -53140,7 +53136,7 @@ function tampilkanPilihanCetakPdf(noSurat, targetReq = null) {
   }
 
   // VALIDASI UTAMA: TOMBOL / AKSES CETAK PDF BELUM TERSEDIA KARENA TANDA TANGAN DM MASIH KOSONG
-  const dmTtdVal = targetReq ? (targetReq.dm_ttd || targetReq.dmTTD || targetReq._tempCanvasBase64 || '') : '';
+  const dmTtdVal = targetReq ? (targetReq.dm_ttd || targetReq.dmTTD || '') : '';
   if (!dmTtdVal || !String(dmTtdVal).trim()) {
     showNotif('TOMBOL / AKSES CETAK PDF BELUM TERSEDIA KARENA TANDA TANGAN DM MASIH KOSONG!', 'warning');
     return;
