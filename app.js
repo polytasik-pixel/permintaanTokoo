@@ -5340,6 +5340,7 @@ function showFloatingNotifToast(notif) {
     // Jeda 1 detik (1000ms) jika kursor tidak berada di sekitar (radius 10mm / ~38px) popup notifikasi
     let dismissTimer = null;
     let mouseMoveHandler = null;
+    let isMouseHovering = false;
 
     const cleanupToast = () => {
       if (dismissTimer) {
@@ -5355,18 +5356,33 @@ function showFloatingNotifToast(notif) {
     const startDismissTimer = (delay = 1000) => {
       if (dismissTimer) clearTimeout(dismissTimer);
       dismissTimer = setTimeout(() => {
-        const el = document.getElementById(toastId);
-        if (el) {
-          el.style.animation = 'slideOutNotifToast 0.3s ease forwards';
-          setTimeout(() => {
+        if (!isMouseHovering) {
+          const el = document.getElementById(toastId);
+          if (el) {
+            el.style.animation = 'slideOutNotifToast 0.3s ease forwards';
+            setTimeout(() => {
+              cleanupToast();
+              if (el && el.parentNode) el.remove();
+            }, 300);
+          } else {
             cleanupToast();
-            if (el && el.parentNode) el.remove();
-          }, 300);
-        } else {
-          cleanupToast();
+          }
         }
       }, delay);
     };
+
+    toast.addEventListener('mouseenter', () => {
+      isMouseHovering = true;
+      if (dismissTimer) {
+        clearTimeout(dismissTimer);
+        dismissTimer = null;
+      }
+    });
+
+    toast.addEventListener('mouseleave', () => {
+      isMouseHovering = false;
+      startDismissTimer(1000);
+    });
 
     // Deteksi kursor di sekitar popup (toleransi 10mm / ~38px margin)
     const marginPx = 38; // 10mm = 37.8px
@@ -5383,14 +5399,14 @@ function showFloatingNotifToast(notif) {
       const isNear = isNearX && isNearY;
 
       if (isNear) {
-        // Jika kursor di sekitar popup (radius 10mm) -> tahan popup (stop timer)
+        isMouseHovering = true;
         if (dismissTimer) {
           clearTimeout(dismissTimer);
           dismissTimer = null;
         }
       } else {
-        // Jika kursor di luar radius 10mm -> jalankan timer 1 detik
-        if (!dismissTimer) {
+        if (isMouseHovering) {
+          isMouseHovering = false;
           startDismissTimer(1000);
         }
       }
@@ -5405,10 +5421,15 @@ function showFloatingNotifToast(notif) {
 }
 window.showFloatingNotifToast = showFloatingNotifToast;
 
+if (typeof window._lastSeenUnreadNotifCount === 'undefined') {
+  window._lastSeenUnreadNotifCount = null;
+}
+if (typeof window._lastToastedNotifId === 'undefined') {
+  window._lastToastedNotifId = null;
+}
+
 function updateNotifBellCounter() {
-
   const bellBtn = document.getElementById('btnNotifHeader') || document.getElementById('btnNotifBell');
-
   const badgeEl = document.getElementById('badgeNotifCount');
 
   if (!bellBtn || !badgeEl) return;
@@ -5416,11 +5437,8 @@ function updateNotifBellCounter() {
   const isLoginPage = (document.getElementById('loginPage') && document.getElementById('loginPage').classList.contains('active')) || !currentUser;
 
   if (isLoginPage) {
-
     bellBtn.style.setProperty('display', 'none', 'important');
-
     return;
-
   }
 
   bellBtn.style.display = 'flex';
@@ -5442,48 +5460,49 @@ function updateNotifBellCounter() {
 
   const userNotifs = typeof getAccessibleNotifications === 'function' ? getAccessibleNotifications() : [];
 
-  const unreadCount = userNotifs.filter(n => {
-
+  const unreadNotifs = userNotifs.filter(n => {
     if (!n) return false;
-
     if (!n.readBy) return true;
-
     return !n.readBy.includes(currentUser ? currentUser.id : '') && !n.readBy.includes(currentUser ? currentUser.username : '');
+  });
 
-  }).length;
-
+  const unreadCount = unreadNotifs.length;
   const displayCount = unreadCount;
 
   if (displayCount > 0) {
-
     badgeEl.textContent = displayCount > 99 ? '99+' : displayCount;
-
     badgeEl.style.setProperty('display', 'inline-flex', 'important');
-
     badgeEl.style.setProperty('visibility', 'visible', 'important');
-
     badgeEl.style.setProperty('opacity', '1', 'important');
-
     badgeEl.style.setProperty('align-items', 'center', 'important');
-
     badgeEl.style.setProperty('justify-content', 'center', 'important');
-
   } else {
-
     badgeEl.textContent = '0';
-
     badgeEl.style.setProperty('display', 'none', 'important');
-
     badgeEl.style.setProperty('visibility', 'hidden', 'important');
-
     badgeEl.style.setProperty('opacity', '0', 'important');
-
   }
 
+  // --- CEK PERUBAHAN BADGE & NOTIFIKASI BARU UNTUK AUTO POPUP 1 DETIK ---
+  if (window._lastSeenUnreadNotifCount === null) {
+    window._lastSeenUnreadNotifCount = unreadCount;
+    window._lastToastedNotifId = unreadNotifs.length > 0 ? unreadNotifs[0].id : null;
+  } else {
+    const isBadgeIncreased = unreadCount > window._lastSeenUnreadNotifCount;
+    const newestUnread = unreadNotifs.length > 0 ? unreadNotifs[0] : null;
+    const isNewNotifId = newestUnread && newestUnread.id !== window._lastToastedNotifId;
+
+    if ((isBadgeIncreased || isNewNotifId) && newestUnread) {
+      window._lastToastedNotifId = newestUnread.id;
+      if (typeof showFloatingNotifToast === 'function') {
+        showFloatingNotifToast(newestUnread);
+      }
+    }
+    window._lastSeenUnreadNotifCount = unreadCount;
+  }
 }
 
 window.updateNotifBellCounter = updateNotifBellCounter;
-
 window.updateNotifBadgeCount = updateNotifBellCounter;
 
 window.updateNotifBadgeCount = updateNotifBellCounter;
