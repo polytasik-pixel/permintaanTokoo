@@ -5261,6 +5261,150 @@ function getAccessibleNotifications() {
 
 
 
+function showFloatingNotifToast(notif) {
+  try {
+    if (!notif) return;
+    const isLogin = typeof isLoginPageActive === 'function' ? isLoginPageActive() : (!currentUser);
+    if (isLogin) return;
+
+    if (!document.getElementById('floatingNotifToastStyles')) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'floatingNotifToastStyles';
+      styleEl.textContent = `
+        @keyframes slideInNotifToast {
+          0% { transform: translateX(120%) scale(0.95); opacity: 0; }
+          100% { transform: translateX(0) scale(1); opacity: 1; }
+        }
+        @keyframes slideOutNotifToast {
+          0% { transform: translateX(0) scale(1); opacity: 1; }
+          100% { transform: translateX(120%) scale(0.95); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(styleEl);
+    }
+
+    let container = document.getElementById('floatingNotifToastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'floatingNotifToastContainer';
+      container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 10px; max-width: 380px; width: 92vw; pointer-events: none;';
+      document.body.appendChild(container);
+    }
+
+    const toastId = 'toast_' + (notif.id || Date.now());
+    const existing = document.getElementById(toastId);
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.style.cssText = `
+      pointer-events: auto;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.97) 0%, rgba(30, 41, 59, 0.97) 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.6), 0 0 22px rgba(34, 197, 94, 0.3);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: #ffffff;
+      font-family: inherit;
+      animation: slideInNotifToast 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative;
+      overflow: hidden;
+      transition: opacity 0.2s, transform 0.2s;
+    `;
+
+    const titleText = (notif.title || notif.subjek || 'NOTIFIKASI BARU').toString().toUpperCase();
+    const msgText = (notif.message || notif.pesan || notif.noSurat || '').toString();
+
+    toast.innerHTML = `
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #22c55e, #10b981);"></div>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-rounded" style="color: #22c55e; font-size: 20px;">notifications_active</span>
+          <span style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 99px; letter-spacing: 0.5px;">NOTIFIKASI BARU</span>
+        </div>
+        <button type="button" onclick="this.closest('#${toastId}').remove()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 2px; font-size: 18px; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#ffffff'">✕</button>
+      </div>
+      <div style="font-weight: 800; font-size: 13.5px; color: #ffffff; line-height: 1.3; margin-bottom: 4px;">${titleText}</div>
+      <div style="font-size: 12px; color: #cbd5e1; line-height: 1.45; word-break: break-word;">${msgText}</div>
+      <div style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" onclick="if(typeof bukaNotificationModal === 'function') bukaNotificationModal(); this.closest('#${toastId}').remove();" style="background: #22c55e; color: #0f172a; font-weight: 800; border: none; padding: 6px 14px; border-radius: 6px; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);">
+          <span class="material-symbols-rounded" style="font-size: 15px;">visibility</span> Buka List
+        </button>
+      </div>
+    `;
+
+    container.appendChild(toast);
+
+    // Jeda 1 detik (1000ms) jika kursor tidak berada di sekitar (radius 10mm / ~38px) popup notifikasi
+    let dismissTimer = null;
+    let mouseMoveHandler = null;
+
+    const cleanupToast = () => {
+      if (dismissTimer) {
+        clearTimeout(dismissTimer);
+        dismissTimer = null;
+      }
+      if (mouseMoveHandler) {
+        window.removeEventListener('mousemove', mouseMoveHandler);
+        mouseMoveHandler = null;
+      }
+    };
+
+    const startDismissTimer = (delay = 1000) => {
+      if (dismissTimer) clearTimeout(dismissTimer);
+      dismissTimer = setTimeout(() => {
+        const el = document.getElementById(toastId);
+        if (el) {
+          el.style.animation = 'slideOutNotifToast 0.3s ease forwards';
+          setTimeout(() => {
+            cleanupToast();
+            if (el && el.parentNode) el.remove();
+          }, 300);
+        } else {
+          cleanupToast();
+        }
+      }, delay);
+    };
+
+    // Deteksi kursor di sekitar popup (toleransi 10mm / ~38px margin)
+    const marginPx = 38; // 10mm = 37.8px
+
+    mouseMoveHandler = (e) => {
+      const el = document.getElementById(toastId);
+      if (!el) {
+        cleanupToast();
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      const isNearX = e.clientX >= (rect.left - marginPx) && e.clientX <= (rect.right + marginPx);
+      const isNearY = e.clientY >= (rect.top - marginPx) && e.clientY <= (rect.bottom + marginPx);
+      const isNear = isNearX && isNearY;
+
+      if (isNear) {
+        // Jika kursor di sekitar popup (radius 10mm) -> tahan popup (stop timer)
+        if (dismissTimer) {
+          clearTimeout(dismissTimer);
+          dismissTimer = null;
+        }
+      } else {
+        // Jika kursor di luar radius 10mm -> jalankan timer 1 detik
+        if (!dismissTimer) {
+          startDismissTimer(1000);
+        }
+      }
+    };
+
+    window.addEventListener('mousemove', mouseMoveHandler);
+
+    // Mulai timer awal 1 detik saat toast baru saja muncul
+    startDismissTimer(1000);
+
+  } catch(e) {}
+}
+window.showFloatingNotifToast = showFloatingNotifToast;
+
 function updateNotifBellCounter() {
 
   const bellBtn = document.getElementById('btnNotifHeader') || document.getElementById('btnNotifBell');
@@ -5268,8 +5412,6 @@ function updateNotifBellCounter() {
   const badgeEl = document.getElementById('badgeNotifCount');
 
   if (!bellBtn || !badgeEl) return;
-
-
 
   const isLoginPage = (document.getElementById('loginPage') && document.getElementById('loginPage').classList.contains('active')) || !currentUser;
 
@@ -5281,11 +5423,22 @@ function updateNotifBellCounter() {
 
   }
 
-
-
   bellBtn.style.display = 'flex';
 
-
+  if (!bellBtn._hoverToastBound) {
+    bellBtn._hoverToastBound = true;
+    bellBtn.addEventListener('mouseenter', () => {
+      const userNotifs = typeof getAccessibleNotifications === 'function' ? getAccessibleNotifications() : [];
+      const unreads = userNotifs.filter(n => {
+        if (!n) return false;
+        if (!n.readBy) return true;
+        return !n.readBy.includes(currentUser ? currentUser.id : '') && !n.readBy.includes(currentUser ? currentUser.username : '');
+      });
+      if (unreads.length > 0 && typeof showFloatingNotifToast === 'function') {
+        showFloatingNotifToast(unreads[0]);
+      }
+    });
+  }
 
   const userNotifs = typeof getAccessibleNotifications === 'function' ? getAccessibleNotifications() : [];
 
@@ -5299,11 +5452,7 @@ function updateNotifBellCounter() {
 
   }).length;
 
-
-
   const displayCount = unreadCount;
-
-
 
   if (displayCount > 0) {
 
@@ -8245,6 +8394,49 @@ async function initSupabaseRealtimeEngine() {
         (event) => {
           if (event && event.payload) {
             applyMaintenanceModeUI(event.payload.isMaintenance, event.payload.message);
+          }
+        }
+      )
+      .on(
+        'broadcast',
+        { event: 'photo_input_popup_done_changed' },
+        (event) => {
+          if (event && event.payload && typeof event.payload.enabled !== 'undefined') {
+            if (typeof applyPhotoInputPopupDoneState === 'function') {
+              applyPhotoInputPopupDoneState(event.payload.enabled);
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'system_settings' },
+        (payload) => {
+          if (payload && payload.new) {
+            const key = payload.new.setting_key || payload.new.key;
+            if (key === 'global_show_photo_input_popup_done') {
+              const val = payload.new.setting_value !== undefined ? payload.new.setting_value : payload.new.value;
+              const enabled = typeof parseBooleanSettingValue === 'function' ? parseBooleanSettingValue(val) : (val === 'true' || val === true);
+              if (typeof applyPhotoInputPopupDoneState === 'function') {
+                applyPhotoInputPopupDoneState(enabled);
+              }
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'lookup' },
+        (payload) => {
+          if (payload && payload.new) {
+            const key = payload.new.key || payload.new.setting_key;
+            if (key === 'global_show_photo_input_popup_done') {
+              const val = payload.new.value !== undefined ? payload.new.value : payload.new.setting_value;
+              const enabled = typeof parseBooleanSettingValue === 'function' ? parseBooleanSettingValue(val) : (val === 'true' || val === true);
+              if (typeof applyPhotoInputPopupDoneState === 'function') {
+                applyPhotoInputPopupDoneState(enabled);
+              }
+            }
           }
         }
       )
@@ -16017,9 +16209,12 @@ async function processSupabaseSSOJWT(rawJwtToken) {
       }
 
       if (portalUrl && String(portalUrl).trim().length > 0) {
+        /* DISABLED REDIRECT FOR LOCAL HTML RUNNING
         setTimeout(function() {
           window.location.href = String(portalUrl).trim();
         }, 1200);
+        */
+        console.warn("[LOCAL DEV]: SSO portal redirect disabled for local testing.");
       }
       return false;
     }
@@ -16066,8 +16261,11 @@ function redirectPortalIfFromSSOOrGoLogin() {
     const portalUrl = localStorage.getItem('sso_return_url');
     if (portalUrl && String(portalUrl).trim().length > 0) {
       localStorage.removeItem('sso_return_url');
+      /* DISABLED REDIRECT FOR LOCAL HTML RUNNING
       window.location.href = String(portalUrl).trim();
       return true;
+      */
+      console.warn("[LOCAL DEV]: SSO return portal redirect disabled for local testing.");
     }
   } catch(e) {}
   if (typeof pindahHalaman === 'function') {
@@ -24852,6 +25050,9 @@ function doneService(noSurat) {
 
   renderArtemisPhotoPreviews();
   applyPhotoInputPopupDoneState(window._showPhotoInputInPopupDone !== false);
+  if (typeof syncPhotoInputPopupDoneFromSupabase === 'function') {
+    syncPhotoInputPopupDoneFromSupabase();
+  }
 
 
 
@@ -24896,12 +25097,10 @@ function closeArtemisModal() {
 
 
   const pasteBox = document.getElementById('artemisPasteBox');
-
   const previewGrid = document.getElementById('artemisPhotoPreviewGrid');
-
-  if (pasteBox) pasteBox.style.display = 'block';
-
-  if (previewGrid) previewGrid.style.display = 'flex';
+  const showPhoto = window._showPhotoInputInPopupDone !== false;
+  if (pasteBox) pasteBox.style.display = showPhoto ? 'block' : 'none';
+  if (previewGrid) previewGrid.style.display = showPhoto ? 'flex' : 'none';
 
 
 
@@ -48242,176 +48441,228 @@ window.verifikasiDanEksekusiHapusLokal = verifikasiDanEksekusiHapusLokal;
 
 // =======================================================================
 
-// PWA & DESKTOP/MOBILE HOME SCREEN APP BADGING API
-
+// =======================================================================
+// PWA, CHROME TAB & DYNAMIC FAVICON NOTIFICATION BADGE CONTROL
 // =======================================================================
 
-function updateGlobalDeviceAppBadge() {
+function isLoginPageActive() {
+  if (typeof currentUser === 'undefined' || !currentUser) return true;
+  const loginPg = document.getElementById('loginPage');
+  if (loginPg && loginPg.style.display !== 'none' && !loginPg.classList.contains('hidden')) return true;
+  const loginForm = document.getElementById('loginForm') || document.querySelector('.login-container');
+  if (loginForm && loginForm.offsetParent !== null && loginForm.style.display !== 'none') return true;
+  return false;
+}
+window.isLoginPageActive = isLoginPageActive;
 
-  if (!('setAppBadge' in navigator) && !('setExperimentalAppBadge' in navigator)) return;
-
-
-
+function updateDynamicFaviconBadge(count, isLoginPage) {
   try {
-
-    if (!currentUser) {
-
-      if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
-
-      return;
-
+    const baseTitle = 'Permintaan Toko';
+    let faviconLink = document.querySelector("link[rel*='icon']");
+    if (!faviconLink) {
+      faviconLink = document.createElement('link');
+      faviconLink.rel = 'icon';
+      faviconLink.id = 'dynamicAppFavicon';
+      document.head.appendChild(faviconLink);
     }
 
+    if (!window._originalFaviconUrl) {
+      window._originalFaviconUrl = faviconLink.getAttribute('href') || 'https://www.google.com/favicon.ico';
+    }
 
+    if (isLoginPage || !count || count <= 0) {
+      if (window._originalFaviconUrl && faviconLink.getAttribute('href') !== window._originalFaviconUrl) {
+        faviconLink.setAttribute('href', window._originalFaviconUrl);
+      }
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d');
+
+    const img = new Image();
+    if (window._originalFaviconUrl && (window._originalFaviconUrl.startsWith('http://') || window._originalFaviconUrl.startsWith('https://'))) {
+      img.crossOrigin = 'Anonymous';
+    }
+    img.src = window._originalFaviconUrl;
+    img.onload = () => {
+      try {
+        ctx.clearRect(0, 0, 32, 32);
+        ctx.drawImage(img, 0, 0, 32, 32);
+
+        // Indikator bulat hijau menyala kecil di pojok kanan atas favicon Chrome tab
+        const dotX = 24;
+        const dotY = 8;
+        const dotRadius = 4.2; // Ukuran agak kecil
+
+        // Ring border putih tipis untuk kontras
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, dotRadius + 1.2, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
+        // Bulatan hijau menyala (#22c55e)
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, dotRadius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#22c55e';
+        ctx.fill();
+
+        const badgeDataUrl = canvas.toDataURL('image/png');
+        if (badgeDataUrl) {
+          faviconLink.setAttribute('href', badgeDataUrl);
+        }
+      } catch(taintErr) {
+        // Tainted canvas fallback saat dijalankan via file:// protocol lokal
+      }
+    };
+    img.onerror = () => {};
+  } catch(e) {}
+}
+window.updateDynamicFaviconBadge = updateDynamicFaviconBadge;
+
+function getUnreadNotificationsSummaryText(userNotifs, allChats, rooms) {
+  try {
+    const list = [];
+    if (Array.isArray(userNotifs) && currentUser) {
+      const unreads = userNotifs.filter(n => {
+        if (!n) return false;
+        if (!n.readBy) return true;
+        return !n.readBy.includes(currentUser.id) && !n.readBy.includes(currentUser.username);
+      });
+      unreads.slice(0, 3).forEach((n, i) => {
+        const title = (n.title || n.subjek || 'NOTIFIKASI BARU').toString().trim().toUpperCase();
+        const msg = (n.message || n.pesan || n.noSurat || '').toString().trim().replace(/[\r\n\t]+/g, ' ');
+        const shortMsg = msg ? (msg.length > 35 ? msg.substring(0, 35) + '...' : msg) : '';
+        list.push(`${i + 1}. ${title}${shortMsg ? ': ' + shortMsg : ''}`);
+      });
+    }
+
+    if (list.length < 3 && Array.isArray(allChats) && currentUser) {
+      const isAdm = typeof isServiceTSMUser === 'function' ? isServiceTSMUser() : false;
+      if (isAdm) {
+        const unreadRms = Array.isArray(rooms) ? rooms.filter(r => (Number(r.unreadAdmin) || 0) > 0) : [];
+        if (unreadRms.length > 0) {
+          const uNames = unreadRms.slice(0, 2).map(r => String(r.user || r.room || '').replace(/^ROOM_/, '').trim()).join(', ');
+          list.push(`💬 CHAT BARU: ${uNames}`);
+        }
+      } else {
+        const myUname = String(currentUser.username || '').trim().toUpperCase();
+        const unreadMsg = (Array.isArray(allChats) ? [...allChats].reverse() : []).find(c => {
+          if (!c) return false;
+          const cUser = String(c.user || c.senderUsername || '').trim().toUpperCase();
+          const cRoom = String(c.room || '').trim().toUpperCase();
+          const isMyChat = (cUser === myUname || cRoom === 'ROOM_' + myUname);
+          const isFromService = (c.pengirim === 'SERVICE' || c.pengirim === 'ADMIN');
+          return isMyChat && isFromService && c.read !== true && (!c.readBy || !c.readBy.includes(myUname));
+        });
+        if (unreadMsg) {
+          const txt = (unreadMsg.pesan || unreadMsg.message || 'Pesan Service').toString().trim().replace(/[\r\n\t]+/g, ' ');
+          list.push(`💬 CHAT: ${txt.length > 30 ? txt.substring(0, 30) + '...' : txt}`);
+        }
+      }
+    }
+
+    if (list.length > 0) {
+      return ` — ${list.join('  •  ')}`;
+    }
+  } catch(e) {}
+  return '';
+}
+window.getUnreadNotificationsSummaryText = getUnreadNotificationsSummaryText;
+
+function updateGlobalDeviceAppBadge() {
+  try {
+    const baseTitle = 'Permintaan Toko';
+    const isLogin = typeof isLoginPageActive === 'function' ? isLoginPageActive() : (!currentUser);
+
+    // jika posisi di login page -> matikan/sembunyikan indikator bulat di tab Chrome
+    if (isLogin) {
+      document.title = baseTitle;
+      if (typeof updateDynamicFaviconBadge === 'function') updateDynamicFaviconBadge(0, true);
+      if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+      else if (navigator.clearExperimentalAppBadge) navigator.clearExperimentalAppBadge().catch(() => {});
+      return;
+    }
 
     // 1. Hitung notifikasi sistem belum dibaca
-
     const userNotifs = typeof getAccessibleNotifications === 'function' ? getAccessibleNotifications() : [];
-
     const unreadNotifCount = userNotifs.filter(n => {
-
       if (!n) return false;
-
       if (!n.readBy) return true;
-
       return !n.readBy.includes(currentUser.id) && !n.readBy.includes(currentUser.username);
-
     }).length;
 
-
-
     // 2. Hitung chat belum dibaca
-
     const isAdm = typeof isServiceTSMUser === 'function' ? isServiceTSMUser() : false;
-
     const allChats = JSON.parse(appStorage.getItem(CHAT_DB_KEY) || '[]');
-
     const rooms = JSON.parse(appStorage.getItem(CHAT_ROOM_DB_KEY) || '[]');
 
-
-
     let unreadChatCount = 0;
-
     if (isAdm) {
-
       const unreadRoomsCount = Array.isArray(rooms) ? rooms.filter(r => (Number(r.unreadAdmin) || 0) > 0).length : 0;
-
       if (unreadRoomsCount > 0) {
-
         unreadChatCount = unreadRoomsCount;
-
       } else if (Array.isArray(allChats) && allChats.length > 0) {
-
         const unreadUsersSet = new Set();
-
         allChats.forEach(c => {
-
           if (c && c.pengirim === 'USER' && c.read !== true && (!c.readBy || !c.readBy.includes(currentUser.username))) {
-
             const uName = String(c.user || c.senderUsername || '').trim().toUpperCase();
-
             if (uName) unreadUsersSet.add(uName);
-
           }
-
         });
-
         unreadChatCount = unreadUsersSet.size;
-
       } else {
-
         unreadChatCount = 0;
-
       }
-
     } else {
-
       const myUname = String(currentUser.username || '').trim().toUpperCase();
-
       const myRoom = Array.isArray(rooms) ? rooms.find(r => 
-
         String(r.room || '').trim().toUpperCase() === 'ROOM_' + myUname || 
-
         String(r.user || '').trim().toUpperCase() === myUname
-
       ) : null;
 
-
-
       const hasUnreadFromRoom = myRoom && (Number(myRoom.unreadUser) || 0) > 0;
-
       let hasUnreadFromChats = false;
 
-
-
       if (Array.isArray(allChats) && allChats.length > 0) {
-
         hasUnreadFromChats = allChats.some(c => {
-
           if (!c) return false;
-
           const cUser = String(c.user || c.senderUsername || '').trim().toUpperCase();
-
           const cRoom = String(c.room || '').trim().toUpperCase();
-
           const isMyChat = (cUser === myUname || cRoom === 'ROOM_' + myUname);
-
           const isFromService = (c.pengirim === 'SERVICE' || c.pengirim === 'ADMIN');
-
           const isUnread = c.read !== true && (!c.readBy || !c.readBy.includes(myUname));
-
           return isMyChat && isFromService && isUnread;
-
         });
-
       }
 
-
-
       unreadChatCount = (hasUnreadFromRoom || hasUnreadFromChats) ? 1 : 0;
-
     }
-
-
 
     const grandTotalUnread = unreadNotifCount + unreadChatCount;
 
-    const baseTitle = 'Permintaan Toko';
-
-
-
     if (grandTotalUnread > 0) {
-
-      document.title = `🔴 (${grandTotalUnread}) ${baseTitle}`;
+      document.title = `🟢 (${grandTotalUnread}) NOTIFIKASI`;
+      if (typeof updateDynamicFaviconBadge === 'function') updateDynamicFaviconBadge(grandTotalUnread, false);
 
       if (navigator.setAppBadge) {
-
         navigator.setAppBadge(grandTotalUnread).catch(() => {});
-
       } else if (navigator.setExperimentalAppBadge) {
-
         navigator.setExperimentalAppBadge(grandTotalUnread).catch(() => {});
-
       }
-
     } else {
-
       document.title = baseTitle;
+      if (typeof updateDynamicFaviconBadge === 'function') updateDynamicFaviconBadge(0, false);
 
       if (navigator.clearAppBadge) {
-
         navigator.clearAppBadge().catch(() => {});
-
       } else if (navigator.clearExperimentalAppBadge) {
-
         navigator.clearExperimentalAppBadge().catch(() => {});
-
       }
-
     }
-
   } catch(e) {}
-
 }
 
 window.updateGlobalDeviceAppBadge = updateGlobalDeviceAppBadge;
@@ -54463,83 +54714,7 @@ function renderBuktiPermintaanModalGrid() {
   const totalFiles = existingFiles.length + tempFiles.length;
 
   if (totalFiles === 0) {
-    container.innerHTML = `
-      <div style="font-family: 'Poppins', Arial, sans-serif; background: #ffffff; color: #0f172a; padding: 18px; border-radius: 4px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-        
-        <!-- Header Title: PERMINTAAN TOKO -->
-        <div style="text-align: center; font-size: 18px; font-weight: 800; border-bottom: 2.5px solid #0f172a; padding-bottom: 10px; margin-bottom: 16px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
-          PERMINTAAN TOKO
-        </div>
-
-        <!-- Info Grid -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11.5px; color: #0f172a;">
-          <tr>
-            <td style="padding: 3px 0; width: 85px; font-weight: 600; color: #0f172a;">NO SURAT</td>
-            <td style="padding: 3px 4px; width: 12px; color: #0f172a;">:</td>
-            <td style="padding: 3px 0; font-weight: 600; color: #0284c7;">${req.noSurat || '-'}</td>
-            <td style="padding: 3px 0; width: 85px; font-weight: 600; color: #0f172a; text-align: left;">TANGGAL</td>
-            <td style="padding: 3px 4px; width: 12px; color: #0f172a; text-align: center;">:</td>
-            <td style="padding: 3px 0; font-weight: 400; color: #0f172a; width: 120px;">${req.tanggal || '-'}</td>
-          </tr>
-          <tr>
-            <td style="padding: 3px 0; font-weight: 600; color: #0f172a;">TOKO</td>
-            <td style="padding: 3px 4px; color: #0f172a;">:</td>
-            <td style="padding: 3px 0; font-weight: 600; color: #0f172a; text-transform: uppercase;">${req.toko || '-'}</td>
-            <td style="padding: 3px 0; font-weight: 600; color: #0f172a; text-align: left;">JENIS</td>
-            <td style="padding: 3px 4px; color: #0f172a; text-align: center;">:</td>
-            <td style="padding: 3px 0; text-transform: uppercase; font-weight: 400; color: #0f172a;">${req.jenis || 'DEFAULT'}</td>
-          </tr>
-        </table>
-
-        <!-- Section Label -->
-        <div style="font-size: 11.5px; font-weight: 700; margin-bottom: 8px; color: #0f172a; text-transform: uppercase;">DETAIL PERMINTAAN:</div>
-
-        <!-- Items Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px; border: 1px solid #cbd5e1;">
-          <thead>
-            <tr style="background: #0284c7; color: #ffffff;">
-              <th style="width: 32px; text-align: center; padding: 7px 4px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600;">NO</th>
-              <th style="width: 110px; padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">TIPE BARANG</th>
-              <th style="width: 110px; padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">NO. SERI</th>
-              <th style="padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">PERMINTAAN BARANG</th>
-              <th style="padding: 7px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600; text-align: left;">ALASAN PERMINTAAN</th>
-              <th style="width: 42px; text-align: center; padding: 7px 4px; border: 1px solid #0369a1; color: #ffffff; font-weight: 600;">QTY</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsRowsHtml || '<tr><td colspan="6" style="text-align: center; padding: 10px; color: #94a3b8; font-weight: 400;">Tidak ada item</td></tr>'}
-          </tbody>
-        </table>
-
-        <!-- TTD Area Summary -->
-        <div style="display: flex; justify-content: space-around; text-align: center; font-size: 11px; margin-top: 10px; gap: 8px;">
-          <div style="flex: 1; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; background: #f8fafc;">
-            <div style="font-weight: 500; color: #475569; margin-bottom: 2px;">PEMOHON (TOKO)</div>
-            <div style="height: 44px; display: flex; align-items: center; justify-content: center;">
-              ${pemohonTtdImg || '<span style="color: #94a3b8; font-style: italic; font-weight: 400;">ADA</span>'}
-            </div>
-            <div style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">${req.pemohonUserName || req.pemohon || 'Pemohon Toko'}</div>
-          </div>
-
-          <div style="flex: 1; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; background: #f8fafc;">
-            <div style="font-weight: 500; color: #0284c7; margin-bottom: 2px;">SERVICE (VERIFIKATOR)</div>
-            <div style="height: 44px; display: flex; align-items: center; justify-content: center;">
-              ${serviceTtdImg}
-            </div>
-            <div style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">${req.serviceUserName || 'Service'}</div>
-          </div>
-
-          <div style="flex: 1; border: 1px dashed #16a34a; padding: 6px; border-radius: 4px; background: #f0fdf4;">
-            <div style="font-weight: 500; color: #16a34a; margin-bottom: 2px;">DM (DITANDATANGANI DI BEWAH)</div>
-            <div style="height: 44px; display: flex; align-items: center; justify-content: center; color: #16a34a; font-weight: 500; font-size: 10px;">
-              [ SILAKAN TTD DI CANVAS ]
-            </div>
-            <div style="font-size: 10px; color: #16a34a; font-weight: 500; margin-top: 2px;">${currentUser ? (currentUser.fullName || currentUser.username) : 'DM'}</div>
-          </div>
-        </div>
-
-      </div>
-    `;
+    container.innerHTML = '';
     return;
   }
 
@@ -54790,7 +54965,7 @@ async function eksekusiProsesSimpanBukti(noSurat, idx, requests) {
 
     tutupModalUploadBuktiPermintaan();
     if (typeof showNotif === 'function') {
-      showNotif(`BERHASIL MENGUNGGAH DOKUMEN PERMINTAAN #${noSurat} KE SUPABASE STORAGE!`, 'success');
+      showNotif(`BERHASIL MENGUNGGAH DOKUMEN PERMINTAAN #${noSurat}`, 'success');
     }
 
     // Refresh Detail Modal if open and update tables
@@ -58616,6 +58791,16 @@ window.eksekusiImportStatusPartExcel = eksekusiImportStatusPartExcel;
 
 
 /* === ADMIN REALTIME CONTROL FOR PHOTO INPUT IN POPUP DONE === */
+function parseBooleanSettingValue(val) {
+  if (val === true || val === 1) return true;
+  if (val === false || val === 0 || val === null || val === undefined) return false;
+  const str = String(val).trim().toLowerCase();
+  if (['true', '1', 'ya', 'yes', 'aktif', 'tampil', 'enable', 'on'].includes(str)) return true;
+  if (['false', '0', 'tidak', 'no', 'nonaktif', 'sembunyikan', 'disable', 'off'].includes(str)) return false;
+  return false;
+}
+window.parseBooleanSettingValue = parseBooleanSettingValue;
+
 window._showPhotoInputInPopupDone = localStorage.getItem('global_show_photo_input_popup_done') !== 'false';
 
 function applyPhotoInputPopupDoneState(enabled) {
@@ -58624,16 +58809,23 @@ function applyPhotoInputPopupDoneState(enabled) {
 
   const uploadContainer = document.getElementById('artemisUploadContainer');
   const dropArea = document.getElementById('artemisUploadDropArea');
+  const pasteBox = document.getElementById('artemisPasteBox');
   const previewGrid = document.getElementById('artemisPhotoPreviewGrid');
 
+  const displayVal = window._showPhotoInputInPopupDone ? 'block' : 'none';
+  const flexDisplayVal = window._showPhotoInputInPopupDone ? 'flex' : 'none';
+
   if (uploadContainer) {
-    uploadContainer.style.setProperty('display', window._showPhotoInputInPopupDone ? 'flex' : 'none', 'important');
+    uploadContainer.style.setProperty('display', flexDisplayVal, 'important');
   }
   if (dropArea) {
-    dropArea.style.setProperty('display', window._showPhotoInputInPopupDone ? 'block' : 'none', 'important');
+    dropArea.style.setProperty('display', displayVal, 'important');
+  }
+  if (pasteBox) {
+    pasteBox.style.setProperty('display', displayVal, 'important');
   }
   if (previewGrid) {
-    previewGrid.style.setProperty('display', window._showPhotoInputInPopupDone ? 'flex' : 'none', 'important');
+    previewGrid.style.setProperty('display', flexDisplayVal, 'important');
   }
 
   const btnToggle = document.getElementById('btnTogglePhotoInputPopupDoneAdmin');
@@ -58658,8 +58850,12 @@ async function syncPhotoInputPopupDoneFromSupabase() {
   try {
     const { data } = await client.from('system_settings').select('setting_value').eq('setting_key', 'global_show_photo_input_popup_done').maybeSingle();
     if (data && data.setting_value !== undefined && data.setting_value !== null) {
-      const enabled = data.setting_value === 'true' || data.setting_value === true;
-      applyPhotoInputPopupDoneState(enabled);
+      applyPhotoInputPopupDoneState(parseBooleanSettingValue(data.setting_value));
+      return;
+    }
+    const { data: dataLookup } = await client.from('lookup').select('value').eq('key', 'global_show_photo_input_popup_done').maybeSingle();
+    if (dataLookup && dataLookup.value !== undefined && dataLookup.value !== null) {
+      applyPhotoInputPopupDoneState(parseBooleanSettingValue(dataLookup.value));
     }
   } catch(e) {}
 }
@@ -59554,8 +59750,9 @@ function bukaModalApprovalDMCanvas(noSurat) {
       `;
     }).join('');
 
-    const serviceTtdImg = req.serviceTTD ? `<img src="${req.serviceTTD}" crossOrigin="anonymous" style="max-height: 44px; max-width: 110px; object-fit: contain;" />` : (req.serviceApprove ? '<div style="color: #0077b6; font-weight: 500; padding: 4px 0;">APPROVED (SERVICE)</div>' : '-');
-    const pemohonTtdImg = req.pemohonTTD ? `<img src="${req.pemohonTTD}" crossOrigin="anonymous" style="max-height: 44px; max-width: 110px; object-fit: contain;" />` : '';
+    const getCrossOriginAttr = (url) => (url && typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) ? 'crossOrigin="anonymous"' : '';
+    const serviceTtdImg = req.serviceTTD ? `<img src="${req.serviceTTD}" ${getCrossOriginAttr(req.serviceTTD)} style="max-height: 44px; max-width: 110px; object-fit: contain;" />` : (req.serviceApprove ? '<div style="color: #0077b6; font-weight: 500; padding: 4px 0;">APPROVED (SERVICE)</div>' : '-');
+    const pemohonTtdImg = req.pemohonTTD ? `<img src="${req.pemohonTTD}" ${getCrossOriginAttr(req.pemohonTTD)} style="max-height: 44px; max-width: 110px; object-fit: contain;" />` : '';
 
     container.innerHTML = `
       <div style="font-family: 'Poppins', Arial, sans-serif; background: #ffffff; color: #0f172a; padding: 18px; border-radius: 4px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
