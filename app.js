@@ -1994,7 +1994,7 @@ function reinitSupabaseClient(newUrl, newKey, newFileUrl = '', newFileKey = '') 
 
             if (typeof renderRiwayat === 'function') renderRiwayat();
 
-            if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+            
 
           }).catch(() => {});
 
@@ -6854,7 +6854,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (typeof loadRiwayat === 'function') loadRiwayat();
 
-      if (document.getElementById('masterDbTableBody') && typeof loadMasterDbTable === 'function') loadMasterDbTable();
+      
 
       if (typeof updateNotifBellCounter === 'function') updateNotifBellCounter();
 
@@ -6969,10 +6969,6 @@ function onSupabaseDataChange(keyChanged) {
   } else if (pageId === 'riwayatPage' && typeof loadRiwayat === 'function') {
 
     loadRiwayat();
-
-  } else if (pageId === 'masterDbPage' && typeof loadMasterDbTable === 'function') {
-
-    loadMasterDbTable();
 
   } else if (pageId === 'userManagementPage' && typeof loadUsersManagement === 'function') {
 
@@ -8289,7 +8285,7 @@ async function initSupabaseRealtimeEngine() {
 
           if (typeof loadDashboard === 'function') loadDashboard();
 
-          if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+          
 
         }
 
@@ -8329,7 +8325,7 @@ async function initSupabaseRealtimeEngine() {
 
               if (typeof loadDashboard === 'function') loadDashboard();
 
-              if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+              
 
               return;
 
@@ -8351,7 +8347,7 @@ async function initSupabaseRealtimeEngine() {
 
               if (typeof loadDashboard === 'function') loadDashboard();
 
-              if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+              
 
               return;
 
@@ -10246,11 +10242,7 @@ function refreshRealtimeUI() {
 
     if (typeof loadRiwayat === 'function') loadRiwayat();
 
-    if (typeof loadMasterDbTable === 'function' && document.getElementById('masterDbTableBody')) {
-
-      loadMasterDbTable();
-
-    }
+    
 
     if (typeof updateNotifBellCounter === 'function') updateNotifBellCounter();
 
@@ -13543,11 +13535,7 @@ function saveRequestsToDB(requests, targetReq = null, action = 'UPDATE') {
 
     if (typeof loadRiwayat === 'function') loadRiwayat();
 
-    if (typeof loadMasterDbTable === 'function' && document.getElementById('masterDbTableBody')) {
-
-      loadMasterDbTable();
-
-    }
+    
 
   }
 
@@ -14803,7 +14791,7 @@ async function hapusSemuaFotoBiasa() {
 
       if (typeof loadDashboard === 'function') loadDashboard();
 
-      if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+      
 
 
 
@@ -17173,7 +17161,7 @@ async function eksekusiHapusPenyimpananLokal() {
 
         if (typeof loadDashboard === 'function') loadDashboard();
 
-        if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+        
 
         if (typeof loadUsersManagement === 'function') loadUsersManagement();
 
@@ -18270,11 +18258,11 @@ function updateAdminNavVisibility() {
 
   const btnUserNav = document.getElementById('btnUserNav');
 
-  const btnMasterDbNav = document.getElementById('btnMasterDbNav');
+  
 
   const btnUserNavSidebar = document.getElementById('btnUserNavSidebar');
 
-  const btnMasterDbNavSidebar = document.getElementById('btnMasterDbNavSidebar');
+  
 
   const containerAdminThemeBg = document.getElementById('containerAdminGlobalThemeBg');
 
@@ -18284,7 +18272,7 @@ function updateAdminNavVisibility() {
 
   if (btnUserNav) btnUserNav.style.setProperty('display', 'none', 'important');
 
-  if (btnMasterDbNav) btnMasterDbNav.style.setProperty('display', 'none', 'important');
+  
 
 
 
@@ -18296,11 +18284,7 @@ function updateAdminNavVisibility() {
 
   }
 
-  if (btnMasterDbNavSidebar) {
-
-    btnMasterDbNavSidebar.style.setProperty('display', isAdmin ? 'flex' : 'none', 'important');
-
-  }
+  
 
 
 
@@ -18340,7 +18324,7 @@ function updateBottomMenuHighlight(pageId) {
 
     'riwayatPage': "bukaMenuRiwayat()",
 
-    'masterDbPage': "showPage('masterDbPage')",
+    
 
     'userManagementPage': "showPage('userManagementPage')",
 
@@ -18424,7 +18408,7 @@ function pindahHalaman(pageId, pushHistory = true) {
 
 
 
-  if ((pageId === 'masterDbPage' || pageId === 'userManagementPage') && !checkIsAdminUser()) {
+  if ((pageId === 'userManagementPage') && !checkIsAdminUser()) {
 
     pindahHalaman('dashboardPage', false);
 
@@ -18450,7 +18434,7 @@ function pindahHalaman(pageId, pushHistory = true) {
 
     target.classList.add('active');
 
-    target.style.setProperty('display', (pageId === 'dashboardPage' || pageId === 'loginPage' || pageId === 'masterDbPage' || pageId === 'riwayatPage') ? 'flex' : 'block', 'important');
+    target.style.setProperty('display', (pageId === 'dashboardPage' || pageId === 'loginPage' || pageId === 'riwayatPage') ? 'flex' : 'block', 'important');
 
   }
 
@@ -18524,10 +18508,6 @@ function pindahHalaman(pageId, pushHistory = true) {
   } else if (pageId === 'riwayatPage') {
 
     if (typeof filterRiwayat === 'function') filterRiwayat();
-
-  } else if (pageId === 'masterDbPage') {
-
-    if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
 
   } else if (pageId === 'userManagementPage') {
 
@@ -24537,7 +24517,7 @@ async function approveService(noSurat) {
       if (typeof showNotif === 'function') showNotif(`NO SURAT #${noSurat} BERHASIL DI-APPROVE SERVICE`, 'success');
       if (typeof loadRiwayat === 'function') loadRiwayat();
       if (typeof loadDashboard === 'function') loadDashboard();
-      if (currentUser && currentUser.category === 'SERVICE' && currentUser.area === 'TSM' && typeof loadMasterDbTable === 'function') loadMasterDbTable();
+      
       if (typeof refreshDetailModalIfOpen === 'function') refreshDetailModalIfOpen(noSurat);
       const btnRefSrv = document.getElementById('btnRefreshDetailV2');
       if (btnRefSrv) btnRefSrv.style.setProperty('display', 'none', 'important');
@@ -24800,11 +24780,7 @@ function doneService(noSurat) {
 
             if (typeof loadDashboard === 'function') loadDashboard();
 
-            if (typeof loadMasterDbTable === 'function' && document.getElementById('masterDbTableBody')) {
-
-              loadMasterDbTable();
-
-            }
+            
 
             lihatDetail(noSurat);
 
@@ -25699,7 +25675,7 @@ function prosesSimpanDoneDenganBuktiArtemis() {
 
         if (currentUser && currentUser.category === 'SERVICE' && currentUser.area === 'TSM') {
 
-          if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+          
 
         }
 
@@ -25805,7 +25781,7 @@ function batalApproveService(noSurat) {
 
       loadDashboard();
 
-      if (currentUser && currentUser.category === 'SERVICE' && currentUser.area === 'TSM') loadMasterDbTable();
+      
 
       if (typeof refreshDetailModalIfOpen === 'function') refreshDetailModalIfOpen(noSurat);
 
@@ -25897,7 +25873,7 @@ function batalApproveDM(noSurat) {
 
       loadDashboard();
 
-      if (currentUser && currentUser.category === 'SERVICE' && currentUser.area === 'TSM') loadMasterDbTable();
+      
 
       if (typeof refreshDetailModalIfOpen === 'function') refreshDetailModalIfOpen(noSurat);
 
@@ -26143,7 +26119,7 @@ function prosesReject(roleType) {
 
     loadDashboard();
 
-    if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+    
 
 
 
@@ -26629,7 +26605,7 @@ function hapusDataProses(noSurat, alasan) {
 
       if (typeof loadDashboard === 'function') loadDashboard();
 
-      if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+      
 
       if (typeof refreshOpenPopupsUI === 'function') refreshOpenPopupsUI();
 
@@ -27432,7 +27408,7 @@ showConfirm(`APAKAH ANDA YAKIN INGIN MENYIMPAN PERUBAHAN ITEM PERMINTAAN #${noSu
 
         if (currentUser && currentUser.category === 'SERVICE' && currentUser.area === 'TSM') {
 
-          if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+          
 
         }
 
@@ -39527,355 +39503,21 @@ window.hapusUser = hapusUser;
 
 
 
-function loadMasterDbTable() {
 
-  const tbody = document.getElementById('masterDbTableBody');
 
-  if (!tbody) return;
 
 
 
-  const searchInput = document.getElementById('searchMasterDb');
 
-  const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
 
 
-  // Preserve checked checkbox selections across re-renders
 
-  const checkedBoxes = tbody.querySelectorAll('.masterDbCheckbox:checked');
 
-  const checkedSet = new Set(Array.from(checkedBoxes).map(cb => cb.value));
 
 
 
-  let requests = getRequestsFromDB();
 
-
-
-  if (search) {
-
-    requests = requests.filter(r => matchesRequestSearchFilter(r, search));
-
-  }
-
-
-
-  tbody.innerHTML = '';
-
-
-
-  if (requests.length === 0) {
-
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px; color:var(--text-muted);">BELUM ADA DATA PERMINTAAN TERDAFTAR.</td></tr>`;
-
-    // Empty dummy rows removed per user request
-
-    updateMultiMasterDbBtnState();
-
-    return;
-
-  }
-
-
-
-  requests.forEach(r => {
-
-    let itemsDetailText = (r.items || []).map((i, idx) => {
-
-      let dusText = i.dus ? ` | Dus:${i.dus}` : '';
-
-      return `<div style="padding:3px 0; border-bottom:1px dashed var(--border-color); font-size:12px; line-height:1.4;">
-
-        <strong>${idx + 1}. ${i.type || '-'}</strong> (SN: <span style="font-family:monospace; color:var(--primary);">${i.seri || '-'}${dusText}</span>)<br>
-
-        <span style="color:var(--text-main);">${i.barang || '-'}</span> <small style="color:var(--text-muted);">[Alasan: ${i.alasan || '-'}]</small> 
-
-        <strong style="color:var(--primary);">(Qty: ${i.qty || 1})</strong>
-
-      </div>`;
-
-    }).join('');
-
-
-
-    const tr = document.createElement('tr');
-
-    // Blinking row animation disabled per user request
-
-    const isChecked = checkedSet.has(r.noSurat) ? 'checked' : '';
-
-    tr.innerHTML = `
-      <td style="text-align:center; padding: 10px 14px; border-bottom: 1px solid #e2e8f0 !important;"><input type="checkbox" class="masterDbCheckbox" value="${r.noSurat}" ${isChecked} onchange="updateMultiMasterDbBtnState()"></td>
-      <td style="padding: 10px 14px; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0 !important;">${r.noSurat || '-'}</td>
-      <td style="padding: 10px 14px; text-align: left; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${r.tanggal || '-'}</td>
-      <td style="padding: 10px 14px; color: #1e293b; border-bottom: 1px solid #e2e8f0 !important;"><div class="namaTokoWrap" style="color: #1e293b; font-weight: 700; text-transform: uppercase;">${r.toko || '-'}</div></td>
-      <td style="padding: 10px 14px; text-align: center; font-weight: 700; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${r.area || 'BDG'}</td>
-      <td style="padding: 10px 14px; text-align: center; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${r.jenis || '-'}</td>
-      <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0 !important;">${itemsDetailText}</td>
-      <td style="padding: 10px 14px; text-align: center; border-bottom: 1px solid #e2e8f0 !important;">${getBadgeStatusHTML(r)}</td>
-      <td style="padding: 10px 14px; color: #334155; border-bottom: 1px solid #e2e8f0 !important;">${r.catatan || '-'}</td>
-      <td style="text-align:center; white-space:nowrap; padding: 10px 14px; border-bottom: 1px solid #e2e8f0 !important;">
-        <button type="button" class="btnIcon btnDelete" onclick="hapusDataMaster('${r.noSurat}')" title="HAPUS DATA"><span class="material-symbols-rounded">delete</span></button>
-        <button type="button" class="btnIcon btnEdit" onclick="bukaModalUbahStatusAdmin('${r.noSurat}')" title="UBAH STATUS SUPABASE (ADMIN ONLY)" style="background: #8b5cf6 !important; color: #ffffff !important; margin-left: 4px !important;"><span class="material-symbols-rounded" style="font-size: 16px;">published_with_changes</span></button>
-      </td>
-    `;
-
-    tbody.appendChild(tr);
-
-  });
-
-
-
-  // Empty dummy rows removed per user request
-
-  updateMultiMasterDbBtnState();
-
-}
-
-
-
-function toggleSelectAllMasterDb(masterCheckbox) {
-
-  const isChecked = masterCheckbox ? masterCheckbox.checked : false;
-
-  const checkboxes = document.querySelectorAll('.masterDbCheckbox');
-
-  checkboxes.forEach(cb => {
-
-    cb.checked = isChecked;
-
-  });
-
-  updateMultiMasterDbBtnState();
-
-}
-
-
-
-function updateMultiMasterDbBtnState() {
-
-  const checkboxes = document.querySelectorAll('.masterDbCheckbox:checked');
-
-  const btn = document.getElementById('btnHapusMultiMasterDb');
-
-  const selectAll = document.getElementById('selectAllMasterDb');
-
-  const totalCheckboxes = document.querySelectorAll('.masterDbCheckbox');
-
-
-
-  if (selectAll && totalCheckboxes.length > 0) {
-
-    selectAll.checked = (checkboxes.length === totalCheckboxes.length);
-
-  }
-
-
-
-  if (btn) {
-
-    if (checkboxes.length > 0) {
-
-      btn.style.display = 'inline-flex';
-
-      btn.innerHTML = `<span class="material-symbols-rounded" style="vertical-align:middle; margin-right:4px;">delete_sweep</span> HAPUS (${checkboxes.length}) DATA`;
-
-    } else {
-
-      btn.style.display = 'none';
-
-    }
-
-  }
-
-}
-
-
-
-async function hapusMultiMasterDb() {
-
-  const selectedCheckboxes = document.querySelectorAll('.masterDbCheckbox:checked');
-
-  const noSuratList = Array.from(selectedCheckboxes).map(cb => cb.value).filter(Boolean);
-
-
-
-  if (noSuratList.length === 0) {
-
-    showNotif('PILIH MINIMAL 1 DATA PERMINTAAN UNTUK DIHAPUS!', 'warning');
-
-    return;
-
-  }
-
-
-
-showConfirm(`ADMIN: YAKIN INGIN MENGHAPUS ${noSuratList.length} DATA PERMINTAAN TERPILIH?`, () => {
-
-    showLoading('MENGHAPUS DATA TERPILIH...');
-
-    setTimeout(async () => {
-
-      try {
-
-        // 1. DOKUMENTASIKAN KODE SURAT PADA DELETED_REQUESTS_KEY
-
-        try {
-
-          const delReqs = JSON.parse(appStorage.getItem(DELETED_REQUESTS_KEY) || '[]');
-
-          noSuratList.forEach(ns => {
-
-            if (ns && !delReqs.includes(ns)) delReqs.push(ns);
-
-          });
-
-          appStorage.setItem(DELETED_REQUESTS_KEY, JSON.stringify(delReqs));
-
-        } catch(e) {}
-
-
-
-        // 2. FILTER DARI CACHE LOKAL & SIMPAN
-
-        const currentReqs = getRequestsFromDB();
-
-        const updatedReqs = currentReqs.filter(r => r && r.noSurat && !noSuratList.includes(r.noSurat));
-
-        try {
-
-          saveRequestsToDB(updatedReqs);
-
-        } catch(e) {
-
-          appStorage.setItem(REQUESTS_DB_KEY, JSON.stringify(updatedReqs));
-
-        }
-
-
-
-        // 3. HAPUS BATCH DARI SUPABASE (TABEL: permintaan_toko)
-
-        if (typeof supabase !== 'undefined' && supabase) {
-
-          try {
-
-            await supabase.from('permintaan_toko').delete().in('no_surat', noSuratList);
-
-          } catch(sbErr1) {}
-
-        }
-
-
-
-        if (typeof syncSupabaseRequestsToLocalCache === 'function') {
-
-          await syncSupabaseRequestsToLocalCache();
-
-        }
-
-
-
-        // 4. HAPUS INDIVIDUAL FIRESTORE & REALTIME DB
-
-        noSuratList.forEach(noSurat => {
-
-          try {
-
-            const docId = String(noSurat || '').replace(/[\/\.]/g, '_');
-
-            if (docId) {
-
-              if (typeof dbFirestore !== 'undefined' && dbFirestore) {
-
-                dbFirestore.collection('requests').doc(docId).delete().catch(err => console.warn('[FIRESTORE DELETE NOTICE]:', err));
-
-              }
-
-              if (typeof dbRealtime !== 'undefined' && dbRealtime) {
-
-                dbRealtime.ref(`requests/${docId}`).remove().catch(err => console.warn('[REALTIME DELETE NOTICE]:', err));
-
-              }
-
-            }
-
-          } catch(e) {}
-
-        });
-
-
-
-        if (supabaseRealtimeChannel) {
-
-          try {
-
-            supabaseRealtimeChannel.send({
-
-              type: 'broadcast',
-
-              event: 'data_changed',
-
-              payload: { action: 'BATCH_DELETE', noSuratList: noSuratList, timestamp: Date.now() }
-
-            });
-
-          } catch(e) {}
-
-        }
-
-        if (typeof pushCentralCloudDB === 'function') {
-
-          try { await pushCentralCloudDB(); } catch(e) {}
-
-        }
-
-
-
-        hideLoading();
-
-        showNotif(`BERHASIL MENGHAPUS ${noSuratList.length} DATA PERMINTAAN TERPILIH!`, 'info');
-
-
-
-        if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
-
-        if (typeof loadRiwayat === 'function') loadRiwayat();
-
-        if (typeof loadDashboard === 'function') loadDashboard();
-
-      } catch (err) {
-
-        hideLoading();
-
-        console.error('[HAPUS MULTI MASTER ERROR]:', err);
-
-        showNotif('TERJADI KESALAHAN SAAT MENGHAPUS DATA MULTI TERPILIH: ' + (err.message || err), 'error');
-
-      }
-
-    }, 400);
-
-  });
-
-}
-
-window.toggleSelectAllMasterDb = toggleSelectAllMasterDb;
-
-window.updateMultiMasterDbBtnState = updateMultiMasterDbBtnState;
-
-window.hapusMultiMasterDb = hapusMultiMasterDb;
-
-
-
-function hapusDataMaster(noSurat) {
-
-  if (!noSurat) return;
-
-  tolakServiceModal(noSurat, 'HAPUS');
-
-}
 
 
 
@@ -40039,156 +39681,6 @@ window.getBreakdownSuratExportValue = getBreakdownSuratExportValue;
 
 
 
-function downloadMasterExcel() {
-
-  if (typeof checkUserCanDownloadExcel === 'function' && !checkUserCanDownloadExcel(currentUser)) {
-
-    showNotif('TIDAK ADA HAK AKSES!', 'warning');
-
-    return;
-
-  }
-
-  const data = getRequestsFromDB();
-
-  if (data.length === 0) {
-
-    showNotif('TIDAK ADA DATA MASTER UNTUK DIEKSPOR!', 'warning');
-
-    return;
-
-  }
-
-
-
-  showLoading('MOHON TUNGGU...');
-
-  setTimeout(() => {
-
-    hideLoading();
-
-    const rows = [];
-
-    rows.push([
-
-      'NO SURAT', 'TANGGAL', 'TOKO / PEMOHON', 'AREA', 'JENIS',
-
-      'TIPE BARANG', 'NO SERI', 'NO SERI DUS', 'PERMINTAAN',
-
-      'ALASAN', 'QTY', 'STATUS PART', 'BREAKDOWN SURAT', 'STATUS', 'CATATAN', 'LOG APPROVAL'
-
-    ]);
-
-
-
-    data.forEach(r => {
-
-      const logStr = (r.log || []).map(l => `${l.action} by ${l.user} (${l.time})`).join(' | ');
-
-      r.items.forEach(it => {
-
-        const isUnfulfilled = !!(it.unfulfilled || it.batal || it.status === 'TIDAK BISA DIPENUHI' || it.status === 'TIDAK DIPENUHI' || r.status === 'BATAL' || r.unfulfilled);
-
-        const customKet = (it.statusPart || it.keteranganPart || it.updatePart || it.noPart || it.alasanBatal || '').trim();
-
-        
-
-        let statusPartVal = '';
-
-        if (isUnfulfilled) {
-
-          if (customKet && customKet !== 'TIDAK DIPENUHI' && customKet !== 'TIDAK BISA DIPENUHI') {
-
-            statusPartVal = `TIDAK DIPENUHI (${customKet})`;
-
-          } else {
-
-            statusPartVal = 'TIDAK DIPENUHI';
-
-          }
-
-        } else if (customKet) {
-
-          statusPartVal = customKet;
-
-        } else if (r.status === 'DONE') {
-
-          statusPartVal = 'DIPENUHI';
-
-        } else {
-
-          statusPartVal = '-';
-
-        }
-
-
-
-        // Kolom K: Murni nama barang permintaan tanpa tambahan [TIDAK DIPENUHI/Ket]
-        let namaBarangDisplay = it.barang || it.permintaan || '-';
-
-
-
-        rows.push([
-
-          r.noSurat,
-
-          r.tanggal,
-
-          `${r.toko} (${r.createdBy})`,
-
-          r.area,
-
-          r.jenis,
-
-          it.type || it.tipe || '-',
-
-          it.seri || it.sn || '-',
-
-          it.dus || '',
-
-          namaBarangDisplay,
-
-          it.alasan || '-',
-
-          it.qty || it.jumlah || 1,
-
-          statusPartVal,
-
-          getBreakdownSuratExportValue(r, it),
-
-          isUnfulfilled ? `${r.status} (TIDAK DIPENUHI)` : r.status,
-
-          r.catatan || '',
-
-          logStr
-
-        ]);
-
-      });
-
-    });
-
-
-
-    if (typeof XLSX !== 'undefined') {
-
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-
-      const wb = XLSX.utils.book_new();
-
-      XLSX.utils.book_append_sheet(wb, ws, "Master Data");
-
-      XLSX.writeFile(wb, `MASTER_DATA_PERMINTAAN_LENGKAP_${new Date().toISOString().split('T')[0]}.xlsx`);
-
-      } else {
-
-      showNotif('MODUL EXCEL (.XLSX) BELUM SIAP, PERIKSA KONEKSI INTERNET!', 'warning');
-
-    }
-
-  }, 400);
-
-}
 
 
 
@@ -44846,7 +44338,7 @@ Fitur Hapus Penyimpanan Lokal / Database hanya dapat diakses oleh Admin.`);
 
       if (typeof loadDashboard === 'function') loadDashboard();
 
-      if (typeof loadMasterDbTable === 'function') loadMasterDbTable();
+      
 
     } catch(err) {
 
@@ -45326,7 +44818,7 @@ document.addEventListener('touchmove', function (e) {
 
   const activePage = typeof getCurrentActivePageId === 'function' ? getCurrentActivePageId() : '';
 
-  if (activePage === 'riwayatPage' || activePage === 'masterDbPage') {
+  if (activePage === 'riwayatPage') {
 
     const isInsideTable = e.target.closest('.tableWrap');
 
@@ -53951,11 +53443,7 @@ async function simpanUbahStatusAdmin() {
 
     window._isClosingDetailModal = false;
 
-    if (typeof loadMasterDbTable === 'function' && document.getElementById('masterDbTableBody')) {
-
-      loadMasterDbTable();
-
-    }
+    
 
     if (typeof filterRiwayat === 'function') {
 
@@ -56447,31 +55935,7 @@ function updateExcelDownloadButtonState() {
 
 
 
-  const masterExcelBtns = document.querySelectorAll('button[onclick*="downloadMasterExcel()"]');
 
-  masterExcelBtns.forEach(btn => {
-
-    btn.style.setProperty('background', 'linear-gradient(135deg, #107c41, #0f7b40)', 'important');
-
-    btn.style.setProperty('color', '#ffffff', 'important');
-
-    btn.style.removeProperty('opacity');
-
-    btn.style.removeProperty('cursor');
-
-    btn.style.removeProperty('filter');
-
-    btn.title = 'DOWNLOAD MASTER EXCEL LENGKAP (.XLSX)';
-
-    const icon = btn.querySelector('.material-symbols-rounded');
-
-    if (icon) {
-
-      icon.style.removeProperty('text-decoration');
-
-    }
-
-  });
 
 }
 
@@ -56713,7 +56177,7 @@ function updateEnterpriseBreadcrumbAndSidebar(pageId) {
 
     'riwayatPage': { title: 'Daftar Riwayat Permintaan Toko & Status Approval', icon: 'history', label: 'Riwayat Permintaan' },
 
-    'masterDbPage': { title: 'Kelola Master Database (Barang & Toko)', icon: 'database', label: 'Master Database' },
+    
 
     'userManagementPage': { title: 'Kelola User, Hak Akses & Integration Token', icon: 'manage_accounts', label: 'Kelola User' },
 
@@ -56754,8 +56218,6 @@ function updateEnterpriseBreadcrumbAndSidebar(pageId) {
   else if (pageId === 'inputPage') activeSidebarItem = document.getElementById('navItemInput');
 
   else if (pageId === 'riwayatPage') activeSidebarItem = document.getElementById('navItemRiwayat');
-
-  else if (pageId === 'masterDbPage') activeSidebarItem = document.getElementById('btnMasterDbNavSidebar');
 
   else if (pageId === 'userManagementPage') activeSidebarItem = document.getElementById('btnUserNavSidebar');
 
@@ -56812,11 +56274,11 @@ function updateEnterpriseBreadcrumbAndSidebar(pageId) {
 
   var btnUserSidebar = document.getElementById('btnUserNavSidebar');
 
-  var btnMasterSidebar = document.getElementById('btnMasterDbNavSidebar');
+  
 
   if (btnUserSidebar) btnUserSidebar.style.display = isAdmin ? 'flex' : 'none';
 
-  if (btnMasterSidebar) btnMasterSidebar.style.display = isAdmin ? 'flex' : 'none';
+  
 
 }
 
@@ -58580,7 +58042,7 @@ const APP_MENU_SEARCH_LIST = [
 
   { id: 'riwayatPage', title: 'Riwayat Permintaan', desc: 'Histori, Status, Tracking & Lacak Permintaan', keywords: 'riwayat histori daftar tracking lacak permintaan toko status barang done approve reject pending', icon: 'history', action: () => bukaMenuRiwayat() },
 
-  { id: 'masterDbPage', title: 'Master Database', desc: 'Master Data Barang, Toko & Kode Unit', keywords: 'master database data barang daftar toko unit dus barang serial sn', icon: 'database', action: () => showPage('masterDbPage') },
+  
 
   { id: 'userManagementPage', title: 'Kelola User & Akses', desc: 'Manajemen Pengguna, Peran & Hak Akses', keywords: 'kelola user akun manajemen pengguna akses role password reset admin', icon: 'manage_accounts', action: () => showPage('userManagementPage') },
 

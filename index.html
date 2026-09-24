@@ -334,10 +334,7 @@
             <span class="material-symbols-rounded">history</span>
             <span>Riwayat Permintaan</span>
           </a>
-          <a class="sidebar-item" id="btnMasterDbNavSidebar" onclick="showPage('masterDbPage')">
-            <span class="material-symbols-rounded">database</span>
-            <span>Master Database</span>
-          </a>
+
           <a class="sidebar-item" id="btnUserNavSidebar" onclick="showPage('userManagementPage')">
             <span class="material-symbols-rounded">manage_accounts</span>
             <span>Kelola User & Akses</span>
@@ -768,49 +765,7 @@
         </div>
       </div>
     </section>
-      <section id="masterDbPage" class="page">
-      <div class="box box-full">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-          <h3 style="color: #0284c7;">MASTER DATA PERMINTAAN LENGKAP (ADMIN DATA UTAMA)</h3>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-            <button type="button" id="btnHapusMultiMasterDb" class="btnDownload" style="display: none; background: #dc2626 !important; color: #ffffff !important; border: 1px solid #991b1b !important; border-radius: 4px !important; height: 42px !important; padding: 0 18px !important; font-weight: 700 !important; cursor: pointer !important;" onclick="hapusMultiMasterDb()">
-              <span class="material-symbols-rounded" style="color: #ffffff !important;">delete_sweep</span> HAPUS (0) DATA
-            </button>
-            <button class="btnDownload" style="background: linear-gradient(135deg, #107c41, #0f7b40) !important; color: #ffffff !important;" onclick="downloadMasterExcel()">
-              <span class="material-symbols-rounded">download</span> DOWNLOAD MASTER EXCEL LENGKAP (.XLSX)
-            </button>
-          </div>
-        </div>
 
-        <div class="searchToolbar">
-          <input type="text" id="searchMasterDb" placeholder="CARI DATA PERMINTAAN (NO SURAT, TOKO, TYPE, SERI, BARANG)..." onkeyup="loadMasterDbTable()">
-        </div>
-
-        <div class="tableWrap">
-          <table class="historyTable">
-            <thead>
-              <tr>
-                <th style="width: 36px; text-align: center;">
-                  <input type="checkbox" id="selectAllMasterDb" onchange="toggleSelectAllMasterDb(this)" style="cursor: pointer; width: 16px; height: 16px;" title="PILIH SEMUA">
-                </th>
-                <th>NO SURAT</th>
-                <th style="text-align: left;">TANGGAL</th>
-                <th>PEMOHON / TOKO</th>
-                <th>AREA</th>
-                <th>JENIS</th>
-                <th>DETAIL ITEM & ALASAN</th>
-                <th>STATUS</th>
-                <th>CATATAN</th>
-                <th style="text-align: center;">HAPUS DATA</th>
-              </tr>
-            </thead>
-            <tbody id="masterDbTableBody">
-              <!-- Injected dynamically -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
       <section id="userManagementPage" class="page">
       <!-- FONTE WHATSAPP AUTOMATION TOKEN -->
             <!-- PENGATURAN MODE MAINTENANCE SISTEM (REALTIME ALL DEVICES) -->
