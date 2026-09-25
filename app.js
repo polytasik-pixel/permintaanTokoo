@@ -59119,6 +59119,61 @@ async function simpanApprovalDMWithTTDAndGDrive() {
       if (typeof generateAndBackupApprovedPdf === 'function') {
         generateAndBackupApprovedPdf(targetNoSurat, targetReq || findRequestByNoSuratOrId(targetNoSurat)).catch(e => console.warn('[BACKGROUND PDF WARN]:', e));
       }
+
+      // D. Notifikasi Sistem & WA ke Tim Service dan Toko Pembuat (Creator)
+      try {
+        const currentReq = targetReq || (typeof findRequestByNoSuratOrId === 'function' ? findRequestByNoSuratOrId(targetNoSurat) : null);
+        const reqToko = currentReq ? (currentReq.toko || 'Toko') : 'Toko';
+        const reqArea = currentReq ? (currentReq.area || 'ALL') : 'ALL';
+        const directLink = typeof getAppDirectLink === 'function' ? getAppDirectLink(targetNoSurat) : window.location.href;
+        const allUsers = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
+
+        // 1) Notifikasi Lonceng Sistem
+        if (typeof tambahNotifikasiSistem === 'function') {
+          tambahNotifikasiSistem(['SERVICE', 'TOKO', 'SALES'], reqArea, `PERMINTAAN #${targetNoSurat} DARI ${reqToko} TELAH DISETUJUI DM. SILAKAN UPLOAD BUKTI SURAT BER-CAP & TTD.`, targetNoSurat);
+        }
+
+        if (typeof kirimNotifikasiWA === 'function') {
+          // 2) WA ke Toko Pembuat (Creator)
+          const creator = allUsers.find(u => {
+            if (!u || !currentReq) return false;
+            const uNameUpper = String(u.username || '').trim().toUpperCase();
+            const reqCreatedByUpper = String(currentReq.createdBy || '').trim().toUpperCase();
+            const reqUserIdUpper = String(currentReq.userId || '').trim().toUpperCase();
+            if (uNameUpper && (uNameUpper === reqCreatedByUpper || uNameUpper === reqUserIdUpper)) return true;
+            if (u.storeCode && String(u.storeCode).trim().toUpperCase() === String(currentReq.toko || '').trim().toUpperCase()) return true;
+            return false;
+          });
+
+          if (creator && creator.phone && creator.phone !== '-' && String(creator.phone).trim() !== '') {
+            const creatorName = creator.fullName || creator.username || reqToko;
+            kirimNotifikasiWA(creator.phone,
+              `Yth. Bapak/Ibu *${creatorName}* (*${reqToko}*)\n\n` +
+              `🎉 *PERMINTAAN DISETUJUI DM (APPROVED)*\n` +
+              `Pengajuan Surat *#${targetNoSurat}* (*${reqToko}*) telah *DISETUJUI oleh DM*.\n\n` +
+              `📌 *TINDAKAN SELANJUTNYA:*\n` +
+              `Mohon dapat segera cetak dokumen dan **MENGUNGGAH BUKTI SURAT YANG SUDAH DICAP DAN DITANDATANGANI (TTD)** pada aplikasi.\n\n` +
+              `• Link Detail Surat: ${directLink}\n\n` +
+              `Terima kasih.`
+            );
+          }
+
+          // 3) WA ke Tim Service Area
+          const serviceUsers = allUsers.filter(u => u && (u.category === 'SERVICE' || u.category === 'HODS' || u.role === 'SERVICE') && (u.area === reqArea || u.area === 'ALL') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
+          serviceUsers.forEach(srv => {
+            const srvName = srv.fullName || srv.username || 'Bapak/Ibu Tim Service';
+            kirimNotifikasiWA(srv.phone,
+              `Yth. Bapak/Ibu *${srvName}* (Tim Service)\n\n` +
+              `🎉 *PERMINTAAN DISETUJUI DM (APPROVED)*\n` +
+              `Pengajuan Surat *#${targetNoSurat}* (*${reqToko}*) telah *DISETUJUI oleh DM*. Dokumen siap untuk diproses lebih lanjut.\n\n` +
+              `• Link Detail Surat: ${directLink}\n\n` +
+              `Terima kasih.`
+            );
+          });
+        }
+      } catch (eWADMApprove) {
+        console.warn('[DM APPROVE WA DISPATCH ERROR]:', eWADMApprove);
+      }
     } catch (bgErr) {
       console.warn('[BACKGROUND APPROVAL TASK ERROR]:', bgErr);
     }
