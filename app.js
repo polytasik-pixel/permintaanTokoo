@@ -3392,27 +3392,53 @@ async function pingSupabaseKeepAlive(force = false) {
     const lastPing = localStorage.getItem('SUPABASE_LAST_KEEPALIVE_PING_TS');
     const now = Date.now();
 
-    // Jika tidak di-force dan sudah pernah ping dalam 24 jam terakhir (atau < 5 hari), skip untuk hemat kuota
+    // Jika tidak di-force dan sudah pernah ping dalam 24 jam terakhir, skip untuk hemat kuota
     if (!force && lastPing && (now - Number(lastPing)) < (24 * 60 * 60 * 1000)) {
       window.isSupabaseOnline = true;
       if (typeof updateGlobalConnectionDotStatus === 'function') updateGlobalConnectionDotStatus();
       return;
     }
 
-    if (supabase && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY) {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/system_settings?select=setting_key&limit=1`, {
-        headers: {
-          'apikey': SUPABASE_PUBLISHABLE_KEY,
-          'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
-        }
-      });
-
-      window.isSupabaseOnline = (res.ok || res.status === 200 || res.status === 206);
-      if (window.isSupabaseOnline) {
-        localStorage.setItem('SUPABASE_LAST_KEEPALIVE_PING_TS', String(now));
+    let isSuccess1 = false;
+    // 1. PING SUPABASE 1 (DB Utama)
+    if (SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/system_settings?select=setting_key&limit=1`, {
+          headers: {
+            'apikey': SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+          }
+        });
+        isSuccess1 = (res.ok || res.status === 200 || res.status === 206);
+      } catch (e1) {
+        isSuccess1 = false;
       }
-    } else {
-      window.isSupabaseOnline = false;
+    }
+    window.isSupabaseOnline = isSuccess1;
+
+    // 2. PING SUPABASE 2 (DB/Storage Sekunder)
+    if (SUPABASE_FILE_URL && SUPABASE_FILE_KEY) {
+      try {
+        await fetch(`${SUPABASE_FILE_URL}/rest/v1/system_settings?select=setting_key&limit=1`, {
+          headers: {
+            'apikey': SUPABASE_FILE_KEY,
+            'Authorization': `Bearer ${SUPABASE_FILE_KEY}`
+          }
+        }).catch(() => {
+          return fetch(`${SUPABASE_FILE_URL}/rest/v1/?apikey=${encodeURIComponent(SUPABASE_FILE_KEY)}`, {
+            headers: {
+              'apikey': SUPABASE_FILE_KEY,
+              'Authorization': `Bearer ${SUPABASE_FILE_KEY}`
+            }
+          });
+        });
+      } catch (e2) {
+        console.warn('[SUPABASE 2 KEEPALIVE NOTICE]:', e2);
+      }
+    }
+
+    if (isSuccess1) {
+      localStorage.setItem('SUPABASE_LAST_KEEPALIVE_PING_TS', String(now));
     }
   } catch (e) {
     window.isSupabaseOnline = false;
@@ -3426,12 +3452,18 @@ function startSupabaseKeepalive() {
     clearInterval(window._supabaseKeepaliveInterval);
     window._supabaseKeepaliveInterval = null;
   }
-  // Panggil ping on-demand (akan otomatis ping jika sudah waktunya/lebih dari 1-5 hari)
+  // Panggil ping 1x 24 jam saat booting awal
   pingSupabaseKeepAlive(false);
+
+  // Periksa setiap 6 jam apakah sudah waktunya ping harian (mencegah sleep jika tab aktif terus)
+  window._supabaseKeepaliveInterval = setInterval(() => {
+    pingSupabaseKeepAlive(false);
+  }, 6 * 60 * 60 * 1000);
 }
 
 window.startSupabaseKeepalive = startSupabaseKeepalive;
 window.pingSupabaseKeepAlive = pingSupabaseKeepAlive;
+
 
 
 
