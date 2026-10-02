@@ -14447,6 +14447,16 @@ async function kirimNotifikasiWA(targetPhone, message, forceSend = false) {
 
 
   for (const cleanPhone of phoneList) {
+    // [SAFETY FILTER]: CEGAH PENGIRIM (USER SAMA) DAN ROLE DM MENERIMA WA APABILA AKSI DISALURKAN OLEH DM
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.phone && typeof formatCleanPhoneList === 'function') {
+      try {
+        const senderPhones = formatCleanPhoneList(currentUser.phone);
+        if (senderPhones && senderPhones.includes(cleanPhone)) {
+          console.log('[WA SKIPPED - CEGAH PENGIRIMAN WA KE NOMOR SENDIRI]:', cleanPhone);
+          continue;
+        }
+      } catch (eExSelf) {}
+    }
 
     const msgHash = `${cleanPhone}_${String(message).trim()}`;
 
@@ -23488,7 +23498,15 @@ async function prosesSimpanKeDB(toko, jenis, catatan, items) {
 
       const allUsers = getUsersFromDB();
 
-      const serviceUsers = allUsers.filter(u => u.category === 'SERVICE' && (u.area === currentUser.area || u.area === 'ALL'));
+      const serviceUsers = allUsers.filter(u => {
+      if (!u || !u.phone || u.phone === '-') return false;
+      const catUpper = String(u.category || u.kategori || '').toUpperCase();
+      const roleUpper = String(u.role || '').toUpperCase();
+      if (catUpper.includes('DM') || roleUpper.includes('DM')) return false; // STRICTLY EXCLUDE DM USERS FROM NEW REQUEST WA
+      const isService = catUpper.includes('SERVICE') || roleUpper.includes('SERVICE') || catUpper.includes('HODS') || roleUpper.includes('HODS');
+      const isAreaMatchUser = (u.area === (currentUser ? currentUser.area : '') || u.area === 'ALL' || !u.area);
+      return isService && isAreaMatchUser;
+    });
 
       serviceUsers.forEach(srv => {
 
@@ -49395,7 +49413,15 @@ function kirimNotifDanWaBreakdown(noSurat, partialId, statusType, extra = {}) {
           );
         });
       } else if (statusType === 'APPROVE') {
-        const serviceUsers = allUsers.filter(u => u && (u.category === 'SERVICE' || u.category === 'HODS' || u.role === 'SERVICE') && (u.area === targetArea || u.area === 'ALL') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
+        const serviceUsers = allUsers.filter(u => {
+          if (!u || !u.phone || u.phone === '-' || String(u.phone).trim() === '') return false;
+          const catUpper = String(u.category || u.kategori || '').toUpperCase();
+          const roleUpper = String(u.role || '').toUpperCase();
+          if (catUpper.includes('DM') || roleUpper.includes('DM')) return false; // EXCLUDE DM ON DM APPROVAL
+          const isService = catUpper.includes('SERVICE') || roleUpper.includes('SERVICE') || catUpper.includes('HODS') || roleUpper.includes('HODS');
+          const isAreaMatchUser = (u.area === targetArea || u.area === 'ALL' || !u.area);
+          return isService && isAreaMatchUser;
+        });
         serviceUsers.forEach(srv => {
           const srvName = srv.fullName || srv.username || 'Bapak/Ibu Tim Service';
           kirimNotifikasiWA(srv.phone,
@@ -49407,7 +49433,15 @@ function kirimNotifDanWaBreakdown(noSurat, partialId, statusType, extra = {}) {
           );
         });
       } else if (statusType === 'REJECT') {
-        const serviceUsers = allUsers.filter(u => u && (u.category === 'SERVICE' || u.category === 'HODS' || u.role === 'SERVICE') && (u.area === targetArea || u.area === 'ALL') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
+        const serviceUsers = allUsers.filter(u => {
+          if (!u || !u.phone || u.phone === '-' || String(u.phone).trim() === '') return false;
+          const catUpper = String(u.category || u.kategori || '').toUpperCase();
+          const roleUpper = String(u.role || '').toUpperCase();
+          if (catUpper.includes('DM') || roleUpper.includes('DM')) return false; // EXCLUDE DM ON DM APPROVAL
+          const isService = catUpper.includes('SERVICE') || roleUpper.includes('SERVICE') || catUpper.includes('HODS') || roleUpper.includes('HODS');
+          const isAreaMatchUser = (u.area === targetArea || u.area === 'ALL' || !u.area);
+          return isService && isAreaMatchUser;
+        });
         serviceUsers.forEach(srv => {
           const srvName = srv.fullName || srv.username || 'Bapak/Ibu Tim Service';
           kirimNotifikasiWA(srv.phone,
