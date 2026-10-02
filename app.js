@@ -14446,7 +14446,61 @@ async function kirimNotifikasiWA(targetPhone, message, forceSend = false) {
 
 
 
-  for (const cleanPhone of phoneList) {
+  // [STRICT DM EXCLUSION FILTER]: Dapatkan seluruh nomor HP DM dari database
+    let dmPhoneNumbers = [];
+    try {
+      const allUsersDb = typeof getUsersFromDB === 'function' ? getUsersFromDB() : [];
+      allUsersDb.forEach(u => {
+        if (!u || !u.phone || u.phone === '-') return;
+        const catU = String(u.category || u.kategori || '').toUpperCase();
+        const roleU = String(u.role || '').toUpperCase();
+        if (catU.includes('DM') || roleU.includes('DM')) {
+          if (typeof formatCleanPhoneList === 'function') {
+            const pList = formatCleanPhoneList(u.phone);
+            if (Array.isArray(pList)) dmPhoneNumbers.push(...pList);
+          }
+        }
+      });
+    } catch(eDbDm) {}
+
+    const msgUpper = String(message || '').toUpperCase();
+    const isNewRequestMsg = msgUpper.includes('PERMINTAAN BARU') || 
+                            msgUpper.includes('PEMBERITAHUAN SISTEM PERMINTAAN BARANG') || 
+                            msgUpper.includes('TELAH DIBUAT PENGAJUAN PERMINTAAN');
+
+    const isDmApprovalMsg = msgUpper.includes('PERMINTAAN DISETUJUI DM') || 
+                            msgUpper.includes('SURAT JALAN PARSIAL DISETUJUI DM') || 
+                            msgUpper.includes('DISETUJUI OLEH DM') || 
+                            msgUpper.includes('APPROVAL DM BERHASIL');
+
+    const isCurrentLoggedInDM = typeof currentUser !== 'undefined' && currentUser && (
+      String(currentUser.category || currentUser.kategori || '').toUpperCase().includes('DM') || 
+      String(currentUser.role || '').toUpperCase().includes('DM')
+    );
+
+    for (const cleanPhone of phoneList) {
+      // 1. CEGAH NOMOR SENDIRI (PENGIRIM/PELAKU AKSI)
+      if (typeof currentUser !== 'undefined' && currentUser && currentUser.phone && typeof formatCleanPhoneList === 'function') {
+        try {
+          const senderPhones = formatCleanPhoneList(currentUser.phone);
+          if (senderPhones && senderPhones.includes(cleanPhone)) {
+            console.log('[WA SKIPPED - NOMOR SENDIRI EXCLUDED]:', cleanPhone);
+            continue;
+          }
+        } catch (eExSelf) {}
+      }
+
+      // 2. CEGAH DM MENERIMA WA PERMINTAAN BARU SAMA SEKALI
+      if (isNewRequestMsg && dmPhoneNumbers.includes(cleanPhone)) {
+        console.log('[WA SKIPPED - DM TIDAK BOLEH DAPAT WA PERMINTAAN BARU]:', cleanPhone);
+        continue;
+      }
+
+      // 3. CEGAH DM MENERIMA WA SAAT DM APPROVAL SAMA SEKALI
+      if ((isDmApprovalMsg || isCurrentLoggedInDM) && dmPhoneNumbers.includes(cleanPhone)) {
+        console.log('[WA SKIPPED - DM TIDAK BOLEH DAPAT WA SAAT DM APPROVAL]:', cleanPhone);
+        continue;
+      }
     // [SAFETY FILTER]: CEGAH PENGIRIM (USER SAMA) DAN ROLE DM MENERIMA WA APABILA AKSI DISALURKAN OLEH DM
     if (typeof currentUser !== 'undefined' && currentUser && currentUser.phone && typeof formatCleanPhoneList === 'function') {
       try {
@@ -59225,7 +59279,15 @@ async function simpanApprovalDMWithTTDAndGDrive() {
           }
 
           // 3) WA ke Tim Service Area
-          const serviceUsers = allUsers.filter(u => u && (u.category === 'SERVICE' || u.category === 'HODS' || u.role === 'SERVICE') && (u.area === reqArea || u.area === 'ALL') && u.phone && u.phone !== '-' && String(u.phone).trim() !== '');
+          const serviceUsers = allUsers.filter(u => {
+          if (!u || !u.phone || u.phone === '-' || String(u.phone).trim() === '') return false;
+          const catUpper = String(u.category || u.kategori || '').toUpperCase();
+          const roleUpper = String(u.role || '').toUpperCase();
+          if (catUpper.includes('DM') || roleUpper.includes('DM')) return false; // STRICTLY EXCLUDE DM
+          const isService = catUpper.includes('SERVICE') || roleUpper.includes('SERVICE') || catUpper.includes('HODS') || roleUpper.includes('HODS');
+          const isAreaMatchUser = (u.area === reqArea || u.area === 'ALL' || !u.area);
+          return isService && isAreaMatchUser;
+        });
           serviceUsers.forEach(srv => {
             const srvName = srv.fullName || srv.username || 'Bapak/Ibu Tim Service';
             kirimNotifikasiWA(srv.phone,
