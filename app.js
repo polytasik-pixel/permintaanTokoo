@@ -14365,87 +14365,307 @@ const sentWaCache = {};
 
 
 
-function formatCleanPhoneList(targetPhone) {
+async function getFonnteWhatsAppGroups(forceRefresh = false) {
+  if (!forceRefresh && window._fonnteGroupsCache && Array.isArray(window._fonnteGroupsCache) && window._fonnteGroupsCache.length > 0) {
+    return window._fonnteGroupsCache;
+  }
+  try {
+    const rawCache = localStorage.getItem('STORE_FONNTE_GROUPS_CACHE');
+    if (!forceRefresh && rawCache) {
+      const parsed = JSON.parse(rawCache);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        window._fonnteGroupsCache = parsed;
+        return parsed;
+      }
+    }
+  } catch(e) {}
 
+  const token = (typeof getFonteToken === 'function' ? getFonteToken() : '') || 'FejqMMmJNpcfvouaqVoE';
+  if (!token) return [];
+
+  try {
+    const res = await fetch('https://api.fonnte.com/get-whatsapp-group', {
+      method: 'POST',
+      headers: {
+        'Authorization': token.trim()
+      }
+    });
+    const data = await res.json();
+    if (data && (data.status === true || data.status === 'true') && Array.isArray(data.data)) {
+      window._fonnteGroupsCache = data.data;
+      try {
+        localStorage.setItem('STORE_FONNTE_GROUPS_CACHE', JSON.stringify(data.data));
+      } catch(e) {}
+      return data.data;
+    }
+  } catch (err) {
+    console.warn('[FONNTE GET GROUPS NOTICE]:', err);
+  }
+  return window._fonnteGroupsCache || [];
+}
+window.getFonnteWhatsAppGroups = getFonnteWhatsAppGroups;
+
+function formatCleanPhoneList(targetPhone, optionalGroups) {
   if (!targetPhone || targetPhone === '-' || String(targetPhone).trim() === '') return [];
-
-  
 
   const rawStr = String(targetPhone).trim();
 
-  const parts = rawStr.split(/[\s;,/|&\n]+/);
+  let groups = optionalGroups;
+  if (!groups && typeof window !== 'undefined' && Array.isArray(window._fonnteGroupsCache)) {
+    groups = window._fonnteGroupsCache;
+  }
+  if (!groups) {
+    try {
+      const stored = localStorage.getItem('STORE_FONNTE_GROUPS_CACHE');
+      if (stored) groups = JSON.parse(stored);
+    } catch(e) {}
+  }
 
-  
+  // 1. Ekstrak dan amankan URL (seperti https://chat.whatsapp.com/...)
+  const urlPlaceholders = [];
+  let safeStr = rawStr.replace(/https?:\/\/[^\s;,|&]+/gi, function(matched) {
+    urlPlaceholders.push(matched);
+    return '__URL_PLACEHOLDER_' + (urlPlaceholders.length - 1) + '__';
+  });
+
+  safeStr = safeStr.replace(/chat\.whatsapp\.com\/[^\s;,|&]+/gi, function(matched) {
+    urlPlaceholders.push('https://' + matched);
+    return '__URL_PLACEHOLDER_' + (urlPlaceholders.length - 1) + '__';
+  });
+
+  // 2. Normalisasi semua pemisah (koma, titik-koma, pipe, garis miring, newline, ampersand)
+  const normalized = safeStr.replace(/[\/;,|&\n\r]+/g, ',');
+
+  const rawTokens = [];
+  normalized.split(',').forEach(function(chunk) {
+    let c = chunk.trim();
+    if (!c) return;
+
+    if (c.indexOf('__URL_PLACEHOLDER_') !== -1) {
+      c = c.replace(/__URL_PLACEHOLDER_(\d+)__/g, function(_, idx) {
+        return urlPlaceholders[parseInt(idx, 10)] || '';
+      }).trim();
+      if (c) rawTokens.push(c);
+      return;
+    }
+
+    const spaceParts = c.split(/\s+/);
+    if (spaceParts.length > 1 && spaceParts.every(function(p) { return /^(08|\+?62|120|[0-9]{8,})/.test(p); })) {
+      spaceParts.forEach(function(sp) { if (sp.trim()) rawTokens.push(sp.trim()); });
+    } else {
+      rawTokens.push(c);
+    }
+  });
 
   const cleanedList = [];
 
-  parts.forEach(rawPart => {
+  rawTokens.forEach(function(rawToken) {
+    let token = rawToken.trim();
+    if (!token || token.length < 5) return;
 
-    let part = rawPart.trim();
-
-    if (!part || part.length < 5) return;
-
-    
-
-    // Check if target is a WhatsApp Group ID (contains '@g.us', '-', or starts with '120')
-
-    const isGroup = part.includes('@g.us') || part.includes('-') || part.startsWith('120');
-
-
-
-    if (isGroup) {
-
-      let groupTarget = part;
-
-      if (!groupTarget.includes('@g.us') && (groupTarget.includes('-') || groupTarget.startsWith('120'))) {
-
-        groupTarget = groupTarget + '@g.us';
-
-      }
-
-      if (!cleanedList.includes(groupTarget)) {
-
-        cleanedList.push(groupTarget);
-
-      }
-
-    } else {
-
-      let clean = part.replace(/[^0-9]/g, '');
-
-      if (!clean || clean.length < 5) return;
-
-      
-
-      if (clean.startsWith('0')) {
-
-        clean = '62' + clean.slice(1);
-
-      } else if (!clean.startsWith('62') && clean.length <= 13) {
-
-        clean = '62' + clean;
-
-      }
-
-      
-
-      if (!cleanedList.includes(clean)) {
-
-        cleanedList.push(clean);
-
-      }
-
+    // A. Sudah berupa WhatsApp Group ID lengkap (mengandung @g.us)
+    if (token.indexOf('@g.us') !== -1) {
+      const m = token.match(/([0-9A-Za-z_\-]+@g\.us)/);
+      const gid = m ? m[1] : token;
+      if (cleanedList.indexOf(gid) === -1) cleanedList.push(gid);
+      return;
     }
 
+    // B. Group ID angka tanpa @g.us
+    if (/^120[0-9]{12,}$/.test(token) || /^[0-9]{8,16}\-[0-9]{8,16}$/.test(token)) {
+      const gid = token + '@g.us';
+      if (cleanedList.indexOf(gid) === -1) cleanedList.push(gid);
+      return;
+    }
+
+    // C. Tautan WhatsApp Group Fonnte (contoh: https://chat.whatsapp.com/XXXXX)
+    if (token.indexOf('chat.whatsapp.com') !== -1 || token.indexOf('whatsapp.com') !== -1) {
+      let resolvedId = null;
+      if (Array.isArray(groups) && groups.length > 0) {
+        const mainGroup = groups.find(function(g) { return g && g.name && (/PERMINTAAN/i.test(g.name) || /TOKO/i.test(g.name)); });
+        if (mainGroup && mainGroup.id) {
+          resolvedId = mainGroup.id;
+        } else if (groups[0] && groups[0].id) {
+          resolvedId = groups[0].id;
+        }
+      }
+      if (resolvedId) {
+        if (cleanedList.indexOf(resolvedId) === -1) cleanedList.push(resolvedId);
+      } else {
+        const defaultGid = '120363424747010987@g.us';
+        if (cleanedList.indexOf(defaultGid) === -1) cleanedList.push(defaultGid);
+      }
+      return;
+    }
+
+    // D. Nama Grup Fonnte (contoh user mengetik "PERMINTAAN TOKO" atau "Teknisi TSM")
+    if (Array.isArray(groups) && groups.length > 0) {
+      const tokenUpper = token.toUpperCase();
+      const matchedGroup = groups.find(function(g) { return g && g.name && g.name.toUpperCase().indexOf(tokenUpper) !== -1; });
+      if (matchedGroup && matchedGroup.id) {
+        if (cleanedList.indexOf(matchedGroup.id) === -1) cleanedList.push(matchedGroup.id);
+        return;
+      }
+    }
+
+    // E. Nomor HP Biasa (08xxx, +62xxx, 62xxx)
+    let cleanNum = token.replace(/[^0-9]/g, '');
+    if (!cleanNum || cleanNum.length < 5) return;
+
+    if (cleanNum.indexOf('0') === 0) {
+      cleanNum = '62' + cleanNum.slice(1);
+    } else if (cleanNum.indexOf('62') !== 0 && cleanNum.length <= 13) {
+      cleanNum = '62' + cleanNum;
+    }
+
+    if (cleanedList.indexOf(cleanNum) === -1) {
+      cleanedList.push(cleanNum);
+    }
   });
 
-  
-
   return cleanedList;
+}
+window.formatCleanPhoneList = formatCleanPhoneList;
 
+async function bukaPilihGrupFonnte(targetInputId) {
+  const targetEl = document.getElementById(targetInputId);
+  if (!targetEl) return;
+
+  let modal = document.getElementById('popupPilihGrupFonnte');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'popupPilihGrupFonnte';
+    modal.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.65); z-index:2147483647; align-items:center; justify-content:center; backdrop-filter:blur(3px); padding:16px; box-sizing:border-box;';
+    modal.innerHTML = `
+      <div style="background:#fff; border-radius:12px; width:100%; max-width:520px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2); overflow:hidden; font-family:sans-serif;">
+        <div style="padding:16px 20px; background:linear-gradient(135deg, #0284c7, #0369a1); color:#fff; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="material-symbols-rounded" style="font-size:22px;">groups</span>
+            <span style="font-weight:800; font-size:15px; letter-spacing:0.3px;">PILIH GRUP WA FONNTE</span>
+          </div>
+          <button type="button" onclick="tutupPilihGrupFonnte()" style="background:none; border:none; color:#fff; font-size:22px; cursor:pointer; padding:0; line-height:1;">&times;</button>
+        </div>
+        <div style="padding:16px 20px; overflow-y:auto; flex:1;">
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:11.5px; color:#166534; line-height:1.4;">
+            💡 <b>Tips:</b> Anda bisa memasukkan <b>1 No HP</b>, <b>2 No HP atau lebih</b> (pisah koma), <b>ID Grup WA</b> (@g.us), atau <b>Link Grup WA</b>. Klik <b>Ganti</b> untuk mengisi ID grup, atau <b>+ Gabung</b> agar notifikasi terkirim ke pribadi & ke grup sekaligus.
+          </div>
+          <div id="pilihGrupFonnteList" style="display:flex; flex-direction:column; gap:8px;">
+            <div style="text-align:center; padding:24px; color:#64748b; font-size:13px;">Sedang memuat daftar grup WA dari Fonnte...</div>
+          </div>
+          <div style="margin-top:16px; padding-top:14px; border-top:1px dashed #cbd5e1;">
+            <label style="display:block; font-size:11px; font-weight:800; color:#475569; margin-bottom:6px;">TEMPEL LINK GRUP WA / ID MANUAL:</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="inputManualLinkGrup" placeholder="https://chat.whatsapp.com/... atau 120363..." style="flex:1; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">
+              <button type="button" id="btnKonversiLinkGrup" style="background:#0284c7; color:#fff; border:none; border-radius:6px; padding:0 14px; font-size:12px; font-weight:700; cursor:pointer;">Gunakan</button>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+          <button type="button" onclick="refreshPilihGrupFonnte()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:6px 12px; font-size:11px; font-weight:700; color:#475569; cursor:pointer; display:flex; align-items:center; gap:4px;">
+            <span class="material-symbols-rounded" style="font-size:14px;">sync</span> Refresh Grup
+          </button>
+          <button type="button" onclick="tutupPilihGrupFonnte()" style="background:#64748b; color:#fff; border:none; border-radius:6px; padding:6px 16px; font-size:12px; font-weight:700; cursor:pointer;">Tutup</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  window._activeTargetPhoneInputId = targetInputId;
+  modal.style.display = 'flex';
+
+  renderGrupFonnteListUI();
+}
+window.bukaPilihGrupFonnte = bukaPilihGrupFonnte;
+
+function tutupPilihGrupFonnte() {
+  const modal = document.getElementById('popupPilihGrupFonnte');
+  if (modal) modal.style.display = 'none';
+}
+window.tutupPilihGrupFonnte = tutupPilihGrupFonnte;
+
+async function refreshPilihGrupFonnte() {
+  const listEl = document.getElementById('pilihGrupFonnteList');
+  if (listEl) listEl.innerHTML = '<div style="text-align:center; padding:24px; color:#64748b; font-size:13px;">Sedang memperbarui daftar grup...</div>';
+  await getFonnteWhatsAppGroups(true);
+  renderGrupFonnteListUI();
+}
+window.refreshPilihGrupFonnte = refreshPilihGrupFonnte;
+
+async function renderGrupFonnteListUI() {
+  const listEl = document.getElementById('pilihGrupFonnteList');
+  if (!listEl) return;
+
+  const groups = await getFonnteWhatsAppGroups();
+  if (!Array.isArray(groups) || groups.length === 0) {
+    listEl.innerHTML = `
+      <div style="text-align:center; padding:20px; color:#64748b; font-size:12px;">
+        <p style="margin:0 0 6px 0; font-weight:700;">Belum ada grup yang terdeteksi di akun Fonnte.</p>
+        <p style="margin:0; font-size:11px;">Pastikan nomor WA Fonnte sudah tergabung di grup WA, lalu klik tombol Refresh Grup.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  groups.forEach(g => {
+    const gid = g.id || '';
+    const name = g.name || 'Grup Tanpa Nama';
+    html += `
+      <div style="border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; background:#ffffff; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:800; font-size:13px; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">👥 ${name}</div>
+          <div style="font-size:11px; color:#64748b; font-family:monospace; margin-top:2px;">ID: ${gid}</div>
+        </div>
+        <div style="display:flex; gap:6px; flex-shrink:0;">
+          <button type="button" onclick="pilihGrupKeInput('${gid}', false)" style="background:#0284c7; color:#fff; border:none; border-radius:6px; padding:6px 10px; font-size:11px; font-weight:700; cursor:pointer;" title="Ganti No HP dengan ID Grup ini">Ganti</button>
+          <button type="button" onclick="pilihGrupKeInput('${gid}', true)" style="background:#10b981; color:#fff; border:none; border-radius:6px; padding:6px 10px; font-size:11px; font-weight:700; cursor:pointer;" title="Tambahkan ID Grup ini ke nomor HP yang ada">+ Gabung</button>
+        </div>
+      </div>
+    `;
+  });
+  listEl.innerHTML = html;
+
+  const btnManual = document.getElementById('btnKonversiLinkGrup');
+  if (btnManual) {
+    btnManual.onclick = () => {
+      const manualInput = document.getElementById('inputManualLinkGrup');
+      const val = manualInput ? manualInput.value.trim() : '';
+      if (!val) return;
+      pilihGrupKeInput(val, true);
+    };
+  }
 }
 
-window.formatCleanPhoneList = formatCleanPhoneList;
+function pilihGrupKeInput(valToAdd, appendMode = false) {
+  const inputId = window._activeTargetPhoneInputId;
+  const targetEl = document.getElementById(inputId);
+  if (!targetEl || !valToAdd) return;
+
+  let cleanVal = valToAdd.trim();
+  if (cleanVal.includes('@g.us')) {
+    const m = cleanVal.match(/([0-9A-Za-z\-_]+@g\.us)/);
+    if (m) cleanVal = m[1];
+  } else if (/^120[0-9]{12,}$/.test(cleanVal) || /^[0-9]{8,16}\-[0-9]{8,16}$/.test(cleanVal)) {
+    cleanVal = cleanVal + '@g.us';
+  }
+
+  const curVal = (targetEl.value || '').trim();
+  if (appendMode && curVal && curVal !== '-') {
+    if (!curVal.includes(cleanVal)) {
+      targetEl.value = `${curVal}, ${cleanVal}`;
+    }
+  } else {
+    targetEl.value = cleanVal;
+  }
+
+  tutupPilihGrupFonnte();
+  if (typeof showNotif === 'function') {
+    showNotif(`✅ Target WA dipilih: ${cleanVal}`, 'success');
+  }
+}
+window.pilihGrupKeInput = pilihGrupKeInput;
+
 
 
 
