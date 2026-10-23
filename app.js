@@ -3515,7 +3515,7 @@ const CHAT_MESSAGES_KEY = 'STORE_CHAT_MESSAGES_V7_CLEAN';
 
 const CHAT_ROOM_DB_KEY = 'STORE_CHAT_ROOM_DB_V7_CLEAN';
 
-const TTD_DB_KEY = 'STORE_TTD_DB_V7_CLEAN';
+const TTD_DB_KEY = 'STORE_TTD_DB_V8_CLEAN';
 
 const SESSION_KEY = 'STORE_ACTIVE_SESSION_V7_CLEAN';
 
@@ -3559,13 +3559,13 @@ const SYSTEM_DEFAULT_TTD_MAP = {
 
   "HODS":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_SKB_1787708703707.png",
 
-  "USR-1786520232536-457":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_BDU_1787124369187.png",
+  "USR-1786520232536-457":"https://vnlylgbkjmztnvjjgpjw.supabase.co/storage/v1/object/public/photos/TTD_BDU_1792435122426.png",
 
-  "BDU":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_BDU_1787124369187.png",
+  "BDU":"https://vnlylgbkjmztnvjjgpjw.supabase.co/storage/v1/object/public/photos/TTD_BDU_1792435122426.png",
 
-  "M.AWALUDDIN.R":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_BDU_1787124369187.png",
+  "M.AWALUDDIN.R":"https://vnlylgbkjmztnvjjgpjw.supabase.co/storage/v1/object/public/photos/TTD_BDU_1792435122426.png",
 
-  "SERVICE_BDU":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_BDU_1787124369187.png",
+  "SERVICE_BDU":"https://vnlylgbkjmztnvjjgpjw.supabase.co/storage/v1/object/public/photos/TTD_BDU_1792435122426.png",
 
   "USR-1786518085185-694":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_GBJ_1787380373632.png",
 
@@ -3573,13 +3573,13 @@ const SYSTEM_DEFAULT_TTD_MAP = {
 
   "GUDANG BARANG JADI":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_GBJ_1787647951530.png",
 
-  "USR-1787124294394-416":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
+  "USR-1787124294394-416":"https://vnlylgbkjmztnvjjgpjw.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
 
-  "TSM":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
+  "TSM":"https://vnlylgbkjmztnvjjgpjw.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
 
-  "BAUT ADHI WISMANTORO":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
+  "BAUT ADHI WISMANTORO":"https://vnlylgbkjmztnvjjgpjw.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
 
-  "SERVICE_TSM":"https://bfkmxhvqezdobsbgxmzg.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
+  "SERVICE_TSM":"https://vnlylgbkjmztnvjjgpjw.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
 
   "USR-1786503880831-701":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_DM_1787285490848.png",
 
@@ -3587,7 +3587,7 @@ const SYSTEM_DEFAULT_TTD_MAP = {
 
   "FERRY EDIYANTO":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_DM_1787285490848.png",
 
-  "ABAUT ADHI WISMANTORO":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787647878493.png",
+  "ABAUT ADHI WISMANTORO":"https://vnlylgbkjmztnvjjgpjw.supabase.co/storage/v1/object/public/photos/TTD_TSM_1787124340713.png",
 
   "USR-1787286310183-498":"https://nmzulwgqkcyxjjwroxvq.supabase.co/storage/v1/object/public/photos/TTD_BDG_1788489428978.png",
 
@@ -11860,6 +11860,20 @@ async function uploadDataUrlToSupabaseStorageFile(dataUrl, bucketName = 'bukti_p
   const trimmed = dataUrl.trim();
 
   // Jika sudah berupa URL HTTP / HTTPS, tidak perlu diunggah ulang ke Storage
+  // Auto-correct domain mati & berkas TTD usang ke Supabase Storage aktif
+  if (trimmed.includes('bfkmxhvqezdobsbgxmzg.supabase.co')) {
+    trimmed = trimmed.replace(/bfkmxhvqezdobsbgxmzg\.supabase\.co/g, 'vnlylgbkjmztnvjjgpjw.supabase.co');
+  }
+  if (trimmed.includes('TTD_BDU_1787124369187.png')) {
+    trimmed = trimmed.replace(/TTD_BDU_1787124369187\.png/g, 'TTD_BDU_1792435122426.png');
+  }
+  if (trimmed.includes('TTD_SKB_1787287871359.png')) {
+    trimmed = trimmed.replace(/TTD_SKB_1787287871359\.png/g, 'TTD_SKB_1787708703707.png');
+  }
+  if (trimmed.includes('TTD_TSM_1787647878493.png')) {
+    trimmed = trimmed.replace(/TTD_TSM_1787647878493\.png/g, 'TTD_TSM_1787124340713.png');
+  }
+
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
 
   // Jika bukan data:image/ atau data:application/ (Base64), kembalikan teks aslinya
@@ -22119,6 +22133,20 @@ async function uploadSignatureDataUrlToSupabaseStorage(dataUrl, customFileName =
 
   const trimmed = dataUrl.trim();
 
+  // Auto-correct domain mati & berkas TTD usang ke Supabase Storage aktif
+  if (trimmed.includes('bfkmxhvqezdobsbgxmzg.supabase.co')) {
+    trimmed = trimmed.replace(/bfkmxhvqezdobsbgxmzg\.supabase\.co/g, 'vnlylgbkjmztnvjjgpjw.supabase.co');
+  }
+  if (trimmed.includes('TTD_BDU_1787124369187.png')) {
+    trimmed = trimmed.replace(/TTD_BDU_1787124369187\.png/g, 'TTD_BDU_1792435122426.png');
+  }
+  if (trimmed.includes('TTD_SKB_1787287871359.png')) {
+    trimmed = trimmed.replace(/TTD_SKB_1787287871359\.png/g, 'TTD_SKB_1787708703707.png');
+  }
+  if (trimmed.includes('TTD_TSM_1787647878493.png')) {
+    trimmed = trimmed.replace(/TTD_TSM_1787647878493\.png/g, 'TTD_TSM_1787124340713.png');
+  }
+
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
 
   if (!trimmed.startsWith('data:image/')) return trimmed;
@@ -31533,6 +31561,20 @@ function formatSupabaseStorageUrl(urlOrFileName) {
   const trimmed = urlOrFileName.trim();
   if (!trimmed || trimmed === 'null' || trimmed === 'undefined' || trimmed === 'false' || trimmed === '[]' || trimmed === '{}') return '';
   if (trimmed.startsWith('data:image/') || trimmed.startsWith('blob:')) return trimmed;
+  // Auto-correct domain mati & berkas TTD usang ke Supabase Storage aktif
+  if (trimmed.includes('bfkmxhvqezdobsbgxmzg.supabase.co')) {
+    trimmed = trimmed.replace(/bfkmxhvqezdobsbgxmzg\.supabase\.co/g, 'vnlylgbkjmztnvjjgpjw.supabase.co');
+  }
+  if (trimmed.includes('TTD_BDU_1787124369187.png')) {
+    trimmed = trimmed.replace(/TTD_BDU_1787124369187\.png/g, 'TTD_BDU_1792435122426.png');
+  }
+  if (trimmed.includes('TTD_SKB_1787287871359.png')) {
+    trimmed = trimmed.replace(/TTD_SKB_1787287871359\.png/g, 'TTD_SKB_1787708703707.png');
+  }
+  if (trimmed.includes('TTD_TSM_1787647878493.png')) {
+    trimmed = trimmed.replace(/TTD_TSM_1787647878493\.png/g, 'TTD_TSM_1787124340713.png');
+  }
+
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
 
   const sb = (typeof getSupabaseFileClient === 'function') ? getSupabaseFileClient() : ((typeof supabaseFile !== 'undefined' && supabaseFile) ? supabaseFile : ((typeof supabase !== 'undefined' && supabase) ? supabase : null));
@@ -31660,6 +31702,15 @@ function getUserRealSignature(targetRole, targetArea = '', targetUsername = '', 
 
     if (!url || typeof url !== 'string') return url;
 
+    if (url.includes('bfkmxhvqezdobsbgxmzg.supabase.co')) {
+      url = url.replace(/bfkmxhvqezdobsbgxmzg\.supabase\.co/g, 'vnlylgbkjmztnvjjgpjw.supabase.co');
+    }
+    if (url.includes('TTD_BDU_1787124369187.png')) {
+      url = url.replace(/TTD_BDU_1787124369187\.png/g, 'TTD_BDU_1792435122426.png');
+    }
+    if (url.includes('TTD_TSM_1787647878493.png')) {
+      url = url.replace(/TTD_TSM_1787647878493\.png/g, 'TTD_TSM_1787124340713.png');
+    }
     if (url.includes('TTD_SKB_1787287871359.png')) {
 
       return url.replace('TTD_SKB_1787287871359.png', 'TTD_SKB_1787708703707.png');
@@ -31682,7 +31733,7 @@ function getUserRealSignature(targetRole, targetArea = '', targetUsername = '', 
 
   try {
 
-    const dbKey = typeof TTD_DB_KEY !== 'undefined' ? TTD_DB_KEY : 'STORE_TTD_DB_V7_CLEAN';
+    const dbKey = typeof TTD_DB_KEY !== 'undefined' ? TTD_DB_KEY : 'STORE_TTD_DB_V8_CLEAN';
 
     const rawMap = (typeof appStorage !== 'undefined' ? appStorage.getItem(dbKey) : null) || 
 
@@ -31693,6 +31744,11 @@ function getUserRealSignature(targetRole, targetArea = '', targetUsername = '', 
     if (rawMap) {
 
       const parsed = JSON.parse(rawMap);
+      if (parsed && typeof parsed === 'object') {
+        Object.keys(parsed).forEach(k => {
+          if (typeof parsed[k] === 'string') parsed[k] = sanitizeSigUrl(parsed[k]);
+        });
+      }
 
       ttdMap = { ...SYSTEM_DEFAULT_TTD_MAP, ...parsed };
 
@@ -31790,27 +31846,27 @@ function getUserRealSignature(targetRole, targetArea = '', targetUsername = '', 
 
     if (area) {
 
-      if (isValid(ttdMap[`SERVICE_${area}`])) return ttdMap[`SERVICE_${area}`];
+      if (isValid(ttdMap[`SERVICE_${area}`])) return sanitizeSigUrl(ttdMap[`SERVICE_${area}`]);
 
-      if (isValid(ttdMap[`HODS_${area}`])) return ttdMap[`HODS_${area}`];
+      if (isValid(ttdMap[`HODS_${area}`])) return sanitizeSigUrl(ttdMap[`HODS_${area}`]);
 
       const srvAreaUsers = allUsers.filter(u => u && (u.category === 'SERVICE' || u.category === 'HODS') && (typeof isAreaMatch === 'function' ? isAreaMatch(u.area, area) : u.area === area));
 
       for (let srv of srvAreaUsers) {
 
-        if (isValid(srv.ttd)) return srv.ttd;
+        if (isValid(srv.ttd)) return sanitizeSigUrl(srv.ttd);
 
       }
 
     }
 
-    if (isValid(ttdMap['SERVICE'])) return ttdMap['SERVICE'];
+    if (isValid(ttdMap['SERVICE'])) return sanitizeSigUrl(ttdMap['SERVICE']);
 
-    if (isValid(ttdMap['HODS'])) return ttdMap['HODS'];
+    if (isValid(ttdMap['HODS'])) return sanitizeSigUrl(ttdMap['HODS']);
 
     const anySrv = allUsers.find(u => u && (u.category === 'SERVICE' || u.category === 'HODS') && isValid(u.ttd));
 
-    if (anySrv) return anySrv.ttd;
+    if (anySrv) return sanitizeSigUrl(anySrv.ttd);
 
   } else if (role === 'DM' || role === 'DISTRICT_MANAGER') {
 
@@ -59550,7 +59606,7 @@ async function generateAndBackupApprovedPdf(noSurat, reqObj, forceDownload = fal
     }
 
     const dmTtdImg = dmTTDBold ? `<img src="${dmTTDBold}" style="height: 55px; max-width: 170px; object-fit: contain;" />` : '<div style="color: #16a34a; font-weight: bold; padding: 10px 0;">APPROVED (DM)</div>';
-    const serviceTtdImg = serviceTTDBold ? `<img src="${serviceTTDBold}" style="height: 55px; max-width: 170px; object-fit: contain;" />` : (req.serviceApprove ? '<div style="color: #0077b6; font-weight: bold; padding: 10px 0;">APPROVED (SERVICE)</div>' : '-');
+    const serviceTtdImg = serviceTTDBold ? `<img src="${serviceTTDBold}" style="height: 55px; max-width: 170px; object-fit: contain;" onerror="this.onerror=null; this.style.display='none';" />` : (req.serviceApprove ? '<div style="color: #0077b6; font-weight: bold; padding: 10px 0;">APPROVED (SERVICE)</div>' : '-');
     const pemohonTtdImg = pemohonTTDBold ? `<img src="${pemohonTTDBold}" style="height: 55px; max-width: 170px; object-fit: contain;" />` : '';
 
     const areaNameMap = { TSM: 'TASIKMALAYA', BDG: 'BANDUNG', BDU: 'BANDUNG UTARA', CRB: 'CIREBON', SKB: 'SUKABUMI', SBN: 'SUBANG' };
@@ -59899,7 +59955,7 @@ function bukaModalApprovalDMCanvas(noSurat) {
     }).join('');
 
     const getCrossOriginAttr = (url) => (url && typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) ? 'crossOrigin="anonymous"' : '';
-    const serviceTtdImg = req.serviceTTD ? `<img src="${req.serviceTTD}" ${getCrossOriginAttr(req.serviceTTD)} style="max-height: 44px; max-width: 110px; object-fit: contain;" />` : (req.serviceApprove ? '<div style="color: #0077b6; font-weight: 500; padding: 4px 0;">APPROVED (SERVICE)</div>' : '-');
+    const serviceTtdImg = req.serviceTTD ? `<img src="${typeof formatSupabaseStorageUrl === 'function' ? formatSupabaseStorageUrl(req.serviceTTD) : req.serviceTTD}" ${getCrossOriginAttr(req.serviceTTD)} style="max-height: 44px; max-width: 110px; object-fit: contain;" onerror="this.onerror=null; this.style.display='none';" />` : (req.serviceApprove ? '<div style="color: #0077b6; font-weight: 500; padding: 4px 0;">APPROVED (SERVICE)</div>' : '-');
     const pemohonTtdImg = req.pemohonTTD ? `<img src="${req.pemohonTTD}" ${getCrossOriginAttr(req.pemohonTTD)} style="max-height: 44px; max-width: 110px; object-fit: contain;" />` : '';
 
     container.innerHTML = `

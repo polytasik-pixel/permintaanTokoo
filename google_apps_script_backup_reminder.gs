@@ -5,8 +5,8 @@
  */
 
 const CONFIG = {
-  SUPABASE_URL: 'https://bfkmxhvqezdobsbgxmzg.supabase.co',
-  SUPABASE_ANON_KEY: 'sb_publishable_FMzN5oje55yHwz3Sv1s6ww_AyYU3r9K',
+  SUPABASE_URL: 'https://nmzulwgqkcyxjjwroxvq.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_ygnightsusb7pt0s7hrq6w_9irs-7bf',
   FONNTE_TOKEN: 'FejqMMmJNpcfvouaqVoE',
   SHEET_NAME_BACKUP: 'BACKUP_PERMINTAAN',
   SHEET_NAME_SETING: 'seting',
